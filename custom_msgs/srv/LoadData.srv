@@ -1,0 +1,5 @@
+string data_directory
+string task
+---
+string message
+bool success
