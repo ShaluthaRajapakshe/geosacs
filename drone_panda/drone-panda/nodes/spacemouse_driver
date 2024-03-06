@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+from typing import Callable
+import rospy
+import time
+import actionlib
+import control_msgs.msg 
+from geometry_msgs.msg import Twist, PoseStamped
+import franka_gripper.msg
+from sensor_msgs.msg import Joy
+from std_msgs.msg import String
+import tf2_geometry_msgs
+import tf
+from tf.transformations import *
+import tf2_ros
+import signal
+import sys
+import numpy as np
+
+class SpaceMouseDriver(object):
+    def __init__(self):
+        self._virtual_robot = rospy.get_param('~virtual_robot',True)
+        self._twist_pub = rospy.Publisher("/commanded_vel", Twist, queue_size=1)
+        if self._virtual_robot:
+            self._command_pub = rospy.Publisher("/simulator/commands", String, queue_size=1)
+        else:
+            self._grasp_client = actionlib.SimpleActionClient('/franka_gripper/grasp', franka_gripper.msg.GraspAction)
+        
+        self._drone_command_pub = rospy.Publisher("/tello/cmd", String, queue_size=1)
+
+        self._joy_sub = rospy.Subscriber('/spacenav/joy', Joy, self.on_joy)
+        self._a_pressed = False
+        self._b_pressed = False
+        self._b_pressed_time = time.time()
+        self._x_pressed = False
+        self._grasped = False
+        self._ax2_init = False
+        self._ax5_init = False
+            
+    def on_joy(self, msg):
+        ax = np.array(msg.axes)
+        ax = ax/2.0
+        t = Twist()
+        t.linear.x = ax[0]
+        t.linear.y = ax[1]
+        t.linear.z = ax[2]
+        t.angular.x = ax[3]
+        t.angular.y = ax[4]
+        t.angular.z = ax[5]
+        self._twist_pub.publish(t)
+
+        # Left button is for toggling the robot gripper
+        if msg.buttons[0] and not self._a_pressed:
+            self._a_pressed = True
+            if self._virtual_robot:
+                self._command_pub.publish("toggle_gripper")
+            else:
+                if not self._grasped:
+                    goal = franka_gripper.msg.GraspGoal()
+                    goal.width = 0
+                    goal.epsilon.inner = .05
+                    goal.epsilon.outer = .05
+                    goal.speed = .1
+                    goal.force = 10
+                    self._grasp_client.send_goal(goal)
+                    print(self._grasp_client.wait_for_server())
+                else:
+                    goal = franka_gripper.msg.GraspGoal()
+                    goal = franka_gripper.msg.GraspGoal()
+                    goal.width = 0.07
+                    goal.speed = .1
+                    goal.force = 10
+                    self._grasp_client.send_goal(goal)
+                    self._grasp_client.wait_for_server()
+
+                self._grasped = not self._grasped
+        
+        if not msg.buttons[0] and self._a_pressed:
+            self._a_pressed = False
+
+        # Right button: short press (land), long press (takeoff)
+        if msg.buttons[1] and not self._b_pressed:
+            self._b_pressed = True
+            self._b_pressed_time = time.time()
+        if not msg.buttons[1] and self._b_pressed:
+            if (time.time()-self._b_pressed_time)>0.5:
+                self._drone_command_pub.publish("takeoff")
+            else:
+                self._drone_command_pub.publish("land")
+            self._b_pressed = False
+    
+    def run(self):
+        rospy.spin()
+
+    def signal_handler(self, signal, frame):
+        sys.exit()
+
+if __name__ == "__main__":
+    rospy.init_node('spacemouse_driver')
+    mouse_driver = SpaceMouseDriver()
+    signal.signal(signal.SIGINT, mouse_driver.signal_handler)
+    mouse_driver.run()

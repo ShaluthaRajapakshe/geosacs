@@ -1,0 +1,143 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Float32, String
+from drone_ros_msgs.msg import PoseCost
+import signal
+import sys
+import numpy as np
+import tf2_ros
+import time
+import tf_conversions
+import geometry_msgs.msg
+
+class ViewManager(object):
+    def __init__(self):
+        # self._pose_display_pub = rospy.Publisher("/alternative_pose", PoseStamped, queue_size=1)
+        self._drone_goal_pub = rospy.Publisher('/panda_ik/drone_goal', PoseStamped, queue_size=1)
+        
+        self._cost_sub = rospy.Subscriber('/panda_ik/view_cost', Float32, self.on_cost)
+        self._pose_sub = rospy.Subscriber('/panda_ik/global_solutions', PoseCost, self.on_pose)
+        self._command_sub = rospy.Subscriber('/view_manager/command', String, self.on_command)
+        self._command_sub2 = rospy.Subscriber('/panda_ik/event', String, self.on_pandaikmove)
+
+        self.br = tf2_ros.TransformBroadcaster()
+        
+        self._alternatives = []
+        self._costs = []
+        self._current_cost = 0
+        self._timestamps = []
+    
+        self.drone_view_moving = False
+
+        self._id = 0
+
+    def tf_from_pose_stamped(self,posestamped):
+        t = geometry_msgs.msg.TransformStamped()
+
+        t.header.stamp = rospy.Time.now()
+        t.header.frame_id = "panda_link0"
+        t.child_frame_id = "dronealt"
+        t.transform.translation.x = posestamped.pose.position.x
+        t.transform.translation.y = posestamped.pose.position.y
+        t.transform.translation.z = posestamped.pose.position.z
+        t.transform.rotation.x = posestamped.pose.orientation.x
+        t.transform.rotation.y = posestamped.pose.orientation.y
+        t.transform.rotation.z = posestamped.pose.orientation.z
+        t.transform.rotation.w = posestamped.pose.orientation.w
+        self.br.sendTransform(t)
+
+    def on_pandaikmove(self, msg):
+        if msg.data == "start_goal_move":
+            self.drone_view_moving = True
+        elif msg.data == "finish_goal_move":
+            self.drone_view_moving = False
+            self._id = 0
+    
+    def on_command(self, msg):
+        sorted_inds = np.argsort(self._costs)
+        selected_ind = sorted_inds[self._id]
+
+        if msg.data == "go":
+            self._drone_goal_pub.publish(self._alternatives[selected_ind])
+        if msg.data == "new":
+            if self._id<(len(self._alternatives)-1):
+                self._id +=1
+            else:
+                self._id = 0
+
+            # self._pose_display_pub.publish(self._alternatives[selected_ind])
+            self.tf_from_pose_stamped(self._alternatives[selected_ind])
+
+
+    def on_pose(self, msg):
+        # check if similar view is already in list
+        sim_view = False
+        proposed_pos = np.array([msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z])
+        for ii in range(0,len(self._alternatives)):
+            alt_pos = np.array([self._alternatives[ii].pose.position.x, self._alternatives[ii].pose.position.y, self._alternatives[ii].pose.position.z])
+            if np.linalg.norm(alt_pos-proposed_pos)<0.2 and not sim_view:
+                sim_view = True
+                if msg.cost.data<self._costs[ii]:
+                    self._alternatives[ii] = msg.pose
+                    self._timestamps[ii] = time.time()
+                else:
+                    self._timestamps[ii] = time.time()
+                    continue
+        
+        # print(sim_view, len(self._alternatives))
+
+        if not sim_view:
+            self._alternatives.append(msg.pose)
+            self._costs.append(msg.cost.data)
+            self._timestamps.append(time.time())
+
+        # check for expired viewpoints
+        curr_time = time.time()
+        expired_time = 5.0 # five seconds
+        ii = 0
+
+        while ii<len(self._timestamps):
+            if (self._timestamps[ii]+expired_time<curr_time):
+                self._alternatives.pop(ii)
+                self._costs.pop(ii)
+                self._timestamps.pop(ii)
+
+                if(self._id==len(self._alternatives)):
+                    self._id = len(self._alternatives)-1
+            else:
+                ii+=1
+
+        # No more than 5 total stored viewpoints
+        if len(self._alternatives) > 5:
+            max_cost_ind = np.argsort(self._costs)[-1]
+            self._alternatives.pop(max_cost_ind)
+            self._costs.pop(max_cost_ind)
+            self._timestamps.pop(max_cost_ind)
+
+        # 
+        sorted_inds = np.argsort(self._costs)
+        selected_ind = sorted_inds[self._id]
+        if not self.drone_view_moving:
+            # self._pose_display_pub.publish(self._alternatives[selected_ind])
+            self.tf_from_pose_stamped(self._alternatives[selected_ind])
+
+        # print("num views: ",len(self._alternatives))
+
+        # print("Current cost: "+str(self._current_cost))
+        # print("Best cost: "+str(min(self._costs)))
+            
+    def on_cost(self, msg):
+        self._current_cost = msg.data
+    
+    def run(self):
+        rospy.spin()
+
+    def signal_handler(self, signal, frame):
+        sys.exit()
+
+if __name__ == "__main__":
+    rospy.init_node('view_manager')
+    manager = ViewManager()
+    signal.signal(signal.SIGINT, manager.signal_handler)
+    manager.run()

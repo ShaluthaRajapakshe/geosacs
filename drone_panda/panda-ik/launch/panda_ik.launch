@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <node pkg="panda_ik" type="panda_ik" name="panda_ik">
+        <param name="URDF" type="string" value="$(find panda_ik)/urdfs/panda.urdf" />
+    </node>
+</launch>

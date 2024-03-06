@@ -1,0 +1,9 @@
+<library path="lib/libdrone_panda">
+  <class name="drone_panel/DronePanel"
+         type="drone_panel::DronePanel"
+         base_class_type="rviz::Panel">
+    <description>
+      A panel widget for control frame selection and mapping
+    </description>
+  </class>
+</library>

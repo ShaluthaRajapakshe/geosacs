@@ -1,0 +1,439 @@
+#!/usr/bin/env python
+
+# Used to store the last mapped point cloud
+import rospy
+from sensor_msgs.msg import PointCloud2, Image
+from std_msgs.msg import String, Float64
+from drone_ros_msgs.msg import PlanesInliers, PlanesInliersArr
+import numpy as np
+import sys
+import rospkg
+from scipy import interpolate
+
+import matplotlib.pyplot as plt
+
+import numpy as np
+from tf.transformations import quaternion_from_euler as q_e
+from tf.transformations import euler_from_quaternion as e_q
+from geometry_msgs.msg import Point, Polygon, Vector3
+from visualization_msgs.msg import Marker
+from drone_ros_msgs.msg import Planes
+from PyKDL import *
+import PyKDL
+import numpy.linalg as LA
+import rospy
+import ros_numpy
+import time
+import tf
+import tf2_ros
+import tf2_geometry_msgs
+from scipy.spatial import ConvexHull
+import scipy.ndimage as ndimage
+from shapely import geometry
+
+from scipy import interpolate
+
+# A utility function to calculate 
+# area of triangle formed by (x1, y1), 
+# (x2, y2) and (x3, y3) 
+def area(x1, y1, x2, y2, x3, y3):
+      
+    return abs((x1 * (y2 - y3) + 
+                x2 * (y3 - y1) + 
+                x3 * (y1 - y2)) / 2.0)
+  
+# A function to check whether point 
+# P(x, y) lies inside the rectangle 
+# formed by A(x1, y1), B(x2, y2), 
+# C(x3, y3) and D(x4, y4) 
+def check(x1, y1, x2, y2, x3, 
+          y3, x4, y4, x, y):
+                
+    # Calculate area of rectangle ABCD 
+    A = (area(x1, y1, x2, y2, x3, y3) +
+         area(x1, y1, x4, y4, x3, y3))
+  
+    # Calculate area of triangle PAB 
+    A1 = area(x, y, x1, y1, x2, y2)
+  
+    # Calculate area of triangle PBC 
+    A2 = area(x, y, x2, y2, x3, y3)
+  
+    # Calculate area of triangle PCD 
+    A3 = area(x, y, x3, y3, x4, y4)
+  
+    # Calculate area of triangle PAD 
+    A4 = area(x, y, x1, y1, x4, y4)
+  
+    # Check if sum of A1, A2, A3 
+    # and A4 is same as A 
+#     print(A,A1 + A2 + A3 + A4)
+    return (round(A,6) == round(A1 + A2 + A3 + A4,6))
+
+def get_area(bin_image,rect_verts):
+    count = 0.0
+    for ii in range(0,np.shape(bin_image)[0]):
+        for jj in range(0,np.shape(bin_image)[1]):
+            if bin_image[ii,jj]==1 and check(rect_verts[0][0],rect_verts[0][1],rect_verts[1][0],
+                                             rect_verts[1][1],rect_verts[2][0],rect_verts[2][1],
+                                             rect_verts[3][0],rect_verts[3][1],ii,jj):
+                count += 1.0
+    return count
+
+def get_trimmed_bin(bin_image,rect_verts):
+    bin_image_trimmed = np.zeros((np.shape(bin_image)))
+    for ii in range(0,np.shape(bin_image)[0]):
+        for jj in range(0,np.shape(bin_image)[1]):
+            if bin_image[ii,jj]==1 and check(rect_verts[0][0],rect_verts[0][1],rect_verts[1][0],
+                                             rect_verts[1][1],rect_verts[2][0],rect_verts[2][1],
+                                             rect_verts[3][0],rect_verts[3][1],ii,jj):
+                bin_image_trimmed[ii,jj]=1
+    return bin_image_trimmed
+                
+def bin_to_pts(bin_image):
+    pts = []
+    for ii in range(0,np.shape(bin_image)[0]):
+        for jj in range(0,np.shape(bin_image)[1]):
+            if bin_image[ii,jj]==1:
+                pts.append(np.array([ii, jj]))
+    return np.array(pts)
+
+def point_on_line(a, b, p):
+    ap = p - a
+    ab = b - a
+    result = a + np.dot(ap, ab) / np.dot(ab, ab) * ab
+    return result
+
+def get_planes_for_bin(bin_image, rect_verts):
+    # get current area of points
+    bin_area = get_area(bin_image,rect_verts)
+    # print("bin area: ",bin_area)
+    pgon = geometry.Polygon(zip(rect_verts[:,0], rect_verts[:,1]))
+    # print("area rect",pgon.area)
+    
+    # pts = bin_to_pts(bin_image)
+    # plt.scatter(pts[:,0],pts[:,1],color='blue')
+    # plt.plot(rect_verts[:,0],rect_verts[:,1],color='red')
+    # plt.plot(rect_verts[[3,0],0],rect_verts[[3,0],1],color='red')
+    # plt.show()
+    
+    # name = input("WAIT? ")
+
+    if pgon.area==0 or bin_area<10 or bin_area/pgon.area<0.1:
+        return None
+        
+    elif bin_area/pgon.area < 0.6:
+        planes = []
+        
+        # subdivision
+        # print("sdivide")
+        bin_image = get_trimmed_bin(bin_image,rect_verts)
+        com = ndimage.center_of_mass(bin_image)
+        # print("com",com)
+        
+        # Check subdivided boxes
+        bl = rect_verts[3]
+        ul = rect_verts[0]
+        br = rect_verts[2]
+        ur = rect_verts[1]
+
+        com = (bl+ur)/2.0
+        
+        # Box 1
+        rect_box1 = np.vstack((ul,point_on_line(ul,ur,com),com,point_on_line(ul,bl,com)))
+        box1res = get_planes_for_bin(bin_image,rect_box1)
+        if box1res is not None:
+            planes = planes + box1res
+        
+        # Box 2
+        rect_box2 = np.vstack((point_on_line(ul,ur,com),ur,point_on_line(ur,br,com),com))
+        box2res = get_planes_for_bin(bin_image,rect_box2)
+        if box2res is not None:
+            planes = planes + box2res
+            
+        # Box 3
+        rect_box3 = np.vstack((point_on_line(ul,bl,com),com,point_on_line(bl,br,com),bl))
+        box3res = get_planes_for_bin(bin_image,rect_box3)
+        if box3res is not None:
+            planes = planes + box3res
+            
+        # Box 4
+        rect_box4 = np.vstack((com,point_on_line(br,ur,com),br,point_on_line(bl,br,com)))
+        box4res = get_planes_for_bin(bin_image,rect_box4)
+        if box4res is not None:
+            planes = planes + box4res
+            
+#         print("RB1:",rect_box1)
+        # print(np.shape(rect_box1))
+        return planes
+    else:
+        return [rect_verts]
+
+# https://gis.stackexchange.com/questions/22895/finding-minimum-area-rectangle-for-given-points
+def minimum_bounding_rectangle(points):
+    """
+    Find the smallest bounding rectangle for a set of points.
+    Returns a set of points representing the corners of the bounding box.
+
+    :param points: an nx2 matrix of coordinates
+    :rval: an nx2 matrix of coordinates
+    """
+    #from scipy.ndimage.interpolation import rotate
+    from scipy.ndimage import rotate
+    pi2 = np.pi/2.
+
+    # get the convex hull for the points
+    hull_points = points[ConvexHull(points).vertices]
+
+    # calculate edge angles
+    edges = np.zeros((len(hull_points)-1, 2))
+    edges = hull_points[1:] - hull_points[:-1]
+
+    angles = np.zeros((len(edges)))
+    angles = np.arctan2(edges[:, 1], edges[:, 0])
+
+    angles = np.abs(np.mod(angles, pi2))
+    angles = np.unique(angles)
+
+    # find rotation matrices
+    # XXX both work
+    rotations = np.vstack([
+        np.cos(angles),
+        np.cos(angles-pi2),
+        np.cos(angles+pi2),
+        np.cos(angles)]).T
+#     rotations = np.vstack([
+#         np.cos(angles),
+#         -np.sin(angles),
+#         np.sin(angles),
+#         np.cos(angles)]).T
+    rotations = rotations.reshape((-1, 2, 2))
+
+    # apply rotations to the hull
+    rot_points = np.dot(rotations, hull_points.T)
+
+    # find the bounding points
+    min_x = np.nanmin(rot_points[:, 0], axis=1)
+    max_x = np.nanmax(rot_points[:, 0], axis=1)
+    min_y = np.nanmin(rot_points[:, 1], axis=1)
+    max_y = np.nanmax(rot_points[:, 1], axis=1)
+
+    # find the box with the best area
+    areas = (max_x - min_x) * (max_y - min_y)
+    best_idx = np.argmin(areas)
+
+    # return the best box
+    x1 = max_x[best_idx]
+    x2 = min_x[best_idx]
+    y1 = max_y[best_idx]
+    y2 = min_y[best_idx]
+    r = rotations[best_idx]
+
+    rval = np.zeros((4, 2))
+    rval[0] = np.dot([x1, y2], r)
+    rval[1] = np.dot([x2, y2], r)
+    rval[2] = np.dot([x2, y1], r)
+    rval[3] = np.dot([x1, y1], r)
+
+    return rval
+
+# ​
+# #https://stackoverflow.com/questions/35070178/fit-plane-to-a-set-of-points-in-3d-scipy-optimize-minimize-vs-scipy-linalg-lsts
+def publish_plane(p1,p2,p3,p4,ns,planes):
+    global marker_pub, plane_pub    
+    pp1=Point(p1[0],p1[1],p1[2])
+    pp2=Point(p2[0],p2[1],p2[2])
+    pp3=Point(p3[0],p3[1],p3[2])
+    pp4=Point(p4[0],p4[1],p4[2])
+    m = Marker()
+    m.ns = "points"+chr(ns)
+    m.header.frame_id="panda_link0"
+    m.type = 8
+    m.points=[pp1,pp2,pp3,pp4]
+    m.scale.x=.01
+    m.scale.y=.01
+    m.color.a=.8
+    m.color.r = 1.0
+    marker_pub.publish(m)
+    rospy.sleep(rospy.Duration(0, 100))
+
+    # barycenter of the points
+    # compute centered coordinates
+    coords = np.array([p1,p2,p3,p4])
+    G = coords.sum(axis=0) / coords.shape[0]
+    # print(G)
+    # run SVD
+    u, s, v = np.linalg.svd(coords - G)
+    v[2]=np.sign(np.cross(v[0],v[1]).dot(v[2]))*v[2]
+
+    norm = Point(v[2,0],v[2,1],v[2,2])
+
+    planes.header.frame_id = "panda_link0"
+    poly = Polygon()
+    poly.points = [pp1,pp2,pp3,pp4]
+    #plane_pub.publish(planes)
+    rp1=v.dot(p1)#rotate(R,p1)
+    rp2=v.dot(p2)#rotate(R,p2)
+    rp3=v.dot(p3)#rotate(R,p3)
+    xs=[rp1[0],rp2[0],rp3[0]]
+    ys=[rp1[1],rp2[1],rp3[1]]
+    zs=[rp1[2],rp2[2],rp3[2]]
+    q=Rotation(v[0,0],v[0,1],v[0,2],v[1,0],v[1,1],v[1,2],v[2,0],v[2,1],v[2,2]).Inverse().GetQuaternion()
+
+    # unitary normal vector
+    m = Marker()
+    m.header.frame_id="panda_link0"
+    m.ns=chr(ns)
+    m.type = 1
+    m.pose.orientation.x = q[0]
+    m.pose.orientation.y = q[1]
+    m.pose.orientation.z = q[2]
+    m.pose.orientation.w = q[3]
+    m.pose.position.x=G[0]
+    m.pose.position.y=G[1]
+    m.pose.position.z=G[2]
+    m.scale.x=s[0]#max(xs)-min(xs)
+    m.scale.y=s[1]#max(ys)-min(ys)
+    m.scale.z=s[2]#max(zs)-min(zs)
+    # print(m.scale.z)
+    m.color.a=.9
+    m.color.r=250
+    m.color.g=250
+    m.color.b=250
+    marker_pub.publish(m)
+    planes.planes.append(poly)
+    planes.normals.append(norm)
+    half_axe = Vector3(s[0]/2,s[1]/2,s[2]/2)
+    planes.half_axes.append(half_axe)
+    planes.poses.append(m.pose)
+    rospy.sleep(rospy.Duration(0, 100))
+
+def processPlanes(data):
+    planes = Planes()
+    num_planes = 0
+    for ii in range(0,len(data.planes)):
+        # plane parameters
+        a = data.planes[ii].a.data
+        b = data.planes[ii].b.data
+        c = data.planes[ii].c.data
+        d = data.planes[ii].d.data
+
+        # Get Data from plane
+        x = np.array(data.planes[ii].x.data)
+        x = x.reshape((len(x),1))
+        y = np.array(data.planes[ii].y.data)
+        y = y.reshape((len(y),1))
+        z = np.array(data.planes[ii].z.data)
+        z = z.reshape((len(z),1))
+        plane_pts = np.concatenate((x,y,z),axis=1)
+
+        # print(np.shape(plane_pts))
+
+        # Define plane axes for projection
+        plane_normal = np.array([a,b,c])
+        # print("NORMAL:",plane_normal)
+        if abs(np.dot(plane_normal,np.array([1.0, 0.0, 0.0])))<0.95:
+            dir_plane_x = np.array([1.0, 0.0, 0.0])
+        else:
+            dir_plane_x = np.array([0.0, 1.0, 0.0])
+
+        dir_plane_x = dir_plane_x-np.dot(plane_normal,dir_plane_x)*plane_normal
+        dir_plane_x = dir_plane_x/np.linalg.norm(dir_plane_x)
+
+        dir_plane_y = -np.cross(dir_plane_x,plane_normal)
+
+        rot = np.hstack((dir_plane_x.reshape((3,1)),dir_plane_y.reshape((3,1)),plane_normal.reshape((3,1))))
+
+        # print("ROT: \n",rot)
+
+        # Project onto plane
+        plane_pts_rot = (rot.T @ plane_pts.T).T
+
+
+        # Binary erosion
+        x_range = np.max(plane_pts_rot[:,0])-np.min(plane_pts_rot[:,0])
+        y_range = np.max(plane_pts_rot[:,1])-np.min(plane_pts_rot[:,1])
+        rng = np.max([x_range,y_range])
+
+        x_inds = np.digitize(plane_pts_rot[:,0],np.linspace(np.min(plane_pts_rot[:,0]),np.min(plane_pts_rot[:,0])+rng,49))
+        y_inds = np.digitize(plane_pts_rot[:,1],np.linspace(np.min(plane_pts_rot[:,1]),np.min(plane_pts_rot[:,1])+rng,49))
+
+        bin_image = np.zeros((50,50), dtype=int)
+        for jj in range(0,len(plane_pts_rot[:,0])):
+            bin_image[x_inds[jj],y_inds[jj]]=1
+
+        # plt.imshow(bin_image)
+        # plt.show()
+
+        # remove noise
+        # for ii in range(0,1):
+        # bin_image = ndimage.binary_erosion(bin_image,iterations=1).astype(bin_image.dtype)
+        # bin_image = ndimage.binary_dilation(bin_image,iterations=1).astype(bin_image.dtype)
+        
+        # # fill in
+        bin_image = ndimage.binary_dilation(bin_image,iterations=1).astype(bin_image.dtype)
+        # bin_image = ndimage.binary_erosion(bin_image,iterations=1).astype(bin_image.dtype)
+
+        # plt.imshow(bin_image)
+        # plt.show()
+
+        label_im, nb_labels = ndimage.label(bin_image)
+        sizes = ndimage.sum(bin_image, label_im, range(nb_labels + 1))
+        if np.max(sizes)<10: continue
+
+        mask = sizes == max(sizes)
+        bin_image = mask[label_im]
+
+        
+        # if ii==5:
+        # plt.imshow(bin_image)
+        # plt.show()
+        
+        pts = bin_to_pts(bin_image)
+        rect_verts = minimum_bounding_rectangle(pts)
+        planes_sub = get_planes_for_bin(bin_image,rect_verts)
+
+        # if ii==5:
+        # plt.scatter(pts[:,0],pts[:,1],color='blue')
+        # for zz in range(0,len(planes_sub)):
+        #     plt.plot(planes_sub[zz][:,0],planes_sub[zz][:,1],color='red')
+        #     plt.plot(planes_sub[zz][[3,0],0],planes_sub[zz][[3,0],1],color='red')
+        # plt.show()
+
+        z_plane = np.average(plane_pts_rot[:,2])
+
+        for plane in planes_sub:
+            for zz in range(0,4):
+                # convert back to normal x,y coords
+                plane[zz,0] = (interpolate.InterpolatedUnivariateSpline([0,50],[np.min(plane_pts_rot[:,0]), np.min(plane_pts_rot[:,0])+rng],k=1))(plane[zz,0])
+                # plane[zz,1]=np.linspace(np.min(plane_pts_rot[:,1]),np.max(plane_pts_rot[:,1]),50)[round(plane[zz,1])]
+                plane[zz,1] = (interpolate.InterpolatedUnivariateSpline([0,50],[np.min(plane_pts_rot[:,1]), np.min(plane_pts_rot[:,1]+rng)],k=1))(plane[zz,1])
+
+            # Project points back into 3D
+            # print("PLANE: ",plane)
+            rect_verts_3d = np.hstack((plane,z_plane*np.ones((4,1))))
+            # print(rect_verts_3d)
+            verts_orig = (rot @ rect_verts_3d.T)
+
+            # print(verts_orig)
+            
+            publish_plane(verts_orig[:,0],verts_orig[:,1],verts_orig[:,2],verts_orig[:,3],num_planes,planes)
+            num_planes+=1
+    
+    # send to IK
+    print("Total number of planes!: ",num_planes)
+    plane_pub.publish(planes)
+
+def listenForPlanes():
+    global marker_pub, plane_pub
+    rospy.init_node('plane_to_bounding')
+    rospy.Subscriber("/pclplanes", PlanesInliersArr, processPlanes)
+    marker_pub = rospy.Publisher("/viz/meshes",Marker,queue_size = 1,latch =True)
+    plane_pub = rospy.Publisher("/panda_ik/planes",Planes,queue_size = 1,latch =True)
+    rospy.spin()
+
+
+if __name__ == '__main__':
+    listenForPlanes()
+
+

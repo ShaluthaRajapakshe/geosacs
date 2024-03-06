@@ -1,0 +1,15 @@
+<robot name="drone">
+
+  <material name="DroneGreen">
+    <color rgba="0.0 1.0 0.0 1.0"/>
+  </material>
+  <link name="drone_curr_mesh">
+    <visual>
+      <origin rpy="0 0 0"  xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://drone_panda/meshes/fake_drone.STL"/>
+      </geometry>
+      <material name="DroneGreen"/>
+    </visual>
+  </link>
+</robot>

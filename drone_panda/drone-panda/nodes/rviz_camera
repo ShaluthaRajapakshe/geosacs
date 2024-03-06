@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+import rospy
+import numpy as np
+from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Float64MultiArray
+import tf2_ros
+import signal
+import sys
+
+class CameraDriver:
+    def __init__(self):
+        self.panda_sub = rospy.Subscriber(
+            "/panda_ik/panda_commanded_pose", PoseStamped, self.get_panda_state
+        )
+        self.tfBuffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tfBuffer)
+        
+        #self.drone_sub = rospy.Subscriber(
+        #    "/panda_ik/drone_output", PoseStamped, self.get_drone_state
+        #)
+        self.alternate_pose = rospy.Subscriber(
+            "/alternative_pose", PoseStamped, self.get_alternate_pose_state
+        )
+        self.params_pub = rospy.Publisher(
+            "/rviz_cam_params", Float64MultiArray, queue_size=5
+        )
+        self.panda_position = np.array([])
+        self.drone_position = np.array([])
+        self.alternate_pose_position = np.array([])
+
+    def get_panda_state(self, msg):
+        self.panda_position = np.array(
+            [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
+        )
+
+    def get_drone_state(self, msg):
+        self.drone_position = np.array(
+            [msg.transform.translation.x, msg.transform.translation.y, msg.transform.translation.z]
+        )
+
+    def get_alternate_pose_state(self, msg):
+        self.alternate_pose_position = np.array(
+            [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
+        )
+
+    def run(self):
+        r = rospy.Rate(100)
+        while not rospy.is_shutdown():
+            try:
+                trans = self.tfBuffer.lookup_transform('panda_link0', 'drone', rospy.Time())
+                self.get_drone_state(trans)
+            except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+                continue
+            # print(self.panda_position)
+            # print(self.drone_position)
+            # print(self.alternate_pose_position)
+            if (len(self.panda_position) > 0) & (len(self.drone_position) > 0) & (len(self.alternate_pose_position) > 0):
+                look_at = (self.panda_position + self.drone_position + self.alternate_pose_position)/3.0
+                params = Float64MultiArray()
+                params.data = list(look_at)
+                self.params_pub.publish(params)
+
+            r.sleep()
+
+    def signal_handler(self, signal, frame):
+        sys.exit()
+
+
+if __name__ == "__main__":
+    rospy.init_node("rviz_camera")
+    camera_driver = CameraDriver()
+    signal.signal(signal.SIGINT, camera_driver.signal_handler)
+    camera_driver.run()

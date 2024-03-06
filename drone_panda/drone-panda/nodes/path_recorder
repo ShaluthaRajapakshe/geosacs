@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import Pose, PoseStamped
+from nav_msgs.msg import Path
+import tf
+from tf.transformations import *
+import tf2_ros
+import signal
+import sys
+
+REFERENCE_FRAME='panda_link0'
+
+class Recorder(object):
+    def __init__(self):
+        self._br = tf2_ros.TransformBroadcaster()
+        self._tfBuffer = tf2_ros.Buffer()
+        self._tl = tf2_ros.TransformListener(self._tfBuffer)
+        rospy.sleep(.5)
+        self._freq = 1
+
+        self._path_pub = rospy.Publisher("/path",Path, queue_size=1)
+        self._path = Path()
+        self._path.header.frame_id = REFERENCE_FRAME
+
+    def get_path(self):
+        try:
+            t = self._tfBuffer.lookup_transform(REFERENCE_FRAME,"drone",rospy.Time(0))
+            p = PoseStamped()
+            p.header.frame_id = REFERENCE_FRAME
+            p.pose.position.x = t.transform.translation.x
+            p.pose.position.y = t.transform.translation.y
+            p.pose.position.z = t.transform.translation.z
+            p.pose.orientation.x = t.transform.rotation.x
+            p.pose.orientation.y = t.transform.rotation.y
+            p.pose.orientation.z = t.transform.rotation.z
+            p.pose.orientation.w = t.transform.rotation.w
+            self._path.poses.append(p)
+            self._path_pub.publish(self._path)
+        except:
+            pass
+        
+    def run(self):
+        r = rospy.Rate(self._freq)
+        while not rospy.is_shutdown():
+            self.get_path()
+            r.sleep()
+
+    def signal_handler(self, signal, frame):
+        sys.exit()
+
+if __name__ == "__main__":
+    rospy.init_node('path_recorder')
+    recorder = Recorder()
+    signal.signal(signal.SIGINT, recorder.signal_handler)
+    recorder.run()

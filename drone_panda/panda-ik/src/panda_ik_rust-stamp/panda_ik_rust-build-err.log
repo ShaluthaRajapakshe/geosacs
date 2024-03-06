@@ -1,0 +1,70 @@
+warning: unused imports: `Rotation3`, `Translation3`, `Unit`
+ --> src/lib.rs:2:47
+  |
+2 | use na::{Vector3, UnitQuaternion, Quaternion, Rotation3, Unit, Translation3};
+  |                                               ^^^^^^^^^  ^^^^  ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::convert::TryFrom`
+ --> src/lib.rs:3:5
+  |
+3 | use std::convert::TryFrom;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::cmp`
+  --> src/lib.rs:21:5
+   |
+21 | use std::cmp;
+   |     ^^^^^^^^
+
+warning: unused import: `rand::Rng`
+  --> src/lib.rs:28:5
+   |
+28 | use rand::Rng;
+   |     ^^^^^^^^^
+
+warning: unused import: `k`
+  --> src/lib.rs:30:5
+   |
+30 | use k::*;
+   |     ^
+
+warning: unused variable: `velocity`
+   --> src/lib.rs:168:9
+    |
+168 |     let velocity = unsafe{Vector3::from(std::ptr::read(vel))};
+    |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_velocity`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: function `get_gaussian` is never used
+  --> src/lib.rs:83:4
+   |
+83 | fn get_gaussian(x: f64, c: f64, k: i32) -> f64{
+   |    ^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: function `norm_angle` is never used
+   --> src/lib.rs:111:4
+    |
+111 | fn norm_angle(a: f64) -> f64{
+    |    ^^^^^^^^^^
+
+warning: function `diff_angle` is never used
+   --> src/lib.rs:115:4
+    |
+115 | fn diff_angle(a1: f64, a2: f64)-> f64 {
+    |    ^^^^^^^^^^
+
+warning: function `joint_limit_cost` is never used
+   --> src/lib.rs:119:4
+    |
+119 | fn joint_limit_cost(state: &[f64], lb: &[f64], hb: &[f64]) -> f64 {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: `panda_ik` (lib) generated 10 warnings (run `cargo fix --lib -p panda_ik` to apply 5 suggestions)
+    Finished release [optimized] target(s) in 0.04s
+warning: the following packages contain code that will be rejected by a future version of Rust: nalgebra v0.26.2
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 2`

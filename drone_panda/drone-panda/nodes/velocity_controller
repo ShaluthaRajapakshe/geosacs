@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import Twist, TwistStamped
+from tf.transformations import *
+import signal
+import sys
+import PyKDL
+
+
+
+class VelocityController(object):
+    def __init__(self):
+        self._goal_pub = rospy.Publisher('/panda_ik/input', TwistStamped, queue_size=1)
+        self._twist_sub = rospy.Subscriber("/commanded_vel", Twist, self.on_twist)
+            
+    def on_twist(self, msg):
+        t=PyKDL.Twist()
+        t[0]=msg.linear.x
+        t[1]=msg.linear.y
+        t[2]=msg.linear.z
+        t[3]=msg.angular.x
+        t[4]=msg.angular.y
+        t[5]=msg.angular.z
+
+        twist = TwistStamped()
+        twist.header.frame_id = ""
+        twist.header.stamp = rospy.Time.now()
+        twist.twist.linear.x = t[0]
+        twist.twist.linear.y = t[1]
+        twist.twist.linear.z = t[2]
+        twist.twist.angular.x = t[3]
+        twist.twist.angular.y = t[4]
+        twist.twist.angular.z = t[5]
+
+        self._goal_pub.publish(twist)
+    
+    def run(self):
+        rospy.spin()
+
+    def signal_handler(self, signal, frame):
+        sys.exit()
+
+if __name__ == "__main__":
+    rospy.init_node('velocity_controller')
+    vel_controller = VelocityController()
+    signal.signal(signal.SIGINT, vel_controller.signal_handler)
+    vel_controller.run()

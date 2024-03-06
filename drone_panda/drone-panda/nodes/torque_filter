@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+import rospy
+from geometry_msgs.msg import WrenchStamped
+import signal
+import sys
+import numpy as np
+
+
+
+class TorqueFilter(object):
+    def __init__(self):
+        self._torque_pub = rospy.Publisher("/ft", WrenchStamped, queue_size=1)
+        self._torque_sub = rospy.Subscriber("/JointController/panda/ft_sensor", WrenchStamped, self.on_wrench)
+        rospy.sleep(.5)
+
+    def on_wrench(self,msg):
+        msg.wrench.torque.x=0
+        msg.wrench.torque.y=0
+        self._torque_pub.publish(msg)
+
+    def run(self):
+        rospy.spin()
+
+    def signal_handler(self, signal, frame):
+        sys.exit()
+
+if __name__ == "__main__":
+    rospy.init_node('torque_filter')
+    torque_filter = TorqueFilter()
+    signal.signal(signal.SIGINT, torque_filter.signal_handler)
+    torque_filter.run()

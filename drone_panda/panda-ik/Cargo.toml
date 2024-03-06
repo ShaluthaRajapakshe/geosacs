@@ -1,0 +1,27 @@
+[package]
+name = "panda_ik"
+version = "0.1.0"
+authors = ["Kevin Welsh <kevinwelsh132@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+optimization_engine = "0.6.0"
+nalgebra = "0.26"
+k = "0.25"
+hyperdual = "0"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8"
+libc = "*"
+chrono = "*"
+geo = "0.18.0"
+geo-types = "0.7.2"
+rand = "0.5.0"
+
+[lib]
+name = "panda_ik"
+crate_type = ["dylib"]
+
+[profile.release]
+opt-level = 3

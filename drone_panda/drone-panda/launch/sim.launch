@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="virtual_robot" default="true"/>
+    <arg name="virtual_drone" default="true"/>
+    <arg name="use_space_mouse" default="false"/>
+    <arg name="use_joy" default="true"/>
+    <arg name="rvizconfig" default="simu.rviz"/>
+
+    <include file="$(find drone_panda)/launch/all.launch">  
+        <arg name="virtual_robot" value="$(arg virtual_robot)" />
+        <arg name="virtual_drone" value="$(arg virtual_drone)" />
+        <arg name="use_space_mouse" value="$(arg use_space_mouse)" />
+        <arg name="use_joy" value="$(arg use_joy)" />
+        <arg name="rvizconfig" value="$(arg rvizconfig)" />
+    </include>
+</launch>

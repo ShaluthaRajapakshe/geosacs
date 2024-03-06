@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+import numpy as np
+import math
+import rospy
+import PyKDL
+import signal
+import sys
+import tf
+from tf.transformations import *
+import tf2_ros
+from geometry_msgs.msg import Pose, Twist, Quaternion, TransformStamped
+from tf.transformations import quaternion_from_euler as q_e
+from tf.transformations import euler_from_quaternion as e_q
+from tf2_geometry_msgs import PoseStamped
+from sensor_msgs.msg import CameraInfo
+from std_msgs.msg import String
+import copy
+from scipy.spatial.transform import Rotation as R
+from scipy.spatial.transform import Slerp
+
+REFERENCE_FRAME='panda_link0'
+
+class VirtualDrone(object):
+    def __init__(self):
+        self._br = tf2_ros.TransformBroadcaster()
+        self._tfBuffer = tf2_ros.Buffer()
+        self._tl = tf2_ros.TransformListener(self._tfBuffer)
+        rospy.sleep(.5)
+
+        self._info_pub = rospy.Publisher("/virtual_camera/camera_info",CameraInfo,queue_size=1,latch=True)
+        info = CameraInfo()
+        info.header.frame_id = "camera1"
+        #info.height = 1536
+        #info.width = 2048
+        #fx = 976.9754638671875
+        #fy = 976.9026489257812
+        #cx = 1018.8711547851562
+        #cy = 780.8445434570312
+        info.height = 720
+        info.width = 1280
+        fx = 1000
+        fy = fx
+        cx = 640
+        cy = 360
+        info.distortion_model = 'rational_polynomial'
+        info.D = [0.5248579382896423, -2.5943498611450195, 0.0008818571805022657, -0.000306136003928259, 1.4509135484695435, 0.4030783474445343, -2.42022705078125, 1.3811763525009155]
+        info.K = [fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]
+        info.R = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        info.P =  [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
+        info.roi.do_rectify = False 
+        self._info_low_res = copy.deepcopy(info)
+        self._info_pub.publish(self._info_low_res)
+
+        self._info_pub2 = rospy.Publisher("/ee_camera/camera_info",CameraInfo,queue_size=1,latch=True)
+        info = CameraInfo()
+        info.header.frame_id = "ee_camera"
+        info.height = 1536
+        info.width = 2048
+        fx = 976.9754638671875
+        fy = 976.9026489257812
+        cx = 1018.8711547851562
+        cy = 780.8445434570312
+        info.distortion_model = 'rational_polynomial'
+        info.D = [0.5248579382896423, -2.5943498611450195, 0.0008818571805022657, -0.000306136003928259, 1.4509135484695435, 0.4030783474445343, -2.42022705078125, 1.3811763525009155]
+        info.K = [fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]
+        info.R = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        info.P =  [fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0]
+        info.roi.do_rectify = False 
+        self._info_high_res = copy.deepcopy(info)
+        self._info_pub2.publish(self._info_high_res)
+
+        self._twist = Twist()
+        t = TransformStamped()
+        t.header.frame_id = REFERENCE_FRAME
+        t.header.stamp = rospy.Time.now()
+
+        t.child_frame_id = "drone"
+
+        t.transform.translation.x = 1
+        t.transform.translation.y = 0
+        t.transform.translation.z = .5
+        t.transform.rotation.z = 1
+
+        self._freq = 100
+
+        self._goal = None
+
+        self._br.sendTransform(t)
+        self._drone_transform = t
+        self._vel_sub = rospy.Subscriber("/tello/vel", Twist, self.on_twist)
+            
+    def on_twist(self, msg):
+        self._twist = msg
+
+    def publish_drone_pose(self):
+        q = PyKDL.Rotation.RPY(self._twist.angular.x/self._freq,self._twist.angular.y/self._freq,self._twist.angular.z/self._freq).GetQuaternion()
+        p = PoseStamped()
+        p.header.stamp = rospy.Time(0)
+        p.header.frame_id = "drone"
+        p.pose.position.x = self._twist.linear.x/self._freq
+        p.pose.position.y = self._twist.linear.y/self._freq
+        p.pose.position.z = self._twist.linear.z/self._freq
+        p.pose.orientation.x = q[0]
+        p.pose.orientation.y = q[1]
+        p.pose.orientation.z = q[2]
+        p.pose.orientation.w = q[3]
+        try:
+            p = self._tfBuffer.transform(p,"panda_link0")
+            o = p.pose.orientation
+            q=np.array([o.x,o.y,o.z,o.w])
+            mag = np.linalg.norm(q)
+            self._drone_transform.transform.translation = p.pose.position
+            self._drone_transform.transform.rotation.x = q[0]/mag
+            self._drone_transform.transform.rotation.y = q[1]/mag
+            self._drone_transform.transform.rotation.z = q[2]/mag
+            self._drone_transform.transform.rotation.w = q[3]/mag
+        except Exception as e:
+            print(e)
+        self._drone_transform.header.stamp = rospy.Time.now()
+        self._br.sendTransform(self._drone_transform)
+        return
+
+    def run(self):
+        r = rospy.Rate(self._freq)
+        while not rospy.is_shutdown():
+            self.publish_drone_pose()
+            r.sleep()
+
+    def signal_handler(self, signal, frame):
+        sys.exit()
+
+if __name__ == "__main__":
+    rospy.init_node('virtual_drone')
+    virtual_drone = VirtualDrone()
+    signal.signal(signal.SIGINT, virtual_drone.signal_handler)
+    virtual_drone.run()
