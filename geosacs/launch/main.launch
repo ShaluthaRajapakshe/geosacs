@@ -1,0 +1,49 @@
+<launch>
+  <!-- Simulation Parameter -->
+    <arg name="virtual_robot" default="true"/>
+    <arg name="physical_robot" default="false"/>
+    <arg name="use_joy" default="true"/>
+    <arg name="use_joy_controller" default="false"/>
+    <arg name="output" default="/ik_interface/joint_states_sim"/>
+    <arg name="panda_ik" default="true"/>
+    <arg name="fp_ik" default="false"/>
+
+  <param name="physical_robot" type="bool" value="$(arg physical_robot)" />
+
+  <node pkg="geosacs" type="ik_interface.py" name="ik_interface" output="screen"/>
+  <node pkg="geosacs" type="visualisation_rviz.py" name="visualisation_rviz" output="screen"/>
+
+
+  <node pkg="panda_ik" type="panda_ik" name="panda_ik" output="screen">
+    <param name="URDF" type="string" value="$(find drone_panda)/urdfs/lio_arm_reframed.urdf" />
+  </node>
+
+  <group if="$(arg physical_robot)">
+    <node name="service_to_topic_node" pkg="lio_demonstration" type="service_to_topic.py" output="screen"/>
+    <node pkg="myp_app_manager" type="myp_manager.py" name="myp_manager" output="screen"/>
+    <node pkg="myp_app_manager" type="myp_application.py" name="myp_application" output="screen"/>
+  </group>
+
+    <group if="$(arg use_joy)">
+      <rosparam param="joy_node/dev">"/dev/input/js0"</rosparam>
+      <include file="$(find teleop_twist_joy)/launch/teleop.launch">  
+        <arg name="joy_dev" value="/dev/input/js0" />
+      </include>
+    </group>
+
+    <group if="$(arg virtual_robot)">
+        <!-- Load URDF -->
+        <param name="robot_description" textfile="$(find lio_description)/urdf/lio_complete.urdf" />
+        <!-- Launch RVIZ -->
+        <node type="rviz" name="rviz" pkg="rviz" args="-d $(find geosacs)/rviz/geosacs.rviz" />
+        <arg name="node_start_delay" default="1.0" />  
+        <!-- Launch robot state publisher -->
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="lio_state_publisher" launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' " output="screen">
+            <remap from="joint_states" to="$(arg output)"/>
+            <param name="publish_frequency" type="double" value="1000.0" />
+        </node>
+    </group>
+
+
+
+</launch>
