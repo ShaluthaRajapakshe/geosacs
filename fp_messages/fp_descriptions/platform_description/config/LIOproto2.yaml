@@ -1,0 +1,85 @@
+footprint: [[0.1,-0.2],[0.05,-0.28],[-0.6,-0.30],[-0.6,0.30],[0.05,0.28],[0.1,0.2]]
+
+sensors:
+  terarangers:
+      -
+        name: terarangerHub1
+        portname: /dev/terarangerHub1
+        name_for_costmap: [terarangerHub01, terarangerHub11, terarangerHub21, terarangerHub31, terarangerHub41, terarangerHub51, terarangerHub61, terarangerHub71]
+        type_for_costmap: [LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan]
+        topic_for_costmap: ["/Sensors/terarangerHub1_sensor_0", "/Sensors/terarangerHub1_sensor_1", "/Sensors/terarangerHub1_sensor_2", "/Sensors/terarangerHub1_sensor_3", "/Sensors/terarangerHub1_sensor_4", "/Sensors/terarangerHub1_sensor_5", "/Sensors/terarangerHub1_sensor_6", "/Sensors/terarangerHub1_sensor_7"]
+        marking: [true, true, true, true, true, true, true, true]
+        clearing: [true, true, true, true, true, true, true, true]
+        expected_update_rate: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_x: [0.075, 0.098, 0.15, 0.09, 0.09, 0.15, 0.099, 0.075]
+        offset_y: [-0.262, -0.238, -0.144, -0.048, 0.05, 0.14, 0.238, 0.26]
+        offset_z: 0.025
+        offset_roll: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_pitch: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_yaw: [-1.35, -0, 0.2, 0.2, -0.2, -0.2, 0, 1.35]
+
+      -
+        name: terarangerHub2
+        portname: /dev/terarangerHub2
+        name_for_costmap: [terarangerHub02, terarangerHub12, terarangerHub22, terarangerHub32, terarangerHub42, terarangerHub52, terarangerHub62, terarangerHub72]
+        type_for_costmap: [LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan]
+        topic_for_costmap: ["/Sensors/terarangerHub2_sensor_0", "/Sensors/terarangerHub2_sensor_1", "/Sensors/terarangerHub2_sensor_2", "/Sensors/terarangerHub2_sensor_3", "/Sensors/terarangerHub2_sensor_4", "/Sensors/terarangerHub2_sensor_5", "/Sensors/terarangerHub2_sensor_6", "/Sensors/terarangerHub2_sensor_7"]
+        marking: [true, true, true, true, true, true, true, true]
+        clearing: [true, true, true, true, true, true, true, true]
+        expected_update_rate: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_x: [-0.034, -0.1479, -0.263, -0.374, -0.48, -0.515, -0.540, -0.548]
+        offset_y: [0.279, 0.278, 0.276, 0.283, 0.283, 0.248, 0.148, 0.053]
+        offset_z: 0.025
+        offset_roll: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_pitch: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_yaw: [1.57, 1.57, 1.57, 1.57, 2.0, 2.7, 3.14, 3.14]
+
+      -
+        name: terarangerHub3
+        portname: /dev/terarangerHub3
+        name_for_costmap: [terarangerHub03, terarangerHub13, terarangerHub23, terarangerHub33, terarangerHub43, terarangerHub53, terarangerHub63, terarangerHub73]
+        type_for_costmap: [LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan]
+        topic_for_costmap: ["/Sensors/terarangerHub3_sensor_0", "/Sensors/terarangerHub3_sensor_1", "/Sensors/terarangerHub3_sensor_2", "/Sensors/terarangerHub3_sensor_3", "/Sensors/terarangerHub3_sensor_4", "/Sensors/terarangerHub3_sensor_5", "/Sensors/terarangerHub3_sensor_6", "/Sensors/terarangerHub3_sensor_7"]
+        marking: [true, true, true, true, true, true, true, true]
+        clearing: [true, true, true, true, true, true, true, true]
+        expected_update_rate: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_x: [-0.034, -0.1479, -0.263, -0.374, -0.48, -0.515, -0.540, -0.548]
+        offset_y: [-0.279, -0.278, -0.276, -0.283, -0.283, -0.248, -0.148, -0.053]
+        offset_z: 0.025
+        offset_roll: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_pitch: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_yaw: [-1.57, -1.57, -1.57, -1.57, -2.0, -2.7, 3.14, 3.14]
+
+
+  lidar:
+      -
+        name: lidar_front
+        portname: /dev/flashlidar_front
+        name_for_costmap: [flashlidar]
+        type_for_costmap: [LaserScan]
+        topic_for_costmap: ['/scan_front']
+        marking: [true]
+        clearing: [true]
+        expected_update_rate: [0]
+        offset_x: 0.018192
+        offset_y: 0.0
+        offset_z: 0.225
+        offset_roll: 0
+        offset_pitch: 0
+        offset_yaw: -2.40
+      -
+        name: lidar_back
+        portname: /dev/flashlidar_back
+        name_for_costmap: [flashlidar_back]
+        type_for_costmap: [LaserScan]
+        topic_for_costmap: ['/scan_back']
+        marking: [true]
+        clearing: [true]
+        expected_update_rate: [0]
+        offset_x: -0.499
+        offset_y: 0.0
+        offset_z: 0.225
+        offset_roll: 0
+        offset_pitch: 0
+        offset_yaw: 0.338
+

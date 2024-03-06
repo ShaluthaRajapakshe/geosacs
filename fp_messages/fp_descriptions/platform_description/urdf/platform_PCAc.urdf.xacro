@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  name="platform">
+    <xacro:include filename="$(find fp_materials)/urdf/materials.urdf.xacro"/>
+
+    <xacro:include
+            filename="$(find platform_description)/urdf/sensors.urdf.xacro" />
+    <xacro:property
+            name="platform_param"
+            value="${load_yaml('$(find platform_description)/config/PCAc.yaml')}" />
+
+
+    <xacro:property name="lidar_front_rotation" value="$(env RDSCFG_fp_descriptions_lidar_front_rotation)"/>
+    <link name="base_footprint">
+    </link>
+
+  <joint name="base_joint" type="fixed">
+
+    <origin xyz="-0.13 0 0" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="platform_base_link" />
+  </joint>
+ <link name="platform_base_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.05 0.05 0.001" />
+        </geometry>
+        <material name="white" />
+      </visual>
+  </link>
+
+    <!--Teraranger Chains-->
+    <xacro:teraranger_chain name="terarangerHub1" parent="base_footprint">
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][0]} ${platform_param['sensors']['terarangers'][0]['offset_y'][0]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][0]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][0]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][0]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][1]} ${platform_param['sensors']['terarangers'][0]['offset_y'][1]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][1]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][1]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][1]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][2]} ${platform_param['sensors']['terarangers'][0]['offset_y'][2]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][2]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][2]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][2]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][3]} ${platform_param['sensors']['terarangers'][0]['offset_y'][3]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][3]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][3]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][3]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][4]} ${platform_param['sensors']['terarangers'][0]['offset_y'][4]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][4]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][4]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][4]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][5]} ${platform_param['sensors']['terarangers'][0]['offset_y'][5]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][5]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][5]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][5]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][6]} ${platform_param['sensors']['terarangers'][0]['offset_y'][6]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][6]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][6]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][6]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][0]['offset_x'][7]} ${platform_param['sensors']['terarangers'][0]['offset_y'][7]} ${platform_param['sensors']['terarangers'][0]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][0]['offset_roll'][7]} ${platform_param['sensors']['terarangers'][0]['offset_pitch'][7]} ${platform_param['sensors']['terarangers'][0]['offset_yaw'][7]}" />
+    </xacro:teraranger_chain>
+
+    <xacro:teraranger_chain name="terarangerHub2" parent="base_footprint">
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][0]} ${platform_param['sensors']['terarangers'][1]['offset_y'][0]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][0]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][0]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][0]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][1]} ${platform_param['sensors']['terarangers'][1]['offset_y'][1]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][1]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][1]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][1]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][2]} ${platform_param['sensors']['terarangers'][1]['offset_y'][2]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][2]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][2]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][2]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][3]} ${platform_param['sensors']['terarangers'][1]['offset_y'][3]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][3]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][3]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][3]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][4]} ${platform_param['sensors']['terarangers'][1]['offset_y'][4]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][4]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][4]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][4]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][5]} ${platform_param['sensors']['terarangers'][1]['offset_y'][5]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][5]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][5]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][5]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][6]} ${platform_param['sensors']['terarangers'][1]['offset_y'][6]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][6]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][6]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][6]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][1]['offset_x'][7]} ${platform_param['sensors']['terarangers'][1]['offset_y'][7]} ${platform_param['sensors']['terarangers'][1]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][1]['offset_roll'][7]} ${platform_param['sensors']['terarangers'][1]['offset_pitch'][7]} ${platform_param['sensors']['terarangers'][1]['offset_yaw'][7]}" />
+    </xacro:teraranger_chain>
+
+    <xacro:teraranger_chain name="terarangerHub3" parent="base_footprint">
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][0]} ${platform_param['sensors']['terarangers'][2]['offset_y'][0]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][0]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][0]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][0]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][1]} ${platform_param['sensors']['terarangers'][2]['offset_y'][1]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][1]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][1]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][1]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][2]} ${platform_param['sensors']['terarangers'][2]['offset_y'][2]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][2]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][2]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][2]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][3]} ${platform_param['sensors']['terarangers'][2]['offset_y'][3]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][3]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][3]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][3]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][4]} ${platform_param['sensors']['terarangers'][2]['offset_y'][4]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][4]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][4]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][4]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][5]} ${platform_param['sensors']['terarangers'][2]['offset_y'][5]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][5]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][5]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][5]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][6]} ${platform_param['sensors']['terarangers'][2]['offset_y'][6]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][6]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][6]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][6]}" />
+        <origin xyz="${platform_param['sensors']['terarangers'][2]['offset_x'][7]} ${platform_param['sensors']['terarangers'][2]['offset_y'][7]} ${platform_param['sensors']['terarangers'][2]['offset_z']}" rpy="${platform_param['sensors']['terarangers'][2]['offset_roll'][7]} ${platform_param['sensors']['terarangers'][2]['offset_pitch'][7]} ${platform_param['sensors']['terarangers'][2]['offset_yaw'][7]}" />
+    </xacro:teraranger_chain>
+
+    <xacro:lidar name="lidar_front" parent="base_footprint">
+        <origin xyz="${platform_param['sensors']['lidar'][0]['offset_x']} ${platform_param['sensors']['lidar'][0]['offset_y']} ${platform_param['sensors']['lidar'][0]['offset_z']}" rpy="${platform_param['sensors']['lidar'][0]['offset_roll']} ${platform_param['sensors']['lidar'][0]['offset_pitch']} ${lidar_front_rotation}" />
+    </xacro:lidar>
+
+</robot>

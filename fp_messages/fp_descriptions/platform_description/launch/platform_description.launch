@@ -1,0 +1,13 @@
+<launch>
+    <!-- Load the URDF/Xacro model of our robot -->
+    <arg name="urdf_file" default="$(find xacro)/xacro '--inorder' '$(find platform_description)/urdf/platform_$(env ROBOT_BATCH).urdf.xacro'" />
+     <param name="robot_description" command="$(arg urdf_file)" />
+    <!-- Publish the robot state -->
+    <node name="robot_state_publisher_platform" pkg="robot_state_publisher" type="robot_state_publisher">
+    	<param name="publish_frequency" value="50.0"/>
+    </node>
+
+    <node name="joint_state_publisher_platform" pkg="joint_state_publisher" type="joint_state_publisher">
+    	<param name="rate" value="50.0"/>
+    </node>
+</launch>

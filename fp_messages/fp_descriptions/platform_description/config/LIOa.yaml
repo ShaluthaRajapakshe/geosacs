@@ -1,0 +1,177 @@
+footprint: [[0.15,-0.29],[-0.7,-0.29],[-0.7,0.29],[0.15,0.29]]
+
+sensors:
+  lidar:
+    -
+      name: lidar_front
+      portname: /dev/flashlidar_front
+      name_for_costmap: [flashlidar]
+      type_for_costmap: [LaserScan]
+      topic_for_costmap: ['/scan_front']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: 0.08202
+      offset_y: 0.0
+      offset_z: -0.01
+      offset_roll: 0
+      offset_pitch: 3.14
+      offset_yaw: 0
+    -
+      name: lidar_back
+      portname: /dev/flashlidar_back
+      name_for_costmap: [flashlidar_back]
+      type_for_costmap: [LaserScan]
+      topic_for_costmap: ['/scan_back']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.41803
+      offset_y: 0.0
+      offset_z: -0.01
+      offset_roll: 0
+      offset_pitch: 3.14
+      offset_yaw: 3.14
+
+  ultrasonic_sensor:
+    -
+      name: ultrasonic_sensor1
+      name_for_costmap: [ultrasonic_sensor1]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor1']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.625
+      offset_y: -0.095
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: 3.14
+    -
+      name: ultrasonic_sensor2
+      name_for_costmap: [ultrasonic_sensor2]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor2']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.585
+      offset_y: -0.231
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: -2.355
+    -
+      name: ultrasonic_sensor3
+      name_for_costmap: [ultrasonic_sensor3]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor3']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.272
+      offset_y: -0.255
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: -1.57
+    -
+      name: ultrasonic_sensor4
+      name_for_costmap: [ultrasonic_sensor4]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor4']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: 0.097
+      offset_y: -0.255
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: -0.785
+    -
+      name: ultrasonic_sensor5
+      name_for_costmap: [ultrasonic_sensor5]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor5']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: 0.145
+      offset_y: -0.121
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: -0.07
+    -
+      name: ultrasonic_sensor6
+      name_for_costmap: [ultrasonic_sensor6]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor6']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: 0.145
+      offset_y: 0.121
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: 0.07
+    -
+      name: ultrasonic_sensor7
+      name_for_costmap: [ultrasonic_sensor7]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor7']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: 0.097
+      offset_y: 0.255
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: 0.785
+    -
+      name: ultrasonic_sensor8
+      name_for_costmap: [ultrasonic_sensor8]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor8']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.272
+      offset_y: 0.255
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: 1.57
+    -
+      name: ultrasonic_sensor9
+      name_for_costmap: [ultrasonic_sensor9]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor9']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.585
+      offset_y: 0.231
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: 2.355
+
+    -
+      name: ultrasonic_sensor10
+      name_for_costmap: [ultrasonic_sensor10]
+      type_for_costmap: [Range]
+      topic_for_costmap: ['/ultrasonic_sensor10']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.625
+      offset_y: 0.095
+      offset_z: 0.053
+      offset_roll: 0
+      offset_pitch: 0
+      offset_yaw: 3.14

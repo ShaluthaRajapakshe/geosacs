@@ -1,0 +1,19 @@
+---
+uint32 NONE=0
+uint32 CONNECT=1
+uint32 DISCONNECT=2
+uint32 READY=3
+uint32 STOP=4
+uint32 ERROR=5
+uint32 BUSY=6
+uint32 RUN=7
+uint32 PAUSE=8
+uint32 RELEASE=9
+uint32 RECORD=10
+uint32 CALIBRATE=11
+uint32 PROCESS=12
+uint32 CHARGE=13
+uint32 INTERRUPT=14
+uint32 status
+bool success
+string message

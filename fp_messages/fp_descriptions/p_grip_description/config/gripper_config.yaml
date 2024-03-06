@@ -1,0 +1,275 @@
+# (C) Frueh & Partner, 2012-2016
+# Project: myP
+
+# DO NOT modify this file unless you know what you are doing.
+# Please read the format and modify this file carefully if needed.
+# Invalid format or incorrect units will lead to errors in programs or unpredictable robot behavior!
+
+
+#####################################
+# define model                      #
+#####################################
+# 1. name of the robot model currently being used
+# format:   name : ...
+# e.g.:     name : PGrip2
+
+# 2. serial number of this robot
+# format:   serial : ...
+# e.g.:     serial : PG20200
+
+model_name: PGrip2
+model_serial: PG20200
+
+
+#####################################
+# define end effector parameters    #
+#####################################
+# each end effector contains the following list of parameters
+
+# 1. component type
+# format:   [END_EFFECTOR_i]
+# note:     i is a counter corresponding to the component, i:1 refers to the default end effector
+# e.g.:     [END_EFFECTOR_1]
+
+# 2. component name
+# name of the current component
+# format:   name : ...
+# e.g.:     name : PGrip1
+
+# 3. actuator axis id (only if end effector has an actuator)
+# Technosoft board axis id. The axis id is predefined on each board and has to be a unique integer.
+# format:   axis_id : ...
+# e.g.:     axis_id : 7
+
+# 4. angle limit (only if end effector has an actuator)
+# set upper and lower angle limit for actuator in [degrees].
+# format:   lower_angle_limit : ...
+#           upper_angle_limit : ...
+# e.g.:     lower_angle_limit : -175.0
+#           upper_angle_limit : 175.0
+
+# 5. mounting direction (only if end effector has an actuator)
+# define in which direction the actuator is mounted.
+# 1 means counter clockwise, -1 means clockwise.
+# format:   mounting_direction : ...
+# e.g.:     mounting_direction : -1
+
+# 6. mechanical stop (only if end effector has an actuator)
+# define in which direction the mechanical stop is located for calibrating.
+# 1 means counter clockwise, -1 means clockwise.
+# format:   mechanical_stop : ...
+# e.g.:     mechanical_stop : -1
+
+# 7. current factor (only if end effector has an actuator)
+# set the factor with which the current limit of the actuator is reduced during calibration.
+# format:   current_factor : ...
+# e.g.:     current_factor : 0.5
+
+# 8. tool center point pose
+# set the pose (positions in [mm], angles in [degrees]) of the end effector expressed in the robot frame.
+# format:   pose_x     : ...
+#           pose_y     : ...
+#           pose_z     : ...
+#           pose_roll  : ...
+#           pose_pitch : ...
+#           pose_yaw   : ...
+# e.g.:     pose_x     : 0
+#           pose_y     : 0
+#           pose_z     : 285.9
+#           pose_roll  : 0
+#           pose_pitch : 90
+#           pose_yaw   : -90
+
+# 9. mass
+# total mass of the end effector (including motors, cover and the moving part on top of P-Rob) in [kg]
+# format:   mass : ...
+# e.g.:     mass : 1.321
+
+# 10. coordinates of the center of mass (CoM)
+# set the position of the CoM of the end effector, expressed in the robot frame
+# format:   CoM_x : ...
+#           CoM_y : ...
+#           CoM_z : ...
+# e.g.:     CoM_x : 0
+#           CoM_y : 0
+#           CoM_z : 100
+
+# 11. end-effector center point
+# set the position of the point in the center of the end-effector, expressed in the robot frame
+# format:   center_x : ...
+#           center_y : ...
+#           center_z : ...
+# e.g.:     center_x : 0
+#           center_y : 0
+#           center_z : 60
+
+# 12. minimum distance from workspace boundaries
+# set the minimum distance of the end-effector center point and the tool center point from the boundaries of the workspace
+# format:   min_distance_center : ...
+#           min_distance_TCP    : ...
+# e.g.:     min_distance_center : 8.5
+#           min_distance_TCP    : 3.0
+
+# full example for end effector with actuator:
+# 1.    [END_EFFECTOR_1]
+# 2.    name                : PGrip1
+# 3.    axis_id             : 7
+# 4.    lower_angle_limit   : 0.0
+#       upper_angle_limit   : 28.0
+# 5.    mounting_direction  : 1
+# 6.    mechanical_stop     : 1
+# 7.    current_factor      : 1.0
+# 8.    pose_x              : 0
+#       pose_y              : 0
+#       pose_z              : 285.9
+#       pose_roll           : 0
+#       pose_pitch          : 90
+#       pose_yaw            : -90
+# 9.    mass                : 1.321
+# 10.   CoM_x               : 0
+#       CoM_y               : 0
+#       CoM_z               : 100
+# 11.   center_x            : 0
+#       center_y            : 0
+#       center_z            : 60
+# 12.   min_distance_center : 8.5
+#       min_distance_TCP    : 3.0
+
+# full example for end effector without actuator:
+# 1.    [END_EFFECTOR_1]
+# 2.    name                : PGrip1
+# 8.    pose_x              : 0
+#       pose_y              : 0
+#       pose_z              : 285.9
+#       pose_roll           : 0
+#       pose_pitch          : 90
+#       pose_yaw            : -90
+# 9.    mass                : 1.321
+# 10.   CoM_x               : 0
+#       CoM_y               : 0
+#       CoM_z               : 100
+# 11.   center_x            : 0
+#       center_y            : 0
+#       center_z            : 60
+# 12.   min_distance_center : 8.5
+#       min_distance_TCP    : 3.0
+
+[END_EFFECTOR_1]
+END_EFFECTOR_1_name: 7
+END_EFFECTOR_1_axis_id: 127
+END_EFFECTOR_1_type: GRIPPER
+
+END_EFFECTOR_1_current_limit: 1.2
+END_EFFECTOR_1_nominal_current: 0.847
+END_EFFECTOR_1_torque_constant: 0.0706
+END_EFFECTOR_1_motor_efficiency: 0.81
+END_EFFECTOR_1_spring_mounted: 0
+END_EFFECTOR_1_spring_model: -2.54265038e-06,  -1.17409817e-04,  -1.41699069e-03,  7.16947513e-04,  1.03582707e-01,  5.22453175e-03
+END_EFFECTOR_1_rotor_inertia: 0.00000925
+END_EFFECTOR_1_transmission_ratio: 100.0
+END_EFFECTOR_1_gear_efficiency: 0.7
+END_EFFECTOR_1_encoder_resolution: 4096
+END_EFFECTOR_1_i_max_ps: 20
+END_EFFECTOR_1_ts_s: 0.001
+
+END_EFFECTOR_1_lower_angle_limit: 0.0
+END_EFFECTOR_1_upper_angle_limit: 30
+END_EFFECTOR_1_velocity_limit: 170
+END_EFFECTOR_1_velocity_limit_min: 1
+END_EFFECTOR_1_acceleration_limit: 2400
+END_EFFECTOR_1_default_velocity: 80
+
+END_EFFECTOR_1_mounting_direction: -1
+END_EFFECTOR_1_mechanical_stop: -1
+END_EFFECTOR_1_calibration_factor: 0.5
+END_EFFECTOR_1_calibration_factor_fast: 0.7
+END_EFFECTOR_1_calibration_summand: 0.0
+END_EFFECTOR_1_finger_length: 0.1
+END_EFFECTOR_1_min_force: 1.8
+END_EFFECTOR_1_default_force: 5.0
+
+END_EFFECTOR_1_mass: 2.5
+END_EFFECTOR_1_max_payload: 0.0
+
+END_EFFECTOR_1_rotation_axis_x: -1
+END_EFFECTOR_1_rotation_axis_y: 0
+END_EFFECTOR_1_rotation_axis_z: 0
+
+END_EFFECTOR_1_center_x: 0.0
+END_EFFECTOR_1_center_y: 0.0
+END_EFFECTOR_1_center_z: 52.0
+END_EFFECTOR_1_min_distance_center: 80.0
+END_EFFECTOR_1_min_distance_TCP: 10.0
+
+# gripper mounted at 180 degrees angle
+END_EFFECTOR_1_pose_x_1: 0.0
+END_EFFECTOR_1_pose_y_1: 0.0
+END_EFFECTOR_1_pose_z_1: 241.0
+END_EFFECTOR_1_pose_roll_1: 0.0
+END_EFFECTOR_1_pose_pitch_1: 90.0
+END_EFFECTOR_1_pose_yaw_1          : 180.0
+END_EFFECTOR_1_CoM_x_1             : 12.96
+END_EFFECTOR_1_CoM_y_1             : -0.06
+END_EFFECTOR_1_CoM_z_1             : 46.95
+END_EFFECTOR_1_mass_1              : 2.765
+
+# gripper mounted at 90 degrees angle
+END_EFFECTOR_1_pose_x_2            : 189.0
+END_EFFECTOR_1_pose_y_2            : 0.0
+END_EFFECTOR_1_pose_z_2            : 52.0
+END_EFFECTOR_1_pose_roll_2         : 0.0
+END_EFFECTOR_1_pose_pitch_2        : 0.0
+END_EFFECTOR_1_pose_yaw_2          : 0.0
+END_EFFECTOR_1_CoM_x_2             : 3.92
+END_EFFECTOR_1_CoM_y_2             : -0.06
+END_EFFECTOR_1_CoM_z_2             : 38.00
+END_EFFECTOR_1_mass_2              : 2.765
+
+# no gripper mounted
+END_EFFECTOR_1_pose_x_3            : 0.0
+END_EFFECTOR_1_pose_y_3            : 0.0
+END_EFFECTOR_1_pose_z_3            : 0.0
+END_EFFECTOR_1_pose_roll_3         : 0.0
+END_EFFECTOR_1_pose_pitch_3        : 0.0
+END_EFFECTOR_1_pose_yaw_3          : 0.0
+END_EFFECTOR_1_CoM_x_3             : 0.03
+END_EFFECTOR_1_CoM_y_3             : -0.06
+END_EFFECTOR_1_CoM_z_3             : -1.78
+END_EFFECTOR_1_mass_3              : 0.265
+
+## gripper mounted at 180 degrees angle
+#pose_x_1            : 0.0
+#pose_y_1            : 0.0
+#pose_z_1            : 242.6
+#pose_roll_1         : 0.0
+#pose_pitch_1        : 90.0
+#pose_yaw_1          : 180.0
+#CoM_x_1             : 14.3
+#CoM_y_1             : 0.0
+#CoM_z_1             : 53.9
+#mass_1              : 2.5
+#
+## gripper mounted at 90 degrees angle
+#pose_x_2            : 185.0
+#pose_y_2            : 0.0
+#pose_z_2            : 60.0
+#pose_roll_2         : 0.0
+#pose_pitch_2        : 0.0
+#pose_yaw_2          : 0.0
+#CoM_x_2             : 4.3
+#CoM_y_2             : 0.0
+#CoM_z_2             : 44.0
+#mass_2              : 2.5
+#
+## no gripper mounted
+#pose_x_3            : 0.0
+#pose_y_3            : 0.0
+#pose_z_3            : 0.0
+#pose_roll_3         : 0.0
+#pose_pitch_3        : 0.0
+#pose_yaw_3          : 0.0
+#CoM_x_3             : 0.0
+#CoM_y_3             : 0.0
+#CoM_z_3             : 0.0
+#mass_3              : 0.0
+

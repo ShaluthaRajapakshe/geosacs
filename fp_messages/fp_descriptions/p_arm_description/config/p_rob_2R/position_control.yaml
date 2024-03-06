@@ -1,0 +1,27 @@
+joint1_velocity_limit: 100
+joint2_velocity_limit: 100
+joint3_velocity_limit: 100
+joint4_velocity_limit: 100
+joint5_velocity_limit: 100
+joint6_velocity_limit: 100
+
+joint1_damping: 5.0
+joint2_damping: 10.0
+joint3_damping: 5.0
+joint4_damping: 5.0
+joint5_damping: 5.0
+joint6_damping: 5.0
+
+joint1_friction: 5.0
+joint2_friction: 5.0
+joint3_friction: 5.0
+joint4_friction: 5.0
+joint5_friction: 5.0
+joint6_friction: 5.0
+
+joint1_effort: 150
+joint2_effort: 150
+joint3_effort: 150
+joint4_effort: 55
+joint5_effort: 55
+joint6_effort: 30

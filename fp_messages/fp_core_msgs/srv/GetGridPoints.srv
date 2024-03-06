@@ -1,0 +1,5 @@
+string grid_name
+---
+geometry_msgs/Point[] points
+bool success
+string message

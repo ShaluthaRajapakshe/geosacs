@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  name="wheel">
+
+  <xacro:property name="PI" value="3.1415926535897931"/>
+
+    <xacro:macro name="wheel_actuated" params="name parent radius_wheel mass_wheel length_wheel x y z">
+        <joint name="${name}_joint" type="continuous">
+            <parent link="${parent}"/>
+            <child link="${name}"/>
+            <origin xyz="${x} ${y} ${z}" />
+            <axis xyz="0 1 0"/>
+            <limit
+            effort="2000"
+            velocity="1.0"/>
+            <dynamics damping="0.5" friction="1.0"/>
+        </joint>
+
+        <link name="${name}">
+            <visual>
+                <geometry>
+                    <cylinder radius="${radius_wheel}" length="${length_wheel}"/>
+                </geometry>
+                <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+                <material name="black"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <cylinder radius="${radius_wheel}" length="${length_wheel}"/>
+                </geometry>
+                <origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
+            </collision>
+            <xacro:inertial_actuated_wheel mass="${mass_wheel}" radius_wheel="${radius_wheel}" length_wheel="${length_wheel}"/>
+        </link>
+
+        <joint name="${name}_movement_visualizer_joint" type="fixed">
+            <parent link="${name}"/>
+            <child link="${name}_visualizer"/>
+            <origin xyz="0 0 0" />
+            <axis xyz="0 1 0"/>
+        </joint>
+
+        <!-- to visualize movement of the wheel -->
+        <link name="${name}_visualizer">
+            <visual>
+                <geometry>
+                    <box size="0.1 0.04 0.04"/>
+                </geometry>
+                <origin xyz="0 0 0" />
+                <material name="white"/>
+            </visual>
+            <collision>
+                <geometry>
+                    <box size="0 0 0"/>
+                </geometry>
+                <origin xyz="0 0 0" />
+            </collision>
+            <xacro:fake_inertia/>
+        </link>
+
+    </xacro:macro>
+
+    <xacro:macro name="inertial_actuated_wheel" params="mass radius_wheel length_wheel">
+    <inertial>
+            <mass value="${mass}" />
+            <inertia ixx="${0.25 * mass * radius_wheel**2 + 1/12 * mass * length_wheel**2}" ixy="0.0" ixz="0.0"
+                 iyy="${1/2 * mass * radius_wheel**2}" iyz="0.0"
+                 izz="${0.25 * mass * radius_wheel**2 + 1/12 * mass * length_wheel**2}" />
+    </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="fake_inertia">
+    <inertial>
+            <!-- This inertial field doesn't contain reliable data!! -->
+            <mass value="0.000001" />
+            <inertia ixx="0.000001" ixy="0.0" ixz="0.0"
+                 iyy="0.000001" iyz="0.0"
+                 izz="0.000001" />
+    </inertial>
+
+    </xacro:macro>
+
+    	<!-- Caster Dimensions -->
+    <xacro:property name="caster_wheel_length" value="0.02333" />
+    <xacro:property name="caster_wheel_radius" value="0.024165" />
+    <xacro:property name="caster_base_length" value="0.015" />
+    <xacro:property name="caster_base_radius" value="0.015" />
+	<xacro:property name="caster_base_joint_x" value="-0.02626" />
+    <xacro:property name="caster_base_joint_z" value="-0.042385" />
+    <xacro:property name="caster_base_link_z" value="-0.05615" />
+    <xacro:property name="M_PI" value="3.14" />
+	<xacro:property name="wheel_kp" value="600000" />
+    <xacro:property name="wheel_kd" value="3" />
+    <xacro:property name="wheel_mu1" value="10000000" />
+    <xacro:property name="wheel_mu2" value="10000000" />
+    <xacro:arg name="mesh_enabled" default="false" />
+
+    <xacro:macro name="caster_wheel" params="name parent *origin">
+		<!-- Caster Wheel Link -->
+		<link name="${name}_wheel">
+			<inertial>
+				<mass value="0.03837" />
+				<origin xyz="0 0 0" />
+				<inertia  ixx="0.000008221" ixy="0" ixz="0" iyy="0.000013003" iyz="0" izz="0.000008221" />
+				</inertial>
+			<visual>
+                <origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
+				<geometry>
+					<mesh filename="package://platform_description/meshes/caswheel.dae" />
+				</geometry>
+			</visual>
+			<collision>
+				<origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
+				<geometry>
+					<cylinder length="${caster_wheel_length/2}" radius="${caster_wheel_radius}" />
+				</geometry>
+			</collision>
+		</link>
+
+		<!-- Caster Base Link -->
+        <link name="${name}_base">
+			<inertial>
+				<mass value="0.06597" />
+				<origin xyz="-0.01204 0 -0.01454" />
+				<inertia  ixx="0.000039912" ixy="0" ixz="0.000017794" iyy="0.000050728" iyz="0" izz="0.000035261" />
+			</inertial>
+			<visual>
+				<xacro:if value="$(arg mesh_enabled)">
+					<origin xyz="0 0 0" rpy="0 0 0" />
+					<geometry>
+						<mesh filename="package://platform_description/meshes/caster_base2.dae" />
+					</geometry>
+				</xacro:if>
+				<xacro:unless value="$(arg mesh_enabled)">
+					<origin xyz="0 0 ${-caster_base_length/2}" rpy="0 0 0" />
+					<geometry>
+						<cylinder length="${caster_base_length}" radius="${caster_base_radius}" />
+					</geometry>
+				</xacro:unless>
+
+			</visual>
+			<collision>
+				<origin xyz="0 0 ${-caster_base_length/2}" rpy="0 0 0" />
+				<geometry>
+					<cylinder length="${caster_base_length}" radius="${caster_base_radius}" />
+				</geometry>
+			</collision>
+		</link>
+
+		<!-- Caster Base Link and Wheel Link Joint -->
+        <joint name="${name}_wheel_joint" type="continuous">
+			<parent link="${name}_base"/>
+			<child link="${name}_wheel"/>
+			<origin xyz="${caster_base_joint_x} 0 ${caster_base_joint_z}" rpy="0 0 0" />
+			<axis xyz="0 1 0" rpy="0 0 0" />
+        	<dynamics friction="0.0100" />
+
+		</joint>
+
+		<!-- Caster base and parent joint -->
+		<joint name="${name}_base_joint" type="continuous">
+			<parent link="${parent}"/>
+			<child link="${name}_base"/>
+			<xacro:insert_block name="origin"/>
+			<axis xyz="0 0 1" rpy="0 0 0" />
+			<dynamics friction="0.0100" />
+
+		</joint>
+	</xacro:macro>
+
+
+</robot>

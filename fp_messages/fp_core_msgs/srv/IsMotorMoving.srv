@@ -1,0 +1,5 @@
+int64[] actuator_ids
+---
+bool[] moving
+bool success
+string message

@@ -1,0 +1,40 @@
+footprint: [[0.15,-0.29],[-0.7,-0.29],[-0.7,0.29],[0.15,0.29]]
+
+wheels:
+  wheel_diameter: 0.148
+  wheel_length: 0.03
+  wheel_track: 0.427
+  wheel_mass: 0.2
+
+sensors:
+  lidar:
+    -
+      name: lidar_front
+      portname: /dev/flashlidar_front
+      name_for_costmap: [flashlidar]
+      type_for_costmap: [LaserScan]
+      topic_for_costmap: ['/scan_front']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.25762
+      offset_y: 0.15592
+      offset_z: -0.01
+      offset_roll: 0
+      offset_pitch: 3.14
+      offset_yaw: 0
+    -
+      name: lidar_back
+      portname: /dev/flashlidar_back
+      name_for_costmap: [flashlidar_back]
+      type_for_costmap: [LaserScan]
+      topic_for_costmap: ['/scan_back']
+      marking: [true]
+      clearing: [true]
+      expected_update_rate: [0]
+      offset_x: -0.25762
+      offset_y: -0.15592
+      offset_z: -0.01
+      offset_roll: 0
+      offset_pitch: 3.14
+      offset_yaw: 0

@@ -1,0 +1,4 @@
+---
+bool[] values
+bool success
+string message

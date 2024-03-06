@@ -1,0 +1,4 @@
+---
+float64[] values
+bool success
+string message

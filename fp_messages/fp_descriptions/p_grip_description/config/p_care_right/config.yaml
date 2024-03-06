@@ -1,0 +1,21 @@
+up_translation: -0.052 0 0.052
+up_rotation: 0 -1.57 3.14
+
+left_finger_translation: 0 -0.01132 0.092783
+left_finger_rotation: 3.14 -1.57  0
+# Set to '', if the finger has no tip.
+left_tip_translation: 0.05689 0.01398 0
+
+right_finger_translation: 0 0.01132 0.092783
+right_finger_rotation: 3.14 -1.57 0
+# Set to '', if the finger has no tip.
+right_tip_translation: 0.05689 -0.01398 0
+
+# 0.189 0 0.052
+tcp_translation: 0 0 0.215
+tcp_rotation: 3.14 -1.57  0
+
+lower_angle_limit: 0
+upper_angle_limit: 30.0
+velocity_limit: 150.0
+effort_limit: 0.2807

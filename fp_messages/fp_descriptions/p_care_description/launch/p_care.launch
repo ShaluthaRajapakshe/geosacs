@@ -1,0 +1,20 @@
+<launch>
+  <arg name="rviz" default="false" />
+
+  <param
+    name="robot_description"
+    textfile="$(find p_care_description)/urdf/p_care.urdf"/>
+  <param name="use_gui" value="false"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <rosparam param="/source_list">[/pcare_joint_states]</rosparam>
+  </node>
+
+
+  <node
+    name="robot_state_publisher"
+    pkg="robot_state_publisher"
+    type="state_publisher" />
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find urdf_tutorial)/rviz/urdf.rviz" if="$(arg rviz)"/>
+</launch>

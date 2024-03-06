@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  name="lio">
+
+  <!--xacro:property name="robot_batch" value="$(env ROBOT_BATCH)"/-->
+  <xacro:property name="robot_batch" value="1c"/>
+  <!--xacro:property name="robot_base_frame_rotation" value="$(env RDSCFG_fp_descriptions_robot_frame_rotation)"/-->
+  <xacro:property name="robot_base_frame_rotation" value="1.57"/>
+  <!--xacro:property name="joint1_frame_rotation" value="$(env RDSCFG_fp_descriptions_j1_frame_rotation)"/-->
+  <xacro:property name="joint1_frame_rotation" value="0"/>
+
+
+  <xacro:include filename="$(find p_arm_description)/urdf/p_arm.urdf.xacro" />
+  <xacro:include filename="$(find p_grip_description)/urdf/p_grip.urdf.xacro" />
+  <xacro:include filename="$(find p_camera_description)/urdf/r200.urdf.xacro" />
+  <xacro:include filename="$(find p_camera_description)/urdf/fisheye.urdf.xacro" />
+  <xacro:include filename="$(find platform_description)/urdf/platform_${robot_batch}.urdf.xacro" />
+
+  <joint name="LIO_robot_base_link_joint" type="fixed">
+      <origin xyz="0 0 -0.0725" rpy="0 0 0"/>
+      <child link="LIO_base_link"/>
+      <parent link="platform_base_link" />
+    </joint>
+
+  <link name="LIO_base_link">
+    <inertial>
+      <origin
+        xyz="-0 0 0 "
+        rpy="0 0 0" />
+      <mass
+        value="42.2499541196203" />
+      <inertia
+        ixx="2.19278239601341"
+        ixy="-0.00608161487223685"
+        ixz="-0.000366786945712441"
+        iyy="2.04392192430378"
+        iyz="-0.137313138030081"
+        izz="1.93900754024424" />
+    </inertial>
+
+  </link>
+
+    <xacro:if value="${robot_batch == '1a' or robot_batch == '1b'}">
+       <joint name="Lio_base_joint" type="fixed">
+          <origin xyz="0 0 0.2345" rpy="0 0 ${robot_base_frame_rotation}"/>
+          <parent link="LIO_base_link"/>
+          <child link="LIO_robot_base_link" />
+        </joint>
+
+
+
+        <xacro:property name="robot_height" value="0.2345"/>
+        <!-- camera_base_rgbd_front -->
+        <xacro:property name="camera_name" value="rgbd_up"/>
+        <joint name="${camera_name}_link_mount_joint" type="fixed">
+            <origin xyz="0.23179 0.0175 0.12755" rpy=" 0 -0.55 0"/>
+            <parent link="LIO_base_link"/>
+            <child link="${camera_name}_link_mount"/>
+        </joint>
+        <link name="${camera_name}_link_mount"/>
+
+        <!-- camera_base_rgbd_front -->
+        <xacro:property name="camera_name" value="rgbd_down"/>
+        <joint name="${camera_name}_link_mount_joint" type="fixed">
+            <origin xyz="0.23179 0.0175 0.15803 " rpy="0 0.40 0 "/>
+            <parent link="LIO_base_link"/>
+            <child link="${camera_name}_link_mount"/>
+        </joint>
+        <link name="${camera_name}_link_mount"/>
+
+        <!-- camera_base_fisheye_front -->
+        <xacro:fisheye name="fisheye_base" parent="LIO_base_link">
+            <origin xyz="0.265 0 0.198 " rpy=" 0.349 0 -1.57"/>
+        </xacro:fisheye>
+
+        <xacro:p_arm name="lio" parent="LIO_robot_base_link" version="p_rob_2R">
+            <origin xyz="0 0 0.212" rpy="0 0 ${joint1_frame_rotation}" />
+        </xacro:p_arm>
+    </xacro:if>
+
+
+    <xacro:if value="${robot_batch == '1c'}">
+       <joint name="Lio_base_joint" type="fixed">
+          <origin xyz="0 0 0.2655" rpy="0 0 ${robot_base_frame_rotation}"/>
+          <parent link="LIO_base_link"/>
+          <child link="LIO_robot_base_link" />
+        </joint>
+        <xacro:property name="robot_height" value="0.2345"/>
+        <!-- camera_base_rgbd_front -->
+        <xacro:property name="camera_name" value="rgbd_down"/>
+        <joint name="${camera_name}_link_joint" type="fixed">
+            <origin xyz="0.243 -0.0175 0.206" rpy=" 0 0.15 0"/>
+            <parent link="LIO_base_link"/>
+            <child link="${camera_name}_link"/>
+        </joint>
+        <link name="${camera_name}_link"/>
+
+        <!-- camera_base_rgbd_front -->
+        <xacro:property name="camera_name" value="rgbd_up"/>
+        <joint name="${camera_name}_link_joint" type="fixed">
+            <origin xyz="0.243 0.0175 0.206" rpy=" 3.14 -0.15 0"/>
+            <parent link="LIO_base_link"/>
+            <child link="${camera_name}_link"/>
+        </joint>
+        <link name="${camera_name}_link"/>
+
+        <!-- camera_base_fisheye_front -->
+        <xacro:fisheye name="fisheye_base" parent="LIO_base_link">
+            <origin xyz="0.265 0 0.241 " rpy=" 0.349 0.0 -1.57"/>
+        </xacro:fisheye>
+
+        <xacro:p_arm name="lio" parent="LIO_robot_base_link" version="p_rob_2R">
+            <origin xyz="0 0 0.212" rpy="0 0 ${joint1_frame_rotation}" />
+        </xacro:p_arm>
+    </xacro:if>
+
+
+
+    <link name="LIO_robot_base_link">
+    <inertial>
+      <origin
+        xyz="-0 0 ${robot_height}"
+        rpy="0 0 ${robot_base_frame_rotation}" />
+      <mass
+        value="42.2499541196203" />
+      <inertia
+        ixx="2.19278239601341"
+        ixy="-0.00608161487223685"
+        ixz="-0.000366786945712441"
+        iyz="-0.137313138030081"
+        iyy="2.04392192430378"
+        izz="1.93900754024424" />
+    </inertial>
+
+   </link>
+
+  <xacro:p_grip
+    name="lio"
+    parent="lio_gripper_interface_link"
+    version="p_grip_2F"
+    orientation="up"/>
+
+  <joint name="lio_tis_cam_joint" type="fixed">
+    <origin
+      xyz="-0.095 0.0 0.053"
+      rpy="${-pi/2} 0.0 ${-pi/2}"/>
+    <parent link="lio_tcp_link"/>
+    <child link="tis_cam"/>
+  </joint>
+  <link name="tis_cam" >
+    <inertial>
+      <!-- the inertia values are guessed but needed for gazebo -->
+      <origin xyz="0 0 0"/>
+      <mass
+        value="0.001"/>
+      <inertia
+        ixx="0.0001"
+        ixy="0.9"
+        ixz="0.0"
+        iyy="0.0001"
+        iyz="0.0"
+        izz="0.0001"/>
+    </inertial>
+  </link>
+
+  <!-- we need this joint and link for the camera plugin in gazebo the x is taken for camera direction -->
+  <joint name="lio_tis_cam_sim_plugin_joint" type="fixed">
+    <origin
+      xyz="0.0 0.0 0.0"
+      rpy="0 ${-pi/2} 0"/>
+    <parent link="tis_cam"/>
+    <child link="tis_cam_sim_plugin"/>
+  </joint>
+  <link name="tis_cam_sim_plugin" >
+    <inertial>
+      <!-- the inertia values are guessed but needed for gazebo -->
+      <origin xyz="0 0 0"/>
+      <mass
+        value="0.001"/>
+      <inertia
+        ixx="0.0001"
+        ixy="0.9"
+        ixz="0.0"
+        iyy="0.0001"
+        iyz="0.0"
+        izz="0.0001"/>
+    </inertial>
+  </link>
+
+
+
+</robot>

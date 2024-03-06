@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- Parameterizing the positions -->
+  <xacro:property name="depth_offset_x" value="-0.05936"/>
+  <xacro:property name="depth_offset_y" value="0.00047258"/>
+  <xacro:property name="depth_offset_z" value="0.0"/>
+
+  <xacro:macro name="fisheye" params="name parent *origin">
+    <joint name="fisheye_${name}_housing_joint" type="fixed">
+      <insert_block name="origin" />
+      <parent link="${parent}"/>
+      <child link="fisheye_${name}_housing_frame" />
+    </joint>
+
+    <!--TODO: verify intertial and collision parameters -->
+    <link name="fisheye_${name}_housing_frame">
+      <!-- TODO fisheye not correctly placed for Lioc (under Lio in center)
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 ${-pi/2}"/>
+        <geometry>
+          <box size="0.025 0.025 0.025" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.0130 0.0567 0.0118"/>
+        </geometry>
+      </collision>
+      -->
+      <!-- This inertial field doesn't contain reliable data!! -->
+      <inertial>
+        <mass value="0.564" />
+        <origin xyz="0 0 0" />
+        <inertia
+                ixx="0.003881243"
+                ixy="0.0"
+                ixz="0.0"
+                iyy="0.000498940"
+                iyz="0.0"
+                izz="0.003879257" />
+      </inertial>
+    </link>
+
+    <joint name="${name}_link_joint" type="fixed">
+      <origin xyz="0 -0.025 0.0025" rpy="0 0 0"/>
+      <parent link="fisheye_${name}_housing_frame"/>
+      <child link="${name}_link_mount" />
+    </joint>
+
+    <link name="${name}_link_mount"/>
+
+  </xacro:macro>
+</robot>

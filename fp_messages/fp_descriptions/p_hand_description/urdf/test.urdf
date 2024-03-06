@@ -1,0 +1,221 @@
+<?xml version="1.0"?>
+<robot name="p_hand">
+  
+  <!-- LINKS -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/base_link.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="-0.0115 0 -0.127"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/base_link.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="-0.0115 0 -0.127"/>
+    </collision>
+    <inertial>
+      <origin xyz="0.050416 0.000105 0.080742" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <!-- TODO -->
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0" iyy="0.4" iyz="0.0" izz="0.2"/>
+    </inertial>
+  </link>
+  
+  <link name="swivel1">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/swivel1.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.045"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/swivel1.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 -0.045"/>
+    </collision>
+  </link>
+  
+  <link name="swivel2">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/swivel2.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/swivel2.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+  
+  <link name="lower0">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/lower.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/lower.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+  
+  <link name="lower1">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/lower.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/lower.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+  
+  <link name="lower2">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/lower.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/lower.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+  
+  <link name="upper0">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/upper.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/upper.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+  
+  <link name="upper1">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/upper.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/upper.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+  
+  <link name="upper2">
+    <visual>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/upper.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_hand_description/meshes/upper.STL"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+
+<!-- JOINTS -->
+<!-- Swivels -->
+  <joint name="base_link_swivel1" type="revolute">
+    <parent link="base_link"/>
+    <child link="swivel1"/>
+    <!-- lower=30 upper=300  -->
+    <limit effort="1000.0" lower="0.523599" upper="5.23599" velocity="0.5"/>
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1"/>
+  </joint>
+  
+  <joint name="base_link_swivel2" type="revolute">
+    <parent link="base_link"/>
+    <child link="swivel2"/>
+    <!-- lower=60 upper=330  -->
+    <limit effort="1000.0" lower="1.0472" upper="5.75959" velocity="0.5"/>
+    <origin xyz="0 0 -0.08" rpy="0 0 0" />
+    <axis xyz="0 0 1"/>
+  </joint>
+
+<!-- Lowers -->
+  <joint name="base_link_lower0" type="revolute">
+    <parent link="base_link"/>
+    <child link="lower0"/>
+    <!-- lower=-90 upper=50  -->
+    <limit effort="1000.0" lower="-1.5708" upper="0.872665" velocity="0.5"/>
+    <origin xyz="0.053 0 0.042" rpy="1.5708  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <joint name="swivel1_lower1" type="revolute">
+    <parent link="swivel1"/>
+    <child link="lower1"/>
+    <!-- lower=-90 upper=50  -->
+    <limit effort="1000.0" lower="-1.5708" upper="0.872665" velocity="0.5"/>
+    <origin xyz="0.053 0 0.042" rpy="1.5708  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <joint name="swivel2_lower2" type="revolute">
+    <parent link="swivel2"/>
+    <child link="lower2"/>
+    <!-- lower=-90 upper=50  -->
+    <limit effort="1000.0" lower="-1.5708" upper="0.872665" velocity="0.5"/>
+    <origin xyz="0.05 0 0.12" rpy="1.5708  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+<!-- Uppers -->
+  <joint name="lower0_upper0" type="revolute">
+    <parent link="lower0"/>
+    <child link="upper0"/>
+    <!-- lower=-90 upper=100  -->
+    <limit effort="1000.0" lower="-1.5708" upper="1.74533" velocity="0.5"/>
+    <origin xyz="0 0.060 0" rpy="0  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+  
+  <joint name="lower1_upper1" type="revolute">
+    <parent link="lower1"/>
+    <child link="upper1"/>
+    <!-- lower=-90 upper=100  -->
+    <limit effort="1000.0" lower="-1.5708" upper="1.74533" velocity="0.5"/>
+    <origin xyz="0 0.060 0" rpy="0  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+  
+  <joint name="lower2_upper2" type="revolute">
+    <parent link="lower2"/>
+    <child link="upper2"/>
+    <!-- lower=-90 upper=100  -->
+    <limit effort="1000.0" lower="-1.5708" upper="1.74533" velocity="0.5"/>
+    <origin xyz="0 0.060 0" rpy="0  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+</robot>

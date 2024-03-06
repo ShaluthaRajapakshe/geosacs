@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  name="p_rob">
+
+
+  <xacro:include filename="$(find fp_materials)/urdf/materials.urdf.xacro"/>
+  <xacro:include filename="$(find p_arm_description)/urdf/p_arm.urdf.xacro"/>
+  <xacro:include filename="$(find p_grip_description)/urdf/p_grip.urdf.xacro"/>
+
+
+  <link name="base_link">
+    <inertial>
+      <origin
+        xyz="8.71294630254049E-05 0.508451295685675 -0.00113740271757783"
+        rpy="0 0 0"/>
+      <mass
+        value="31.8818528911811"/>
+      <inertia
+        ixx="4.65436888537887"
+        ixy="-0.0338576061896482"
+        ixz="3.29763186167614E-06"
+        iyy="0.165544422845209"
+        iyz="-0.00333281637307909"
+        izz="4.60911765357231"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://p_rob_description/meshes/p_base.STL"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://p_rob_description/meshes/p_base.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+
+  <xacro:p_arm name="p_rob" parent="base_link" version="p_rob_2R">
+    <origin xyz="0 0 0.212"/>
+  </xacro:p_arm>
+
+  <xacro:p_grip
+    name="p_rob"
+    parent="p_rob_gripper_interface_link"
+    version="p_grip_2F"
+    orientation="side"/>
+
+</robot>

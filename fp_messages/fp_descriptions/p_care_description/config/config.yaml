@@ -1,0 +1,48 @@
+base_link_translation: 0 0 0.498
+
+hip_effort: 1.09
+hip_lower_angle_limit: -100
+hip_upper_angle_limit: 100
+hip_velocity_limit: 30
+hip_translation: 0 0 0.172
+hip_mass: 3.652
+hip_CoMx: 0.4
+hip_CoMy: 18.55
+hip_CoMz: 117.75
+hip_ixx: 0.06656
+hip_ixy: 0.00001
+hip_ixz: 0.00001
+hip_iyy: 0.06610
+hip_iyz: 0.00952
+hip_izz: 0.00760
+
+torso_effort: 1.09
+torso_lower_angle_limit: -35
+torso_upper_angle_limit: 0
+torso_velocity_limit: 20
+torso_translation: 0 0 0.45768
+torso_mass: 3.520
+torso_CoMx: -0.9
+torso_CoMy: -28.83
+torso_CoMz: 100.36
+torso_ixx: 0.18406
+torso_ixy: 0.00002
+torso_ixz: -0.00008
+torso_iyy: 0.18142
+torso_iyz: 0.01932
+torso_izz: 0.00841
+
+head_effort: 1.09
+head_lower_angle_limit: -90
+head_upper_angle_limit: 90
+head_velocity_limit: 30
+head_mass: 1.626
+head_CoMx: 0.1
+head_CoMy: 15.53
+head_CoMz: 92.79
+head_ixx: 0.02372
+head_ixy: -0.00002
+head_ixz: 0.00004
+head_iyy: 0.02243
+head_iyz: 0.00024
+head_izz: 0.0343

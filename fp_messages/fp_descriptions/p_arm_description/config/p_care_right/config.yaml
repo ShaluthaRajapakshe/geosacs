@@ -1,0 +1,98 @@
+joint1_effort: 1.09
+joint1_lower_angle_limit: -170
+joint1_upper_angle_limit: 170
+joint1_velocity_limit: 50
+link12_translation: 0 0 0.1505
+link12_mass: 3.652
+link12_CoMx: 0.4
+link12_CoMy: 18.55
+link12_CoMz: 117.75
+link12_ixx: 0.06656
+link12_ixy: 0.00001
+link12_ixz: 0.00001
+link12_iyy: 0.06610
+link12_iyz: 0.00952
+link12_izz: 0.00760
+
+
+joint2_effort: 1.09
+joint2_lower_angle_limit: -110
+joint2_upper_angle_limit: 40
+joint2_velocity_limit: 50
+link23_translation: 0 0 0.29
+link23_mass: 3.520
+link23_CoMx: -0.9
+link23_CoMy: -28.83
+link23_CoMz: 100.36
+link23_ixx: 0.18406
+link23_ixy: 0.00002
+link23_ixz: -0.00008
+link23_iyy: 0.18142
+link23_iyz: 0.01932
+link23_izz: 0.00841
+
+joint3_effort: 1.09
+joint3_lower_angle_limit: -115
+joint3_upper_angle_limit: 40
+joint3_velocity_limit: 50
+link34_translation: 0 0 0.1645
+link34_mass: 1.626
+link34_CoMx: 0.1
+link34_CoMy: 15.53
+link34_CoMz: 92.79
+link34_ixx: 0.02372
+link34_ixy: -0.00002
+link34_ixz: 0.00004
+link34_iyy: 0.02243
+link34_iyz: 0.00024
+link34_izz: 0.0343
+
+
+joint4_effort: 0.3275
+joint4_lower_angle_limit: -170
+joint4_upper_angle_limit: 170
+joint4_velocity_limit: 50
+link45_translation: 0 0 0.1455
+link45_mass: 1.516
+link45_CoMx: 0.15
+link45_CoMy: 18.96
+link45_CoMz: 111.12
+link45_ixx: 0.02488
+link45_ixy: 0.00002
+link45_ixz: 0.00003
+link45_iyy: 0.02409
+link45_iyz: 0.00398
+link45_izz: 0.00272
+
+joint5_effort: 0.3275
+joint5_lower_angle_limit: -115
+joint5_upper_angle_limit: 115
+joint5_velocity_limit: 50
+link56_translation: 0 0 0.129
+link56_mass: 1.417
+link56_CoMx: -0.3
+link56_CoMy: -14.9
+link56_CoMz: 73.21
+link56_ixx: 0.01351
+link56_ixy: -0.00002
+link56_ixz: -0.00003
+link56_iyy: 0.01261
+link56_iyz: -0.00012
+link56_izz: 0.00274
+
+
+joint6_effort: 0.17932399999999998
+joint6_lower_angle_limit: -170
+joint6_upper_angle_limit: 170
+joint6_velocity_limit: 100
+link6G_translation: 0 0 0.046
+link6G_mass: 0.435
+link6G_CoMx: -0.24
+link6G_CoMy: -0.32
+link6G_CoMz: 28.45
+link6G_ixx: 0.00079
+link6G_ixy: 0.00000
+link6G_ixz: 0.00000
+link6G_iyy: 0.00086
+link6G_iyz: -0.00001
+link6G_izz: 0.00084

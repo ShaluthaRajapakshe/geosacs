@@ -1,0 +1,69 @@
+footprint: [[0.1,-0.2],[0.05,-0.31],[-0.6,-0.33],[-0.6,0.33],[0.05,0.31],[0.1,0.2]]
+
+sensors:
+  terarangers:
+      -
+        name: terarangerHub1
+        portname: /dev/terarangerHub1
+        name_for_costmap: [terarangerHub01, terarangerHub11, terarangerHub21, terarangerHub31, terarangerHub41, terarangerHub51, terarangerHub61, terarangerHub71]
+        type_for_costmap: [LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan]
+        topic_for_costmap: ["/Sensors/terarangerHub1_sensor_0", "/Sensors/terarangerHub1_sensor_1", "/Sensors/terarangerHub1_sensor_2", "/Sensors/terarangerHub1_sensor_3", "/Sensors/terarangerHub1_sensor_4", "/terarangerHub1_sensor_5", "/Sensors/terarangerHub1_sensor_6", "/Sensors/terarangerHub1_sensor_7"]
+        marking: [true, true, true, true, true, true, true, true]
+        clearing: [true, true, true, true, true, true, true, true]
+        expected_update_rate: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_x: [0, 0.05, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+        offset_y: [0.32, 0.32, 0.25, 0.15, 0.05, -0.05, -0.15, -0.25]
+        offset_z: -0.03
+        offset_roll: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_pitch: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_yaw: [1.57, 1.57, 0, 0, 0, 0, 0, 0]
+
+      -
+        name: terarangerHub2
+        portname: /dev/terarangerHub2
+        name_for_costmap: [terarangerHub02, terarangerHub12, terarangerHub22, terarangerHub32, terarangerHub42, terarangerHub52, terarangerHub62, terarangerHub72]
+        type_for_costmap: [LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan]
+        topic_for_costmap: ["/Sensors/terarangerHub2_sensor_0", "/Sensors/terarangerHub2_sensor_1", "/Sensors/terarangerHub2_sensor_2", "/Sensors/terarangerHub2_sensor_3", "/Sensors/terarangerHub2_sensor_4", "/Sensors/terarangerHub2_sensor_5", "/Sensors/terarangerHub2_sensor_6", "/Sensors/terarangerHub2_sensor_7"]
+        marking: [true, true, true, true, true, true, true, true]
+        clearing: [true, true, true, true, true, true, true, true]
+        expected_update_rate: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_x: [-0.55, -0.55, -0.55, -0.55, -0.45, -0.3, -0.2, -0.1]
+        offset_y: [-0.05, 0.05, 0.15, 0.25, 0.32, 0.32, 0.32, 0.32]
+        offset_z: -0.03
+        offset_roll: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_pitch: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_yaw: [3.14, 3.14, 3.14, 3.14, 1.57, 1.57, 1.57, 1.57]
+
+      -
+        name: terarangerHub3
+        portname: /dev/terarangerHub3
+        name_for_costmap: [terarangerHub03, terarangerHub13, terarangerHub23, terarangerHub33, terarangerHub43, terarangerHub53, terarangerHub63, terarangerHub73]
+        type_for_costmap: [LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan, LaserScan]
+        topic_for_costmap: ["/Sensors/terarangerHub3_sensor_0", "/Sensors/terarangerHub3_sensor_1", "/Sensors/terarangerHub3_sensor_2", "/Sensors/terarangerHub3_sensor_3", "/Sensors/terarangerHub3_sensor_4", "/Sensors/terarangerHub3_sensor_5", "/Sensors/terarangerHub3_sensor_6", "/Sensors/terarangerHub3_sensor_7"]
+        marking: [true, true, true, true, true, true, true, true]
+        clearing: [true, true, true, true, true, true, true, true]
+        expected_update_rate: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_x: [-0.55, -0.55, -0.45, -0.3, -0.2, -0.1, 0, 0.05]
+        offset_y: [-0.15, -0.25, -0.32, -0.32, -0.32, -0.32, -0.32, -0.32]
+        offset_z: -0.03
+        offset_roll: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_pitch: [0, 0, 0, 0, 0, 0, 0, 0]
+        offset_yaw: [3.14, 3.14, -1.57, -1.57, -1.57, -1.57, -1.57, -1.57]
+
+
+  lidar:
+      -
+        name: flashlidar
+        portname: /dev/flashlidar
+        name_for_costmap: [flashlidar]
+        type_for_costmap: [LaserScan]
+        topic_for_costmap: ['/scan']
+        marking: [true]
+        clearing: [true]
+        expected_update_rate: [0]
+        offset_x: 0.12
+        offset_y: 0.0
+        offset_z: 0.1
+        offset_roll: 0
+        offset_pitch: 0
+        offset_yaw: 0

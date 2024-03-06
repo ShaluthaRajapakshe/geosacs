@@ -1,0 +1,38 @@
+digraph G {
+node [shape=box];
+"base_link" [label="base_link"];
+"lower0" [label="lower0"];
+"upper0" [label="upper0"];
+"tip0" [label="tip0"];
+"swivel1" [label="swivel1"];
+"lower1" [label="lower1"];
+"upper1" [label="upper1"];
+"tip1" [label="tip1"];
+"swivel2" [label="swivel2"];
+"lower2" [label="lower2"];
+"upper2" [label="upper2"];
+"tip2" [label="tip2"];
+node [shape=ellipse, color=blue, fontcolor=blue];
+"base_link" -> "base_link_lower0" [label="xyz: 0.06 0 0.045 \nrpy: 1.5708 -0 0"]
+"base_link_lower0" -> "lower0"
+"lower0" -> "lower0_upper0" [label="xyz: 0 0.065 0 \nrpy: 0 -0 0"]
+"lower0_upper0" -> "upper0"
+"upper0" -> "upper0_tip0" [label="xyz: 0 0.055 0 \nrpy: 0 -0 0"]
+"upper0_tip0" -> "tip0"
+"base_link" -> "base_link_swivel1" [label="xyz: 0 0 0 \nrpy: 0 -0 0"]
+"base_link_swivel1" -> "swivel1"
+"swivel1" -> "swivel1_lower1" [label="xyz: 0.06 0 0.045 \nrpy: 1.5708 -0 0"]
+"swivel1_lower1" -> "lower1"
+"lower1" -> "lower1_upper1" [label="xyz: 0 0.065 0 \nrpy: 0 -0 0"]
+"lower1_upper1" -> "upper1"
+"upper1" -> "upper1_tip1" [label="xyz: 0 0.055 0 \nrpy: 0 -0 0"]
+"upper1_tip1" -> "tip1"
+"base_link" -> "base_link_swivel2" [label="xyz: 0 0 0 \nrpy: 0 -0 0"]
+"base_link_swivel2" -> "swivel2"
+"swivel2" -> "swivel2_lower2" [label="xyz: 0.06 0 0.045 \nrpy: 1.5708 -0 0"]
+"swivel2_lower2" -> "lower2"
+"lower2" -> "lower2_upper2" [label="xyz: 0 0.065 0 \nrpy: 0 -0 0"]
+"lower2_upper2" -> "upper2"
+"upper2" -> "upper2_tip2" [label="xyz: 0 0.055 0 \nrpy: 0 -0 0"]
+"upper2_tip2" -> "tip2"
+}

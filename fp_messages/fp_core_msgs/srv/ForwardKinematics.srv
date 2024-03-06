@@ -1,0 +1,5 @@
+float64[] joint_angles
+---
+Pose pose
+bool success
+string message

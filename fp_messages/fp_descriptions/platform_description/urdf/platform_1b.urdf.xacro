@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  name="platform">
+
+    <xacro:include filename="$(find fp_materials)/urdf/materials.urdf.xacro"/>
+
+    <xacro:include
+      filename="$(find platform_description)/urdf/sensors.urdf.xacro" />
+    <xacro:property
+    name="platform_param"
+    value="${load_yaml('$(find platform_description)/config/LIOb.yaml')}" />
+
+  <xacro:property name="lidar_front_rotation" value="$(env RDSCFG_fp_descriptions_lidar_front_rotation)"/>
+  <xacro:property name="lidar_back_rotation" value="$(env RDSCFG_fp_descriptions_lidar_back_rotation)"/>
+
+  <link name="base_footprint">
+
+  </link>
+  <joint name="base_joint" type="fixed">
+
+    <origin xyz="-0.113 0 0" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="platform_base_link" />
+  </joint>
+   <link name="platform_base_link">
+        <visual>
+          <geometry>
+               <mesh
+                filename="package://platform_description/meshes/platform_LIO.STL" />
+          </geometry>
+          <origin rpy="0 0 1.57" xyz="0 0 -0.07"/>
+          <material name="white"/>
+         </visual>
+  </link>
+
+
+
+  <joint name="lidar_front_joint" type="fixed">
+    <origin xyz="0.08202 0 0" rpy="0 3.14 ${lidar_front_rotation}" />
+    <parent link="base_footprint"/>
+    <child link="lidar_front" />
+  </joint>
+   <link name="lidar_front">
+   </link>
+  
+  <joint name="lidar_back_joint" type="fixed">
+    <origin xyz="-0.41803 0 0" rpy="0 3.14 ${lidar_back_rotation}" />
+    <parent link="base_footprint"/>
+    <child link="lidar_back" />
+  </joint>
+   <link name="lidar_back">
+   </link>
+
+</robot>

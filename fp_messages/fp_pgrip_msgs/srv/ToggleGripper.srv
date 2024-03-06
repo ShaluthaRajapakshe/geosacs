@@ -1,0 +1,4 @@
+bool gripper_open # True for opening the gripper and False for closing it
+---
+bool success
+string message

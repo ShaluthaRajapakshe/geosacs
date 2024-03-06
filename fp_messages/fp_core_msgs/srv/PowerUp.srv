@@ -1,0 +1,5 @@
+uint32 tool_id
+bool simulate
+---
+bool success
+string message

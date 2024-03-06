@@ -1,0 +1,9 @@
+int64[] actuator_ids
+float64[] position
+float64 velocity
+float64 acceleration
+bool block
+bool relative
+---
+bool success
+string message

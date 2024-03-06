@@ -1,0 +1,228 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  name="p_care">
+
+  <xacro:property name="robot_type" value="$(env ROBOT_BATCH)"/>
+
+  <xacro:include
+          filename="$(find p_arm_description)/urdf/p_arm.urdf.xacro" />
+  <xacro:include
+          filename="$(find p_grip_description)/urdf/p_grip.urdf.xacro" />
+  <xacro:include
+          filename="$(find p_camera_description)/urdf/r200.urdf.xacro" />
+  <xacro:include
+          filename="$(find platform_description)/urdf/platform_${robot_type}.urdf.xacro" />
+
+
+  <xacro:property
+          name="pcare_param"
+          value="${load_yaml('$(find p_care_description)/config/config.yaml')}" />
+
+    <joint name="${robot_type}_robot_base_link_joint" type="fixed">
+      <origin xyz="0 0 -0.0725" rpy="0 0 0"/>
+      <child link="${robot_type}_base_link"/>
+      <parent link="platform_base_link" />
+    </joint>
+
+
+  <link name="${robot_type}_base_link">
+    <inertial>
+      <origin
+        xyz="-0.000129164615674658 -0.0650850183395308 0.216920107164484"
+        rpy="0 0 0" />
+      <mass
+        value="42.2499541196203" />
+      <inertia
+        ixx="2.19278239601341"
+        ixy="-0.00608161487223685"
+        ixz="-0.000366786945712441"
+        iyy="2.04392192430378"
+        iyz="-0.137313138030081"
+        izz="1.93900754024424" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/base_link.STL" />
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="hip" type="revolute">
+    <origin xyz="${pcare_param['base_link_translation']}"/>
+    <parent link="${robot_type}_base_link" />
+    <child link="hip" />
+    <limit
+      effort="${pcare_param['hip_effort']}"
+      lower="${pcare_param['hip_lower_angle_limit'] * pi/180}"
+      upper="${pcare_param['hip_upper_angle_limit'] * pi/180}"
+      velocity="${pcare_param['hip_velocity_limit'] * pi/180}"/>
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <link name="hip">
+    <inertial>
+      <origin
+        xyz="-0.000129164615674658 -0.0650850183395308 0.216920107164484"
+        rpy="0 0 0" />
+      <mass
+        value="42.2499541196203" />
+      <inertia
+        ixx="2.19278239601341"
+        ixy="-0.00608161487223685"
+        ixz="-0.000366786945712441"
+        iyy="2.04392192430378"
+        iyz="-0.137313138030081"
+        izz="1.93900754024424" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/hip.STL" />
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/hip.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="torso" type="revolute">
+    <origin xyz="${pcare_param['hip_translation']}"/>
+    <parent link="hip" />
+    <child link="torso" />
+    <limit
+      effort="${pcare_param['torso_effort']}"
+      lower="${pcare_param['torso_lower_angle_limit'] * pi/180}"
+      upper="${pcare_param['torso_upper_angle_limit'] * pi/180}"
+      velocity="${pcare_param['torso_velocity_limit'] * pi/180}"/>
+    <axis xyz="0 -1 0" />
+  </joint>
+
+  <link name="torso">
+    <inertial>
+      <origin
+        xyz="-0.000129164615674658 -0.0650850183395308 0.216920107164484"
+        rpy="0 0 0" />
+      <mass
+        value="42.2499541196203" />
+      <inertia
+        ixx="2.19278239601341"
+        ixy="-0.00608161487223685"
+        ixz="-0.000366786945712441"
+        iyy="2.04392192430378"
+        iyz="-0.137313138030081"
+        izz="1.93900754024424" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/torso.STL" />
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/torso.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="head" type="revolute">
+    <origin xyz="${pcare_param['torso_translation']}"/>
+    <parent link="torso" />
+    <child link="head" />
+    <limit
+      effort="${pcare_param['head_effort']}"
+      lower="${pcare_param['head_lower_angle_limit'] * pi/180}"
+      upper="${pcare_param['head_upper_angle_limit'] * pi/180}"
+      velocity="${pcare_param['head_velocity_limit'] * pi/180}"/>
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <link name="head">
+    <inertial>
+      <origin
+        xyz="-0.000129164615674658 -0.0650850183395308 0.216920107164484"
+        rpy="0 0 0" />
+      <mass
+        value="42.2499541196203" />
+      <inertia
+        ixx="2.19278239601341"
+        ixy="-0.00608161487223685"
+        ixz="-0.000366786945712441"
+        iyy="2.04392192430378"
+        iyz="-0.137313138030081"
+        izz="1.93900754024424" />
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/head.STL" />
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_care_description/meshes/head.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+
+
+  <xacro:p_arm name="left" parent="torso" version="p_care_left">
+    <origin xyz="0 0.0859 0.366" rpy="${-pi/2} 0 0" />
+  </xacro:p_arm>
+
+  <xacro:p_arm name="right" parent="torso" version="p_care_right">
+    <origin xyz="0 -0.0859 0.366" rpy="${-pi/2} 0 ${pi}" />
+  </xacro:p_arm>
+
+  <xacro:p_grip
+    name="left"
+    parent="left_gripper_interface_link"
+    version="p_care_left"
+    orientation="side"/>
+  <xacro:p_grip
+    name="right"
+    parent="right_gripper_interface_link"
+    version="p_care_right"
+    orientation="side"/>
+
+  <!--CAMERAS-->
+  <xacro:realsense_r200 name="camera_chest" parent="torso">
+      <origin xyz="0.095874 0 0.415665" rpy="0 ${(9.0)*pi/180} 0" />
+  </xacro:realsense_r200>
+  <xacro:realsense_r200 name="camera_base" parent="${robot_type}_base_link">
+      <origin xyz="0.1185 0 0.35876" rpy="0 ${(10.0)*pi/180} 0" />
+  </xacro:realsense_r200>
+
+  <xacro:realsense_r200 name="camera_head_front" parent="head">
+    <origin xyz="0.08244 0 0.28125" rpy="0 ${(-18.38)*pi/180} 0" />
+  </xacro:realsense_r200>
+  <xacro:realsense_r200 name="camera_head_rear" parent="head">
+    <origin xyz="-0.13392 0 0.15104" rpy="0 0 ${pi}" />
+  </xacro:realsense_r200>
+
+  <xacro:realsense_r200 name="camera_gripper_right" parent="right_tcp_link">
+    <origin xyz="-0.11 0 -0.052" rpy="${-pi} ${(5)*pi/180} 0" />
+  </xacro:realsense_r200>
+  <xacro:realsense_r200 name="camera_gripper_left" parent="left_tcp_link">
+    <origin xyz="-0.11 0 0.052" rpy="0 ${(-5)*pi/180} 0" />
+  </xacro:realsense_r200>
+    
+</robot>

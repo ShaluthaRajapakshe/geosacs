@@ -1,0 +1,234 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="p_hand">
+
+
+<!-- 
+=================
+DEFINITIONS
+=================
+ -->
+ 
+<!-- CONSTANTS -->
+<!-- Degrees to radians -->
+<xacro:property name="deg2rad_90" value="1.5708" />
+
+<!-- Limits -->
+<xacro:property name="swivel_buffer" value="60.0" />
+
+<!-- Joint displacements -->
+<xacro:property name="swivel_length" value="0.060" />
+<xacro:property name="swivel_height" value="0.045" />
+<xacro:property name="lower_length" value="0.065" />
+<xacro:property name="tip_length" value="0.062" />
+<xacro:property name="tip_inward" value="0.007" />
+
+<!-- STL Origin offsets -->
+<xacro:property name="base_link_origin_offset">
+  <origin xyz="-0.0115 0 -0.127" rpy="0 0 0" />
+</xacro:property>
+
+<xacro:property name="swivel1_origin_offset">
+  <origin xyz="0 0 -0.045" rpy="0 0 0" />
+</xacro:property>
+
+<xacro:property name="swivel2_origin_offset">
+  <origin xyz="0 0 -0.140" rpy="0 0 0" />
+</xacro:property>
+
+<xacro:property name="lower_origin_offset">
+  <origin xyz="0 0 -0.025" rpy="0 0 0" />
+</xacro:property>
+
+<xacro:property name="upper_origin_offset">
+  <origin xyz="0 0 -0.025" rpy="0 0 0" />
+</xacro:property>
+
+<!-- Colors -->
+<xacro:property name="blue">
+  <material name="blue">
+    <color rgba="0 0 .8 1"/>
+  </material>
+</xacro:property>
+
+<xacro:property name="white">
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+</xacro:property>
+
+<!-- MACROS -->
+<!-- Conversions -->
+<xacro:macro name="limit_deg2rad" params="effort lower upper velocity">
+  <limit effort="${effort}" lower="${lower*0.0174533}" upper="${upper*0.0174533}" velocity="${velocity}" />
+</xacro:macro> 
+
+<!-- Generic shortcuts -->
+<xacro:macro name="vis_col_mesh" params="mesh_name *origin_offset *color">
+  <visual>
+    <geometry>
+      <mesh filename="package://p_hand_description/meshes/${mesh_name}.STL" />
+    </geometry>
+    <xacro:insert_block name="origin_offset" />
+    <xacro:insert_block name="color" />
+  </visual>
+  <collision>
+    <geometry>
+      <mesh filename="package://p_hand_description/meshes/${mesh_name}.STL" />
+    </geometry>
+    <xacro:insert_block name="origin_offset" />
+  </collision>
+</xacro:macro>  
+
+<!-- Links -->
+<xacro:macro name="lower_link" params="finger *color">
+  <link name="lower${finger}">
+    <xacro:vis_col_mesh mesh_name="lower">
+      <xacro:insert_block name="lower_origin_offset" />
+      <xacro:insert_block name="color" />
+    </xacro:vis_col_mesh>
+  </link>
+</xacro:macro>  
+
+<xacro:macro name="upper_link" params="finger *color">
+  <link name="upper${finger}">
+    <xacro:vis_col_mesh mesh_name="upper">
+      <xacro:insert_block name="upper_origin_offset" />
+      <xacro:insert_block name="color" />
+    </xacro:vis_col_mesh>
+  </link>
+</xacro:macro>  
+
+<!-- Joints -->
+<xacro:macro name="swivel_lower_joint" params="finger">
+  <xacro:if value="${finger}">
+    <xacro:property name="parent_name" value="swivel${finger}" />
+  </xacro:if>
+  <xacro:unless value="${finger}">
+    <xacro:property name="parent_name" value="base_link" />
+  </xacro:unless>
+  <joint name="${parent_name}_lower${finger}" type="revolute">
+    <parent link="${parent_name}" />
+    <child link="lower${finger}" />
+    <xacro:limit_deg2rad effort="1000.0" lower="-90.0" upper="50.0" velocity="0.5" />
+    <origin xyz="${swivel_length} 0 ${swivel_height}" rpy="${deg2rad_90}  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+</xacro:macro>  
+
+<xacro:macro name="lower_upper_joint" params="finger">
+  <joint name="lower${finger}_upper${finger}" type="revolute">
+    <parent link="lower${finger}" />
+    <child link="upper${finger}" />
+    <xacro:limit_deg2rad effort="1000.0" lower="-90.0" upper="100.0" velocity="0.5" />
+    <origin xyz="0 ${lower_length} 0" rpy="0  0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+</xacro:macro>
+
+<xacro:macro name="tip_joint" params="finger">
+  <joint name="upper${finger}_tip${finger}" type="fixed">
+    <parent link="upper${finger}" />
+    <child link="tip${finger}" />
+    <origin xyz="${-1*tip_inward} ${tip_length} 0" rpy="0  0 0" />
+  </joint>
+</xacro:macro>
+
+
+<!-- 
+=================
+ROBOT DESCRIPTION
+=================
+ -->
+ 
+<!-- LINKS -->
+  <!-- Base and swivels -->
+  <link name="base_link">
+    <xacro:vis_col_mesh mesh_name="base_link">
+      <xacro:insert_block name="base_link_origin_offset" />
+      <xacro:insert_block name="blue" />
+    </xacro:vis_col_mesh>
+  </link>
+  
+  <link name="swivel1">
+    <xacro:vis_col_mesh mesh_name="swivel1">
+      <xacro:insert_block name="swivel1_origin_offset" />
+      <xacro:insert_block name="blue" />
+    </xacro:vis_col_mesh>
+  </link>
+  
+  <link name="swivel2">
+    <xacro:vis_col_mesh mesh_name="swivel2">
+      <xacro:insert_block name="swivel2_origin_offset" />
+      <xacro:insert_block name="blue" />
+    </xacro:vis_col_mesh>
+  </link>
+  
+  
+  <!-- Lowers -->
+  <xacro:lower_link finger="0">
+      <xacro:insert_block name="white" />
+  </xacro:lower_link>
+  
+  <xacro:lower_link finger="1">
+      <xacro:insert_block name="white" />
+  </xacro:lower_link>
+  
+  <xacro:lower_link finger="2">
+      <xacro:insert_block name="white" />
+  </xacro:lower_link>
+  
+  <!-- Uppers -->
+  <xacro:upper_link finger="0">
+      <xacro:insert_block name="blue" />
+  </xacro:upper_link>
+  
+  <xacro:upper_link finger="1">
+      <xacro:insert_block name="blue" />
+  </xacro:upper_link>
+  
+  <xacro:upper_link finger="2">
+      <xacro:insert_block name="blue" />
+  </xacro:upper_link>
+  
+  <!-- Tips -->
+  <link name="tip0"/>
+  <link name="tip1"/>
+  <link name="tip2"/>
+
+  
+<!-- JOINTS -->
+  <!-- Base and swivels -->
+  <joint name="base_link_swivel1" type="revolute">
+    <parent link="base_link" />
+    <child link="swivel1" />
+    <xacro:limit_deg2rad effort="1000.0" lower="${swivel_buffer}" upper="${360.0-2.0*swivel_buffer}" 
+    velocity="0.5" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+  
+  <joint name="base_link_swivel2" type="revolute">
+    <parent link="base_link" />
+    <child link="swivel2" />
+    <xacro:limit_deg2rad effort="1000.0" lower="${2.0*swivel_buffer}" upper="${360.0-swivel_buffer}" 
+    velocity="0.5" />
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+  </joint>
+
+  <!-- Lowers -->
+  <xacro:swivel_lower_joint finger="0" />
+  <xacro:swivel_lower_joint finger="1" />
+  <xacro:swivel_lower_joint finger="2" />
+  
+  <!-- Uppers -->
+  <xacro:lower_upper_joint finger="0" />
+  <xacro:lower_upper_joint finger="1" />
+  <xacro:lower_upper_joint finger="2" />
+  
+  <!-- Tips -->
+  <xacro:tip_joint finger="0" />
+  <xacro:tip_joint finger="1" />
+  <xacro:tip_joint finger="2" />
+  
+</robot>

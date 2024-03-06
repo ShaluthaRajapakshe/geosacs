@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  name="platform">
+
+    <xacro:include filename="$(find fp_materials)/urdf/materials.urdf.xacro"/>
+
+    <xacro:include
+      filename="$(find platform_description)/urdf/sensors.urdf.xacro" />
+    <xacro:include
+      filename="$(find platform_description)/urdf/wheels.urdf.xacro" />
+    <xacro:property
+    name="platform_param"
+    value="${load_yaml('$(find platform_description)/config/LIOc.yaml')}" />
+    
+
+  <!-- <xacro:property name="lidar_front_rotation" value="$(env RDSCFG_fp_descriptions_lidar_front_rotation)"/> -->
+  <xacro:property name="lidar_front_rotation" value="0"/>
+
+  <!-- <xacro:property name="lidar_back_rotation" value="$(env RDSCFG_fp_descriptions_lidar_back_rotation)"/> -->
+  <xacro:property name="lidar_back_rotation" value="3.14"/>
+
+  <xacro:wheel_actuated name="wheel_actuated_left" parent="base_footprint" radius_wheel="${platform_param['wheels']['wheel_diameter'] / 2}" mass_wheel="${platform_param['wheels']['wheel_mass']}" length_wheel="${platform_param['wheels']['wheel_length']}" x="0" y="${platform_param['wheels']['wheel_track'] / 2}" z="0">
+  </xacro:wheel_actuated>
+  <xacro:wheel_actuated name="wheel_actuated_right" parent="base_footprint" radius_wheel="${platform_param['wheels']['wheel_diameter'] / 2}" mass_wheel="${platform_param['wheels']['wheel_mass']}" length_wheel="${platform_param['wheels']['wheel_length']}" x="0" y="${- platform_param['wheels']['wheel_track'] / 2}" z="0">
+  </xacro:wheel_actuated>
+
+  <xacro:caster_wheel name="caster_left" parent="base_footprint" >
+       <origin xyz="-0.5 ${platform_param['wheels']['wheel_track'] / 2 - 0.05} -0.01" rpy="0 0 0" />
+  </xacro:caster_wheel>
+
+  <xacro:caster_wheel name="caster_right" parent="base_footprint" >
+       <origin xyz="-0.5 ${- (platform_param['wheels']['wheel_track'] / 2 - 0.05)} -0.01" rpy="0 0 0" />
+  </xacro:caster_wheel>
+
+  <link name="base_footprint">
+
+  </link>
+  <joint name="base_joint" type="fixed">
+
+    <origin xyz="-0.113 0 0" rpy="0 0 0" />
+    <parent link="base_footprint"/>
+    <child link="platform_base_link" />
+  </joint>
+   <link name="platform_base_link">
+        <visual>
+          <geometry>
+               <mesh
+                filename="package://platform_description/meshes/platform_LIO.STL" /> <!-- create Lio Version c mesh, still Lio b mesh-->
+          </geometry>
+          <origin rpy="0 0 1.57" xyz="0 0 -0.05"/> 
+          <material name="white"/>
+         </visual>
+        <collision>
+          <geometry>
+               <mesh
+                filename="package://platform_description/meshes/platform_LIO.STL" />
+          </geometry>
+          <origin rpy="0 0 1.57" xyz="0 0 -0.05"/>
+        </collision>
+        <!-- This inertial field doesn't contain reliable data!! -->
+        <inertial>
+          <mass value="60.0" />
+          <origin xyz="0 0 0" />
+          <inertia ixx="0.3881243" ixy="0.0" ixz="0.0"
+                   iyy="0.898940" iyz="0.0"
+                   izz="0.3879257" />
+        </inertial>
+  </link>
+
+  <joint name="lidar_front_joint" type="fixed">
+    <origin xyz="-0.25762 0.15592 -0.01" rpy="0 3.14 ${lidar_front_rotation}" />
+    <parent link="base_footprint"/>
+    <child link="lidar_front" />
+  </joint>
+   <link name="lidar_front">
+   </link>
+
+  <joint name="lidar_back_joint" type="fixed">
+    <origin xyz="-0.25762 -0.15592 -0.01" rpy="0 3.14 ${lidar_back_rotation}" />
+    <parent link="base_footprint"/>
+    <child link="lidar_back" />
+  </joint>
+   <link name="lidar_back">
+   </link>
+
+  <joint name="lidar_front_joint_helper" type="fixed">
+    <origin xyz="-0.25762 0.15592 -0.01" rpy="0 3.14 ${lidar_front_rotation + 1.57}" />
+    <parent link="base_footprint"/>
+    <child link="lidar_front_helper" />
+  </joint>
+   <link name="lidar_front_helper">
+   </link>
+
+   <joint name="lidar_back_joint_helper" type="fixed">
+    <origin xyz="-0.25762 -0.15592 -0.01" rpy="0 3.14 ${lidar_back_rotation - 1.57}" />
+    <parent link="base_footprint"/>
+    <child link="lidar_back_helper" />
+  </joint>
+   <link name="lidar_back_helper">
+   </link>
+
+</robot>
