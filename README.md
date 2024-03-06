@@ -1,2 +1,2 @@
 # geosacs
-GeoSACA: Geometric Shared Autonomy via Canal Surfaces
+GeoSACS: Geometric Shared Autonomy via Canal Surfaces
