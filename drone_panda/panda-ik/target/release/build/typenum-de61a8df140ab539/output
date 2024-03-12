@@ -1,3 +1,0 @@
-cargo:rerun-if-changed=build/main.rs
-cargo:rustc-env=TYPENUM_BUILD_CONSTS=/home/jurassix16/catkin_ws/src/drone_panda/panda-ik/target/release/build/typenum-de61a8df140ab539/out/consts.rs
-cargo:rustc-env=TYPENUM_BUILD_OP=/home/jurassix16/catkin_ws/src/drone_panda/panda-ik/target/release/build/typenum-de61a8df140ab539/out/op.rs

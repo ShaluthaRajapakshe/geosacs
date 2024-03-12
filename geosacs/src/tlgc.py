@@ -3,7 +3,6 @@ import rospy
 import os
 import numpy as np
 from sksurgerycore.algorithms.averagequaternions import average_quaternions
-from custom_msgs.srv import LoadData, LoadDataResponse, LoadDataRequest
 from geometry_msgs.msg import Pose, PoseArray
 from constructGC import construct_GC
 from circularGC import circular_GC
@@ -26,12 +25,10 @@ class TLGCNode():
 
         # ROS Variables
 
-        rospy.Service("/tlgc/load_data_processed", LoadData, self.load_data_cb)
         self.directrix_pub = rospy.Publisher("/tlgc/directrix", PoseArray, queue_size=10)
         self.raw_traj_pub = rospy.Publisher("/tlgc/raw_trajectory", PoseArray, queue_size=10)
         self.processed_traj_pub = rospy.Publisher("/tlgc/processed_trajectory", PoseArray, queue_size=10)
         self.gc_circle_pub = rospy.Publisher("/tlgc/gc_circle", PoseArray, queue_size=10)
-        self.tlgc_load_model_client = rospy.ServiceProxy("/tlgc/load_model", LoadData)
         self.clear_viz_pub = rospy.Publisher("/tlgc/viz_clear", String, queue_size=2)
         self.raw_pose_traj_pub = rospy.Publisher("/tlgc/raw_pose_trajectory", PoseArray, queue_size=10)
         self.processed_pose_traj_pub = rospy.Publisher("/tlgc/processed_pose_trajectory", PoseArray, queue_size=10)
@@ -46,43 +43,7 @@ class TLGCNode():
         rospy.sleep(1)
         rospy.loginfo("tlgc_node has been started") 
 
-    def load_data_cb(self,request):
-        resp = LoadDataResponse()
-        self.data_dir = request.data_directory
-        self.task = request.task
-        self.processed_dir = self.data_dir + f"/{self.task}/record-processed"
 
-        if not os.path.exists(self.processed_dir) or not os.path.isdir(self.processed_dir):
-            resp.message = f"Directory {self.processed_dir} not found."
-            resp.success = False
-            return resp
-
-        items = os.listdir(self.processed_dir)
-        print(items)
-
-        if len(items) == 0:
-            resp.message = f"Directory {self.processed_dir} is empty."
-            resp.success = False
-            return resp
-        
-        self.process_data = True
-
-        resp.success = True
-        resp.message = "Directory found."
-        return resp
-    
-
-    def call_tlgc_load_model(self, data_dir, task):
-        request = LoadDataRequest()  
-        request.data_directory = data_dir
-        request.task = task
-
-        try:
-            response = self.tlgc_load_model_client(request)
-            if response.success: rospy.loginfo(f"Success: {response.message}")
-            else: rospy.loginfo(f"Error: {response.message}")
-        except rospy.ServiceException as e:
-            rospy.logerr(f"Service call failed: {e}")
     
     
     def get_raw_demos(self, raw_dir):

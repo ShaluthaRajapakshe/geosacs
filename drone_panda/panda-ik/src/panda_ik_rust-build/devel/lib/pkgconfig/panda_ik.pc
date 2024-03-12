@@ -1,8 +1,0 @@
-prefix=/home/esenft/catkin_ws/src/panda-ik/src/panda_ik_rust-build/devel
-
-Name: panda_ik
-Description: Description of panda_ik
-Version: 0.1.1
-Cflags: -I/home/esenft/catkin_ws/src/panda-ik/include
-Libs: -L${prefix}/lib 
-Requires: geometry_msgs message_runtime realtime_tools roscpp tf2 tf2_ros drone_ros_msgs

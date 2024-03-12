@@ -4,17 +4,12 @@ import os
 import numpy as np
 
 from geometry_msgs.msg import Pose, PoseStamped, PoseArray
-from std_msgs.msg import Empty, String
+from std_msgs.msg import String
 from sensor_msgs.msg import Joy, JointState
-from custom_msgs.msg import WeightedPose, Correction, SurfacePose
-from fp_core_msgs.msg import Sensors
-
+from geosacs.msg import WeightedPose, Correction, SurfacePose
 from randomInitialPoints import randomInitialPoints
 from reproduce import reproduce
-from getT import get_T
-from getTNB import get_TNB
-from circularGC import circular_GC
-from pyquaternion import Quaternion
+
 
 class MainNode(): 
     def __init__(self):
@@ -33,7 +28,6 @@ class MainNode():
         self.previous_buttons = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         self.terminate = False
         self.gripper_state = ""
-        # self.gripper_state_change_request = ""
         self.gripper_change_direction_request = False
         self.prev_gripper_angle = None
         self.gripper_states = []
@@ -72,6 +66,7 @@ class MainNode():
         self.commanded_pose_pub = rospy.Publisher("/commanded_pose", PoseStamped, queue_size=10)
         self.weighted_pose_pub = rospy.Publisher("/weighted_pose", WeightedPose, queue_size=10)
         self.myp_app_pub = rospy.Publisher("/myp_manager/app_control", String, queue_size=2)
+        self.gripper_state_pub =rospy.Publisher("/gripper_state", String, queue_size=10)
 
 
         #Init Message
@@ -219,21 +214,9 @@ class MainNode():
         if changed_buttons[6] != 0:
             # print("START")
             self.start = True
-            
-    # def load_model(self, data_dir, task):
-
-    #     model_dir = data_dir +f"/{task}/model"
-    #     print(f"Model directory {model_dir}")
-
-    #     items = os.listdir(model_dir)
-    #     print(f"Files: ", items)
-
-    #     filename = model_dir + f"/{items[0]}"
-    #     model = np.load(filename)
-    #     print(f"File data: {model.files}")
-    #     print(f"Model loaded with {len(model['directrix'])} directrix points.")
-
-    #     return model
+        if changed_buttons[0] != 0:
+            self.gripper_state_pub.publish("toggle_gripper")
+        
             
     def get_model(self, model_dir):
 
@@ -592,8 +575,7 @@ class MainNode():
     def run(self):
         # Specify data directory and task
         data_dir = "/home/jurassix16/TLGC_data"
-        task = "iros_demo1"
-        # task = input("What is the name of the task? ")
+        task = input("What is the name of the task? ")
         model_dir = data_dir +f"/{task}/model"
         raw_dir = data_dir + f"/{task}/record-raw"
         processed_dir = data_dir + f"/{task}/record-processed"

@@ -1,0 +1,12 @@
+.vscode/
+__pycache__/
+
+#-- DRONE PANDA --#
+
+#drone_panda>panda-ik
+lio_robot_ik/panda-ik/target
+lio_robot_ik/panda-ik/Cargo.lock
+lio_robot_ik/panda-ik/src/panda_ik_rust-build/*
+lio_robot_ik/panda-ik/src/panda_ik_rust-stamp/*
+lio_robot_ik/panda-ik/tmp/*
+

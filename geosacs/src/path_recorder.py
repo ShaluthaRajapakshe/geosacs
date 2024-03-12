@@ -3,7 +3,7 @@ import rospy
 from nav_msgs.msg import Path
 from geometry_msgs.msg import Pose, PoseStamped, PoseArray
 from sensor_msgs.msg import Joy
-from custom_msgs.msg import SurfacePose
+from geosacs.msg import SurfacePose
 from std_msgs.msg import String
 
 class PathRecorder(): 

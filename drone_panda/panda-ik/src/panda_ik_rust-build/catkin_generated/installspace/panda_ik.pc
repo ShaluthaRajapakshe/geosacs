@@ -1,8 +1,0 @@
-prefix=/usr/local
-
-Name: panda_ik
-Description: Description of panda_ik
-Version: 0.1.1
-Cflags: -I${prefix}/include
-Libs: -L${prefix}/lib 
-Requires: geometry_msgs message_runtime realtime_tools roscpp tf2 tf2_ros drone_ros_msgs

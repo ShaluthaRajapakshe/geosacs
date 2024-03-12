@@ -3,8 +3,6 @@ import rospy
 import os
 import numpy as np
 from geometry_msgs.msg import PoseStamped, Pose, PoseArray
-from custom_msgs.srv import LoadData, LoadDataRequest
-from rospy.exceptions import ROSException, ROSInterruptException
 from std_msgs.msg import String, Empty
 from pathlib import Path
 from scipy.spatial.transform import Rotation 
@@ -29,7 +27,6 @@ class TeachingTCP():
         self.lio_req_tcp_pub = rospy.Publisher("/request_tcp_pub", String, queue_size=2)
         self.commanded_pos_pub = rospy.Publisher("/commanded_pose", PoseStamped, queue_size=2)
         self.lio_status_req_pub = rospy.Publisher("/service2topic/request", String, queue_size=2)
-        self.tlgc_load_data_client = rospy.ServiceProxy("/tlgc/load_data_raw", LoadData)
         # # Visualisation
         self.raw_traj_pub = rospy.Publisher("/tlgc/raw_trajectory", PoseArray, queue_size=10)
         self.clear_viz_pub = rospy.Publisher("/tlgc/viz_clear", String, queue_size=2)
@@ -113,70 +110,7 @@ class TeachingTCP():
         raw_dict["orientation"] = orientations_a
         
         return raw_dict    
-       
-    def playback(self, raw_dict):
- 
-        print(f"[*] Starting Playback for Demonstration `{self.demo_index}`...")
-
-        # Get and check data 
-        positions = raw_dict["position"]
-        orientations = raw_dict["orientation"]
-        if orientations.shape[0] != positions.shape[0] : 
-            rospy.logerr("playback functin: Nb positions != nb orientations")
-            return
-        nb_points = positions.shape[0]
-        
-        # Initial pose
-        initPose = PoseStamped()
-        initPose.pose.position.x = positions[0,0]
-        initPose.pose.position.y = positions[0,1]
-        initPose.pose.position.z = positions[0,2]
-
-        initPose.pose.orientation.w = orientations[0,0]
-        initPose.pose.orientation.x = orientations[0,1]
-        initPose.pose.orientation.y = orientations[0,2]
-        initPose.pose.orientation.z = orientations[0,3]
-
-        initPose.header.frame_id = self.frame
-        initPose.header.stamp = rospy.Time.now()
-        self.commanded_pos_pub.publish(initPose)
-        self.lio_req_tcp_pub.publish("stop")       
-
-
-        # Rest of the poses
-        resp = input("Enter to start playback ?")
-        for i in range(nb_points):
-            pose = PoseStamped()
-            pose.pose.position.x = positions[i,0]
-            pose.pose.position.y = positions[i,1]
-            pose.pose.position.z = positions[i,2]
-
-            pose.pose.orientation.w = orientations[i,0]
-            pose.pose.orientation.x = orientations[i,1]
-            pose.pose.orientation.y = orientations[i,2]
-            pose.pose.orientation.z = orientations[i,3]
-
-            pose.header.frame_id = self.frame
-            pose.header.stamp = rospy.Time.now()
-            self.commanded_pos_pub.publish(pose)
-            self.move_rate.sleep()
-        self.lio_req_tcp_pub.publish("stop")       
-
     
-    def call_tlgc_load_data_raw(self, data_dir, task):
-
-        request = LoadDataRequest()  
-        request.data_directory = data_dir
-        request.task = task
-
-        try:
-            response = self.tlgc_load_data_client(request)
-            if response.success: rospy.loginfo(f"Success: {response.message}")
-            else: rospy.loginfo(f"Error: {response.message}")
-        except rospy.ServiceException as e:
-            rospy.logerr(f"Service call failed: {e}")
-
-   
     def request_save(self, demo_file, raw_dict):
 
         if input("Save this demo? (y/n) ")=="y": 
@@ -283,8 +217,6 @@ class TeachingTCP():
             raw_dict = self.record_demo()
             raw_dict = self.change_frame(raw_dict)
             self.visualise_demo(raw_dict)
-            while input("Playback? (y/[n])") == "y":
-                self.playback(raw_dict)
             self.request_save(demo_file, raw_dict)
             if input("Another demo? (y/n) ")=="n": more = False
             self.clear_viz_pub.publish("all")

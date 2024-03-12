@@ -1,0 +1,329 @@
+<?xml version="1.0" ?>
+<!-- This file is for PRob2 model B 24V -->
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro
+    name="p_arm"
+    params="name parent version *origin">
+
+
+  <xacro:property
+    name="config_path"
+    value="'$(find p_arm_description)/config/${version}/config.yaml'"/>
+  <xacro:property
+    name="parameters"
+    value="${load_yaml(config_path)}"/>
+  <!--Currently, the joint velocity, computed by MoveIt! sometimes overshoots
+  its limits, such that a safety margin is required.-->
+  <xacro:property
+    name="velocity_margin"
+    value="0.05"/>
+
+  <!-- only relevant for gazebo - load the friction, damping, effort, velocity params ATTENTION not compatible with P_care-->
+  <!-- only relevant for gazebo - CONTROLLER_TYPE is set by env variable, default=position (hard move), 
+       other possibilities: effort (soft move) and mixed (has to be tuned together with configs in repo lio_simulation) -->
+  <xacro:property
+    name="control_config_path"
+    value="'$(find p_arm_description)/config/p_rob_2R/$(optenv CONTROLLER_TYPE position)_control.yaml'"/> 
+  <xacro:property
+    name="control_parameters"
+    value="${load_yaml(control_config_path)}"/>
+
+
+  <joint name="${name}_joint1" type="revolute">
+    <xacro:insert_block name="origin"/>
+    <!-- <origin xyz="0 0 0.212" rpy="0 0 0" /> -->
+    <parent link="${parent}"/>
+    <child link="${name}_link12"/>
+    <limit
+      effort="${control_parameters['joint1_effort']}"
+      lower="${parameters['joint1_lower_angle_limit'] * pi/180}"
+      upper="${parameters['joint1_upper_angle_limit'] * pi/180}"
+      velocity="${control_parameters['joint1_velocity_limit'] * pi/180 *
+                (1 - velocity_margin)}"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="${control_parameters['joint1_damping']}" friction="${control_parameters['joint1_friction']}"/>
+  </joint>
+
+  <!-- <transmission name="${name}_joint1_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <actuator name="${name}_joint1_motor">
+      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+      <joint name="${name}_joint1">
+        <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      </joint>
+  </transmission> -->
+
+  <link name="${name}_link12">
+    <inertial>
+      <origin
+        xyz="8.71294630254049E-05 0.0 -0.00113740271757783"
+        rpy="0 0 0"/>
+      <mass
+        value="${parameters['link12_mass']}"/>
+      <inertia
+        ixx="${parameters['link12_ixx']}"
+        ixy="${parameters['link12_ixy']}"
+        ixz="${parameters['link12_ixz']}"
+        iyy="${parameters['link12_iyy']}"
+        iyz="${parameters['link12_iyz']}"
+        izz="${parameters['link12_izz']}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link12.STL"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link12.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${name}_joint2" type="revolute">
+    <origin xyz="${parameters['link12_translation']}"/>
+    <parent link="${name}_link12"/>
+    <child link="${name}_link23"/>
+    <limit
+      effort="${control_parameters['joint2_effort']}"
+      lower="${parameters['joint2_lower_angle_limit'] * pi/180}"
+      upper="${parameters['joint2_upper_angle_limit'] * pi/180}"
+      velocity="${control_parameters['joint2_velocity_limit'] * pi/180 *
+                (1 - velocity_margin)}"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="${control_parameters['joint2_damping']}" friction="${control_parameters['joint2_friction']}"/>
+  </joint>
+
+  <link name="${name}_link23">
+    <inertial>
+      <origin xyz="8.71294630254052E-05 0.000951295697065868 -0.00113740271757783"/>
+      <mass
+        value="${parameters['link23_mass']}"/>
+      <inertia
+        ixx="${parameters['link23_ixx']}"
+        ixy="${parameters['link23_ixy']}"
+        ixz="${parameters['link23_ixz']}"
+        iyy="${parameters['link23_iyy']}"
+        iyz="${parameters['link23_iyz']}"
+        izz="${parameters['link23_izz']}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link23.STL"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link23.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${name}_joint3" type="revolute">
+    <origin xyz="${parameters['link23_translation']}"/>
+    <parent link="${name}_link23"/>
+    <child link="${name}_link34"/>
+    <limit
+      effort="${control_parameters['joint3_effort']}"
+      lower="${parameters['joint3_lower_angle_limit'] * pi/180}"
+      upper="${parameters['joint3_upper_angle_limit'] * pi/180}"
+      velocity="${control_parameters['joint3_velocity_limit'] * pi/180 *
+                (1 - velocity_margin)}"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="${control_parameters['joint3_damping']}" friction="${control_parameters['joint3_friction']}"/>
+  </joint>
+
+  <link name="${name}_link34">
+    <inertial>
+      <origin
+        xyz="8.71294630254052E-05 0.0 -0.00113740271757783"
+        rpy="0 0 0"/>
+      <mass
+        value="${parameters['link34_mass']}"/>
+      <inertia
+        ixx="${parameters['link34_ixx']}"
+        ixy="${parameters['link34_ixy']}"
+        ixz="${parameters['link34_ixz']}"
+        iyy="${parameters['link34_iyy']}"
+        iyz="${parameters['link34_iyz']}"
+        izz="${parameters['link34_izz']}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link34.STL"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link34.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${name}_joint4" type="revolute">
+    <origin xyz="${parameters['link34_translation']}"/>
+    <parent link="${name}_link34"/>
+    <child link="${name}_link45"/>
+    <limit
+      effort="${control_parameters['joint4_effort']}"
+      lower="${parameters['joint4_lower_angle_limit'] * pi/180}"
+      upper="${parameters['joint4_upper_angle_limit'] * pi/180}"
+      velocity="${control_parameters['joint4_velocity_limit'] * pi/180 *
+                (1 - velocity_margin)}"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="${control_parameters['joint4_damping']}" friction="${control_parameters['joint4_friction']}"/>
+  </joint>
+
+  <link name="${name}_link45">
+    <inertial>
+      <origin
+        xyz="8.71294630254052E-05 0.0 -0.00113740271757783"
+        rpy="0 0 0"/>
+      <mass
+        value="${parameters['link45_mass']}"/>
+      <inertia
+        ixx="${parameters['link45_ixx']}"
+        ixy="${parameters['link45_ixy']}"
+        ixz="${parameters['link45_ixz']}"
+        iyy="${parameters['link45_iyy']}"
+        iyz="${parameters['link45_iyz']}"
+        izz="${parameters['link45_izz']}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link45.STL"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link45.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${name}_joint5" type="revolute">
+    <origin xyz="${parameters['link45_translation']}"/>
+    <parent link="${name}_link45"/>
+    <child link="${name}_link56"/>
+    <limit
+      effort="${control_parameters['joint5_effort']}"
+      lower="${parameters['joint5_lower_angle_limit'] * pi/180}"
+      upper="${parameters['joint5_upper_angle_limit'] * pi/180}"
+      velocity="${control_parameters['joint5_velocity_limit'] * pi/180 *
+                (1 - velocity_margin)}"/>
+    <axis xyz="0 1 0"/>
+    <dynamics damping="${control_parameters['joint5_damping']}" friction="${control_parameters['joint5_friction']}"/>
+  </joint>
+
+  <link name="${name}_link56">
+    <inertial>
+      <origin xyz="-8.71294630254049E-05 0.0 0.00113740271757783"/>
+      <mass
+        value="${parameters['link56_mass']}"/>
+      <inertia
+        ixx="${parameters['link56_ixx']}"
+        ixy="${parameters['link56_ixy']}"
+        ixz="${parameters['link56_ixz']}"
+        iyy="${parameters['link56_iyy']}"
+        iyz="${parameters['link56_iyz']}"
+        izz="${parameters['link56_izz']}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link56.STL"/>
+      </geometry>
+      <material name="orange"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link56.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${name}_joint6" type="revolute">
+    <origin xyz="${parameters['link56_translation']}"/>
+    <parent link="${name}_link56"/>
+    <child link="${name}_link6G"/>
+    <limit
+      effort="${control_parameters['joint6_effort']}"
+      lower="${parameters['joint6_lower_angle_limit'] * pi/180}"
+      upper="${parameters['joint6_upper_angle_limit'] * pi/180}"
+      velocity="${control_parameters['joint6_velocity_limit'] * pi/180 *
+                (1 - velocity_margin)}"/>
+    <axis xyz="0 0 1"/>
+    <dynamics damping="${control_parameters['joint6_damping']}" friction="${control_parameters['joint6_friction']}"/>
+  </joint>
+
+  <link name="${name}_link6G">
+    <inertial>
+      <origin xyz="-0.00113740271757783 0.0 8.7129463025477E-05"/>
+      <mass
+        value="${parameters['link6G_mass']}"/>
+      <inertia
+        ixx="${parameters['link6G_ixx']}"
+        ixy="${parameters['link6G_ixy']}"
+        ixz="${parameters['link6G_ixz']}"
+        iyy="${parameters['link6G_iyy']}"
+        iyz="${parameters['link6G_iyz']}"
+        izz="${parameters['link6G_izz']}"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link6G.STL"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh
+          filename="package://p_arm_description/meshes/${version}/link6G.STL"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${name}_gripper_interface_joint" type="fixed">
+    <origin xyz="${parameters['link6G_translation']}"/>
+    <parent link="${name}_link6G"/>
+    <child link="${name}_gripper_interface_link"/>
+  </joint>
+
+  <link name="${name}_gripper_interface_link">
+    <inertial>
+      <!-- the inertia values are guessed-->
+      <origin xyz="0 0 0"/>
+      <mass
+        value="0.1"/>
+      <inertia
+        ixx="0.0001"
+        ixy="0.9"
+        ixz="0.0"
+        iyy="0.0001"
+        iyz="0.0"
+        izz="0.0001"/>
+    </inertial>
+  </link>
+
+
+
+  </xacro:macro>
+</robot>

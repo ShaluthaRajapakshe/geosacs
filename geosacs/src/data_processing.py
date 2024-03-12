@@ -2,7 +2,6 @@
 import rospy
 import os
 import numpy as np
-from custom_msgs.srv import LoadData, LoadDataResponse, LoadDataRequest
 from scipy.interpolate import CubicSpline
 from geometry_msgs.msg import Pose, PoseArray
 from std_msgs.msg import String
@@ -35,57 +34,19 @@ class DataProcessingNode():
         self.raw_dir = None
 
         # ROS Variables
-        rospy.Service("/tlgc/load_data_raw", LoadData, self.load_data_cb)
         self.raw_traj_pub = rospy.Publisher("/tlgc/raw_trajectory", PoseArray, queue_size=10)
         self.processed_traj_pub = rospy.Publisher("/tlgc/processed_trajectory", PoseArray, queue_size=10)
         self.clear_viz_pub = rospy.Publisher("/tlgc/viz_clear", String, queue_size=2)
         self.raw_pose_traj_pub = rospy.Publisher("/tlgc/raw_pose_trajectory", PoseArray, queue_size=10)
         self.processed_pose_traj_pub = rospy.Publisher("/tlgc/processed_pose_trajectory", PoseArray, queue_size=10)
 
-        self.tlgc_load_data_client = rospy.ServiceProxy("/tlgc/load_data_processed", LoadData)
         
         #Init Message
         rospy.sleep(1)
         rospy.loginfo("data_processing_node has been started")
 
 
-    def call_tlgc_load_data_processed(self, data_dir, task):
-        request = LoadDataRequest()  
-        request.data_directory = data_dir
-        request.task = task
 
-        try:
-            response = self.tlgc_load_data_client(request)
-            if response.success: rospy.loginfo(f"Success: {response.message}")
-            else: rospy.loginfo(f"Error: {response.message}")
-        except rospy.ServiceException as e:
-            rospy.logerr(f"Service call failed: {e}")
-    
-    def load_data_cb(self,request):
-        resp = LoadDataResponse()
-        self.data_dir = request.data_directory
-        self.task = request.task
-
-        self.raw_dir = self.data_dir + f"/{self.task}/record-raw"
-
-        if not os.path.exists(self.raw_dir) or not os.path.isdir(self.raw_dir):
-            resp.message = f"Directory {self.raw_dir} not found."
-            resp.success = False
-            return resp
-
-        items = os.listdir(self.raw_dir)
-        print(items)
-
-        if len(items) == 0:
-            resp.message = f"Directory {self.raw_dir} is empty."
-            resp.success = False
-            return resp
-        
-        self.process_data = True
-
-        resp.success = True
-        resp.message = "Directory found."
-        return resp
     
     
     def get_data(self, raw_dir):
