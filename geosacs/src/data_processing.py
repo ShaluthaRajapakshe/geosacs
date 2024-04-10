@@ -114,7 +114,7 @@ class DataProcessingNode():
         n = len(demos_xyz)
         filtered_demos_xyz = []
         filtered_demos_q = []
-        stepc = None
+        stepc = None  #there is an issue with this as stepc final value is the number of points from the second trajectory
 
         
         for i in range(n):
@@ -129,7 +129,7 @@ class DataProcessingNode():
             rospy.loginfo(f"  Trajectory size before step filtering: {positions.shape[0]}")
             # Determine step filter
             num_points = len(positions)
-            stepc = int(0.1 * num_points) # int() returns integer part
+            stepc = int(0.05 * num_points) # 0.1 # int() returns integer part
             if stepc == 0 : stepc = 1
             keep_idxs = list(range(0, num_points, stepc))
             if not (num_points-1)%stepc == 0: 
@@ -270,7 +270,7 @@ class DataProcessingNode():
     
     
     
-    def spatial_filter(self, demos_xyz, demos_q):
+    def spatial_filter(self, demos_xyz, demos_q):  
         rospy.loginfo("Spatial filtering of demos:")
   
         if len(demos_xyz) != len(demos_q):
@@ -452,12 +452,12 @@ class DataProcessingNode():
                     
     def run(self):
 
-        self.data_dir = "/home/jurassix16/TLGC_data"
+        self.data_dir = "/home/shalutha/TLGC_data"
         self.task = input("What is the name of the task? ")
         # self.task = "testlab"
         self.raw_dir = self.data_dir + f"/{self.task}/record-raw"
 
-        raw_demos_xyz, raw_demos_q = self.get_data(self.raw_dir)
+        raw_demos_xyz, raw_demos_q = self.get_data(self.raw_dir)  #only supports for two demos at the moment
         # demos_xyz, demos_q = self.static_filter(raw_demos_xyz, raw_demos_q)
         # demos_xyz, demos_q = self.step_filter(demos_xyz, demos_q)
         # demos_xyz, demos_q = self.spatial_filter(raw_demos_xyz, raw_demos_q)

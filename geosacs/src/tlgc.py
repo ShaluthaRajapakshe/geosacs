@@ -525,6 +525,159 @@ class TLGCNode():
             resulting_vector = (1/sin_omega) * ( np.sin((1.0 - t) * omega) * v0 + np.sin(t * omega) * v1)
 
         return resulting_vector
+
+    def get_correction_x_axes(self, model):
+
+        eT = model["eT"]
+        directrix = model["directrix"]
+        global_x = np.array([1, 0, 0])
+        global_y = np.array([0, 1, 0])
+        global_z = np.array([0, 0, 1])
+        nb_points = directrix.shape[0]
+
+        x_corr_axes = np.zeros((nb_points, 3))
+        previous_correction_x_axis = None
+
+        window_size = 10 ## We can play with this to see the effect
+    
+        for i in range(nb_points):
+            eT_curr =eT[i,:]
+    
+            # Alternative method method
+            T_normalized = eT_curr / np.linalg.norm(eT_curr)
+            projected_global_x = self.project_onto_plane(global_x, T_normalized)
+            correction_x_axis = projected_global_x
+
+            if i == 0 : 
+                previous_correction_x_axis = correction_x_axis
+                x_corr_axes[i,:] = correction_x_axis
+                continue
+            
+            ### Weighting the importance w.r.t global x and projected previous correction x axis
+            #project previous correction x axis onto the plane
+            previous_correction_x_axis = previous_correction_x_axis / np.linalg.norm(previous_correction_x_axis)
+            
+            projected_previous_correction = self.project_onto_plane(previous_correction_x_axis, T_normalized)
+            
+            #### Newly added ####
+            if (projected_global_x == np.array([0, 0, 0])).all():
+                projected_global_x = projected_previous_correction
+
+            theta_X = self.calculate_angle_between_vectors(global_x, projected_global_x) #in degrees
+            theta_C = self.calculate_angle_between_vectors(projected_previous_correction, projected_global_x) #in degrees
+
+            print(f"theta_X = {theta_X}, theta_C = {theta_C}")
+            t = np.radians(theta_X)/(np.pi/2)
+            
+            correction_x_axis = self.slerp(projected_global_x, projected_previous_correction, t, theta_C)
+            previous_correction_x_axis = correction_x_axis
+         
+            # Normalise and append
+            correction_x_axis /= np.linalg.norm(correction_x_axis)
+            x_corr_axes[i,:] = correction_x_axis
+
+        return x_corr_axes
+    
+
+
+    def get_correction_y_axes(self, model, x_corr_axes):
+        eT = model["eT"]
+        directrix = model["directrix"]
+
+        nb_points = directrix.shape[0]
+
+        y_corr_axes = np.zeros((nb_points, 3))
+      
+        ##newly added
+        previous_correction_y_axes = []  #we will use this list to find the average vector within the defined window
+        window_size = 10 ## We can play with this to see the effect
+
+    
+        for i in range(nb_points):
+            eT_curr =eT[i,:]
+            
+            # Alternative method method
+            T_normalized = eT_curr / np.linalg.norm(eT_curr)
+
+            correction_x_axis = x_corr_axes[i,:]
+            correction_y_axis = np.cross(T_normalized, correction_x_axis)
+
+            # # Newly added code for correction y axis
+            ### Handling for correction  Y axis
+
+            if i >= window_size:
+
+                ## Newly Added on 08th April 2024
+                previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[:window_size])
+                projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
+                correction_y_axis = np.cross(T_normalized, correction_x_axis)
+                y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
+
+                if y_angle_diff > 90:
+                            correction_y_axis = -correction_y_axis
+                        
+
+
+            else:
+                if previous_correction_y_axes == []: 
+                    correction_y_axis = np.cross(T_normalized, correction_x_axis)
+                else:
+                    previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes)
+                    projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
+                    correction_y_axis = np.cross(T_normalized, correction_x_axis)
+                    y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
+                    if y_angle_diff > 90:
+                        correction_y_axis = -correction_y_axis
+                   
+            
+
+            # Normalise and append
+         
+            correction_y_axis /= np.linalg.norm(correction_y_axis)
+
+            previous_correction_y_axes.append(correction_y_axis)
+
+            y_corr_axes[i,:] = correction_y_axis
+
+        return y_corr_axes
+    
+
+    def smoothen_correction_y_axes(self, model, y_corr_axes):
+        eT = model["eT"]
+        directrix = model["directrix"]
+        refine_window_size = 10
+
+        nb_points = directrix.shape[0]
+        t = 0.2
+
+        for i in range(int(0.1*nb_points), int(0.9*nb_points)):
+
+            eT_curr =eT[i,:]
+            
+            T_normalized = eT_curr / np.linalg.norm(eT_curr)
+
+            previous_mean_correction_y_axis = self.mean_direction(y_corr_axes[i-refine_window_size:i])
+            next_mean_correction_y_axis = self.mean_direction(y_corr_axes[i+1:i+1+refine_window_size])
+
+            projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
+            projected_next_mean_y_correction = self.project_onto_plane(next_mean_correction_y_axis, T_normalized)
+
+            mean_y_angle_diff = self.calculate_angle_between_vectors(projected_previous_mean_y_correction, projected_next_mean_y_correction)
+
+            ## Before doing slerp we might have to introduce a thereshold so that the orthogonality will be only removed at those points
+            ## Also ensure that the y axis are within the disk
+            if mean_y_angle_diff > 60:
+
+                corrected_y_corr_axis = self.slerp(projected_previous_mean_y_correction, projected_next_mean_y_correction, t, mean_y_angle_diff)
+            
+                y_corr_axes[i] = corrected_y_corr_axis
+
+        return y_corr_axes
+
+            
+
+
+
     
     def get_correction_axes(self, model):
             
@@ -545,6 +698,9 @@ class TLGCNode():
         ##newly added
         previous_correction_y_axes = []  #we will use this list to find the average vector within the defined window
         window_size = 10 ## We can play with this to see the effect
+        forward_window = 50
+
+        y_axis_changed = False
 
         for i in range(nb_points):
             eT_curr =eT[i,:]
@@ -597,15 +753,72 @@ class TLGCNode():
             # correction_y_axis = np.cross(T_normalized, correction_x_axis)
 
             # # Newly added code for correction y axis
-            ### Handling for correction  Y axis
+            ### Handling for correction  Y axis 
+            
 
             if i >= window_size:
-                previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[-window_size:])
+                # previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[-window_size:])
+                previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[:window_size])
                 projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
                 correction_y_axis = np.cross(T_normalized, correction_x_axis)
                 y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
+
                 if y_angle_diff > 90:
-                    correction_y_axis = -correction_y_axis
+                    # correction_y_axis = -correction_y_axis
+                    
+                    #####TO DO: THIS SHOULD BE ONLY PERFORMED IF BOTH ENDS ARE HORIZONTAL
+
+
+                    if i < eT.shape[0]-forward_window-1:
+                        eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
+                        eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
+                        curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
+
+                        
+
+                        z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
+
+                        if y_axis_changed:
+                            correction_y_axis = -correction_y_axis
+                        
+                        if z_diff > 30 and (not y_axis_changed):
+                            print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
+                            
+                            correction_y_axis = -correction_y_axis
+                            y_axis_changed  = True
+
+                    else:
+                        correction_y_axis = -correction_y_axis
+
+            
+                # ## Newly Added on 08th April 2024
+                # if i < nb_points*0.1 or i > nb_points*0.1:
+                #     previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[:window_size])
+                #     projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
+                #     correction_y_axis = np.cross(T_normalized, correction_x_axis)
+                #     y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
+
+                #     if y_angle_diff > 90:
+                #                 correction_y_axis = -correction_y_axis
+
+                # else:
+                #     previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[:window_size])
+                #     projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
+                #     correction_y_axis = np.cross(T_normalized, correction_x_axis)
+
+
+
+                # print (eT.shape)
+                ## Check the future mean direction of the tangent vectors to identify noise 
+                # if i < eT.shape[0]-forward_window-1:
+                #     eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
+                #     eT_angle_diff = self.calculate_angle_between_vectors(eT_mean, T_normalized)
+                #     if eT_angle_diff > 45:
+                #         if y_angle_diff > 90:
+                #             correction_y_axis = -correction_y_axis
+                # else:
+                #     if y_angle_diff > 90:
+                #             correction_y_axis = -correction_y_axis
             else:
                 if previous_correction_y_axes == []: 
                     correction_y_axis = np.cross(T_normalized, correction_x_axis)
@@ -730,7 +943,7 @@ class TLGCNode():
         return min_start_z, min_end_z
 
     def run(self):
-        self.data_dir = "/home/jurassix16/TLGC_data"
+        self.data_dir = "/home/shalutha/TLGC_data"
         self.task = input("What is the name of the task? ")
         # self.task = "laundry_loop3"
         raw_dir = self.data_dir + f"/{self.task}/record-raw"
@@ -740,13 +953,17 @@ class TLGCNode():
         processed_demos_xyz, processed_demos_q = self.get_processed_demos(processed_dir)
         demos_xyz, demos_q = self.reshape_demos(processed_demos_xyz, processed_demos_q)
         
-        idx = np.array([0, 0]) #These values should be adjusted depending on demo #3,20 for tnb vs tny
+        idx = np.array([60,70]) #These values should be adjusted depending on demo #3,20 for tnb vs tny
         xyz_model = self.get_model(demos_xyz, idx)
         
         min_start, min_end = self.get_minimums(processed_demos_xyz)
         # xyz_model = self.saturate_model(xyz_model, min_start, min_end)
 
         x_corr_axes, y_corr_axes = self.get_correction_axes(xyz_model)
+
+        # x_corr_axes = self.get_correction_x_axes(xyz_model)
+        # y_corr_axes = self.get_correction_y_axes(xyz_model, x_corr_axes)
+        # y_corr_axes = self.smoothen_correction_y_axes(xyz_model, y_corr_axes)
 
         q_mean = self.get_mean(demos_q, idx)
         q_weights = self.get_orientation_weights(processed_demos_q, q_mean, idx)
@@ -758,10 +975,10 @@ class TLGCNode():
         model["q_weights"] = q_weights
 
         self.clear_viz_pub.publish("all")
-        self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
-        self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+        # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+        # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
         self.visualise_gc(model["GC"])
-        self.visualise_directrix(model["directrix"], model["q"])
+        # self.visualise_directrix(model["directrix"], model["q"])
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
         # self.visualise_TNB_axes(model["eN"], model["directrix"], "eN")
         # self.visualise_TNB_axes(model["eB"], model["directrix"], "eB")
@@ -790,18 +1007,19 @@ class TLGCNode():
             model["q_weights"] = q_weights
 
             self.clear_viz_pub.publish("all")
-            self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
-            self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
-            # First 50 points
-            self.visualise_gc(model["GC"][:50,:,:])
-            self.visualise_directrix(model["directrix"][:50,:], model["q"][:50,:])
-            self.visualise_TNB_axes(model["eT"][:50,:], model["directrix"][:50,:], "eT")
-            self.visualise_correction_axes(model["x_corr_axes"][:50,:], model["y_corr_axes"][:50,:], model["directrix"][:50,:])
-            # Last 50 points
-            self.visualise_gc(model["GC"][-50:,:,:])
-            self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
-            self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
-            self.visualise_correction_axes(model["x_corr_axes"][-50:,:], model["y_corr_axes"][-50:,:], model["directrix"][-50:,:])
+
+            # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+            # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+            # # First 50 points
+            # self.visualise_gc(model["GC"][:50,:,:])
+            # self.visualise_directrix(model["directrix"][:50,:], model["q"][:50,:])
+            # self.visualise_TNB_axes(model["eT"][:50,:], model["directrix"][:50,:], "eT")
+            # self.visualise_correction_axes(model["x_corr_axes"][:50,:], model["y_corr_axes"][:50,:], model["directrix"][:50,:])
+            # # Last 50 points
+            # self.visualise_gc(model["GC"][-50:,:,:])
+            # self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
+            # self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
+            # self.visualise_correction_axes(model["x_corr_axes"][-50:,:], model["y_corr_axes"][-50:,:], model["directrix"][-50:,:])
 
             if input("Crop again ? ([y]/n]") == "n":
                 crop=False

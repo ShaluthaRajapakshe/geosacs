@@ -11,7 +11,7 @@ class myPApplication():
         # Variables
         self.rate = rospy.Rate(10)  
         # Specify the script you want to run here
-        self.script_path = "/home/jurassix16/final_ws/src/geosacs/lio_specific_pkg/scripts/move_joint.py"
+        self.script_path = "/home/shalutha/geosacs_ws/src/geosacs/lio_specific_pkg/scripts/move_joint.py"
         self.start = False
 
         # ROS Variables

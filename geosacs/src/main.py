@@ -574,7 +574,7 @@ class MainNode():
     
     def run(self):
         # Specify data directory and task
-        data_dir = "/home/jurassix16/TLGC_data"
+        data_dir = "/home/shalutha/TLGC_data"
         task = input("What is the name of the task? ")
         model_dir = data_dir +f"/{task}/model"
         raw_dir = data_dir + f"/{task}/record-raw"
@@ -591,17 +591,20 @@ class MainNode():
             q_weights = np.ones((model["q"].shape[0], 1))
 
         self.clear_rviz_pub.publish("all")
+
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
         # rospy.loginfo("Loading demonstration data visualisation...")
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
-        # rospy.loginfo("Loading GC visualisation...")
-        # self.visualise_gc(model["GC"])
-        # rospy.loginfo("Loading directrix visualisation...")
-        # self.visualise_directrix(model["directrix"], model["q"])
-        # rospy.loginfo("Loading correction axes visualisation...")
-        # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+        rospy.loginfo("Loading GC visualisation...")
+        self.visualise_gc(model["GC"])
+        
+        rospy.loginfo("Loading directrix visualisation...")
+        self.visualise_directrix(model["directrix"], model["q"])
+        rospy.loginfo("Loading correction axes visualisation...")
+        self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+
         # rospy.loginfo("Loading eT visualisation...")
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
         # rospy.loginfo("Loading eN visualisation...")

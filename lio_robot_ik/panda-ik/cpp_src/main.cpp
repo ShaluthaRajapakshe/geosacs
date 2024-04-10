@@ -68,6 +68,7 @@ int main(int argc, char **argv) {
     bool run = true;
     double q_weight = 1.;          //will use this constant weight if weighted_pose is false
 
+    // If dynamic weight adjustment is needed (set through the panda ik launch file)
     ros::Subscriber twistSub1 = nh.subscribe<geosacs::WeightedPose>("/weighted_pose", 10,
     [&](const geosacs::WeightedPose::ConstPtr& msg) {
         if (weighted_pose){
@@ -79,6 +80,7 @@ int main(int argc, char **argv) {
     }
     );
 
+    // Normal mode
     ros::Subscriber twistSub2 = nh.subscribe<geometry_msgs::PoseStamped>("/commanded_pose", 1,
     [&](const geometry_msgs::PoseStamped::ConstPtr& msg) {
         if(!weighted_pose){

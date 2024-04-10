@@ -330,7 +330,7 @@ class VisualiseTLGC():
     
     def run(self):
         # Specify data directory and task
-        data_dir = "/home/jurassix16/TLGC_data"
+        data_dir = "/home/shalutha/TLGC_data"
         task = input("What is the name of the task? ")
         model_dir = data_dir +f"/{task}/model"
         raw_dir = data_dir + f"/{task}/record-raw"

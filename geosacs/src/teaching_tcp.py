@@ -23,17 +23,17 @@ class TeachingTCP():
 
         # ROS Variables
         rospy.Subscriber("/lio_1c/pose", PoseStamped, self.pose_cb )
-        rospy.Subscriber("/service2topic/status", String, self.status_cb)
+        rospy.Subscriber("/service2topic/status", String, self.status_cb)  # its directly listening to lio gripper
         self.lio_req_tcp_pub = rospy.Publisher("/request_tcp_pub", String, queue_size=2)
         self.commanded_pos_pub = rospy.Publisher("/commanded_pose", PoseStamped, queue_size=2)
-        self.lio_status_req_pub = rospy.Publisher("/service2topic/request", String, queue_size=2)
+        self.lio_status_req_pub = rospy.Publisher("/service2topic/request", String, queue_size=2) 
         # # Visualisation
         self.raw_traj_pub = rospy.Publisher("/tlgc/raw_trajectory", PoseArray, queue_size=10)
         self.clear_viz_pub = rospy.Publisher("/tlgc/viz_clear", String, queue_size=2)
         self.raw_pose_traj_pub = rospy.Publisher("/tlgc/raw_pose_trajectory", PoseArray, queue_size=2)
 
         #Path Variables (absolute)
-        self.data_directory = Path("/home/jurassix16/TLGC_data") #/home/atharvad/TLGC_data
+        self.data_directory = Path("/home/shalutha/TLGC_data") #/home/atharvad/TLGC_data
         
         #Init Message
         rospy.sleep(1)
@@ -132,16 +132,21 @@ class TeachingTCP():
         self.observations["orientation"].clear()
 
         # Recording will start&stop when Lio released.
-        self.lio_status_req_pub.publish("start")
+        self.lio_status_req_pub.publish("start") 
         print("Recording will start when Lio released.")
         self.release_to_record = True
-        while not self.recording:
-            rospy.sleep(0.1)
+
+        # wait until user releases the robot
+        while not self.recording:  
+            rospy.sleep(0.1) 
+        
+        # start recording after exiting from the above while loop and wait until user again press the release buttob to stop the recording
         print("Recording...")
         while self.recording:
             rospy.sleep(0.1)
         print("Recording stopped.")
         self.release_to_record = False
+
         self.lio_status_req_pub.publish("stop")
 
         # Get Data
@@ -198,7 +203,7 @@ class TeachingTCP():
             msg.header.frame_id = self.frame
 
         # Publish for visualisation
-        self.raw_pose_traj_pub.publish(msg)
+        self.raw_pose_traj_pub.publish(msg) 
         self.raw_traj_pub.publish(msg)
     
 
@@ -210,7 +215,7 @@ class TeachingTCP():
         print(raw_dir)
         os.makedirs(raw_dir, exist_ok=True)
 
-        self.clear_viz_pub.publish("all")
+        self.clear_viz_pub.publish("all")  
 
         while more:
             demo_file = raw_dir / f"{task}-{self.demo_index}.npz"
