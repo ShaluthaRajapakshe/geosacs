@@ -650,7 +650,7 @@ class MainNode():
             rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-s_model['directrix'][0,:])}")
             rospy.loginfo(f"  Rc[0]={s_model['Rc'][0]}. Starting ratio={Ratio}")
             
-            repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy)
+            repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, model["xyz_corr_y"], direction)
             trajectory_xyz = repro_trajectories[0]
             # print(trajectory_xyz)
             trajectory_q = s_model["q"]
@@ -779,7 +779,8 @@ class MainNode():
                     Ratio = np.array([Ratio])
                     # Create new trajectory for remaining points
                     small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY}
-                    newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy)
+                    newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, model["xyz_corr_y"], direction)
+
                     
                     trajectory_xyz[i:]= newTrajectory[0]                    
                     rospy.loginfo(f"  -> New trajectory_xyz of length {len(newTrajectory[0])}  with first point: {newTrajectory[0][0]}")

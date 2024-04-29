@@ -701,6 +701,7 @@ class TLGCNode():
         forward_window = 50
 
         y_axis_changed = False
+        vertical_end = False
 
         for i in range(nb_points):
             eT_curr =eT[i,:]
@@ -763,32 +764,58 @@ class TLGCNode():
                 correction_y_axis = np.cross(T_normalized, correction_x_axis)
                 y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
 
-                if y_angle_diff > 90:
-                    # correction_y_axis = -correction_y_axis
+                if i < eT.shape[0]-forward_window-1:
+                    eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
+                    eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
+                    curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
+
+                    z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
+
+                    if y_axis_changed:
+                        correction_y_axis = -correction_y_axis
                     
-                    #####TO DO: THIS SHOULD BE ONLY PERFORMED IF BOTH ENDS ARE HORIZONTAL
+                    if z_diff > 30 and (not y_axis_changed):
+                        print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
 
-
-                    if i < eT.shape[0]-forward_window-1:
-                        eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
-                        eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
-                        curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
-
-                        
-
-                        z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
-
-                        if y_axis_changed:
-                            correction_y_axis = -correction_y_axis
-                        
-                        if z_diff > 30 and (not y_axis_changed):
-                            print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
-                            
+                        if y_angle_diff > 90:
                             correction_y_axis = -correction_y_axis
                             y_axis_changed  = True
+                            self.corr_y_changed_idx_xyz = directrix[i]
 
-                    else:
+                else:
+                    ## We have to change the variable vertical end by identifying whether an end is horizontal or vertical
+                    if y_angle_diff > 90 and not vertical_end:
                         correction_y_axis = -correction_y_axis
+
+
+
+                # if y_angle_diff > 90:
+                #     # correction_y_axis = -correction_y_axis
+                    
+                #     #####TO DO: THIS SHOULD BE ONLY PERFORMED IF BOTH ENDS ARE HORIZONTAL # WE CAN FIND IT THROUGH THE NEW METHOD
+
+
+                #     if i < eT.shape[0]-forward_window-1:
+                #         eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
+                #         eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
+                #         curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
+
+                        
+
+                #         z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
+
+                #         if y_axis_changed:
+                #             correction_y_axis = -correction_y_axis
+                        
+                #         if z_diff > 30 and (not y_axis_changed):
+                #             print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
+                            
+                #             correction_y_axis = -correction_y_axis
+                #             y_axis_changed  = True
+
+                #     else:
+                #         print("HEEEEU")
+                #         correction_y_axis = -correction_y_axis
 
             
                 # ## Newly Added on 08th April 2024
@@ -953,7 +980,7 @@ class TLGCNode():
         processed_demos_xyz, processed_demos_q = self.get_processed_demos(processed_dir)
         demos_xyz, demos_q = self.reshape_demos(processed_demos_xyz, processed_demos_q)
         
-        idx = np.array([60,70]) #These values should be adjusted depending on demo #3,20 for tnb vs tny
+        idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 for task 1 and 10,10 for task2 
         xyz_model = self.get_model(demos_xyz, idx)
         
         min_start, min_end = self.get_minimums(processed_demos_xyz)
@@ -973,6 +1000,7 @@ class TLGCNode():
         model["x_corr_axes"] = x_corr_axes
         model["y_corr_axes"] = y_corr_axes
         model["q_weights"] = q_weights
+        model["xyz_corr_y"] = self.corr_y_changed_idx_xyz
 
         self.clear_viz_pub.publish("all")
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
@@ -1005,6 +1033,8 @@ class TLGCNode():
             model["x_corr_axes"] = x_corr_axes
             model["y_corr_axes"] = y_corr_axes
             model["q_weights"] = q_weights
+            model["xyz_corr_y"] = self.corr_y_changed_idx_xyz
+
 
             self.clear_viz_pub.publish("all")
 
