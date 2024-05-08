@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strategy, idx_corr_y, direction ):
+def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strategy, direction ):
     if np.size(starting) != numRepro:
         raise ValueError('The number of starting points should be equal to the number of reproductions')
     if np.size(initPoint, 0) != numRepro:
@@ -12,6 +12,12 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
     
     eN = model['x_corr_axes']
     eB = model['y_corr_axes']
+
+    idx_corr_y = model["xyz_corr_y"]
+
+    vertical_start = model["vertical_start"]
+    vertical_end = model["vertical_end"]
+
     szd = directrix.shape[0]
     
     newTrajectories = [None] * numRepro
@@ -45,12 +51,13 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
                 DCMl2g = np.vstack((eN[ii, :], -eB[ii, :], eT[ii, :]))  # Local2Global DCM using current TNB
                 DCMg2l = DCMl2g.T
 
-            if (directrix[ii,:] == idx_corr_y).all() and not dir_changed:
-                if direction == 1:
-                    DCMl2g = np.vstack((eN[ii, :], -eB[ii, :], eT[ii, :]))  # Local2Global DCM using current TNB
-                
-                DCMg2l = DCMl2g.T
-                dir_changed = True
+            if not vertical_start and not vertical_end:
+                if (directrix[ii,:] == idx_corr_y).all() and not dir_changed:
+                    if direction == 1:
+                        DCMl2g = np.vstack((eN[ii, :], -eB[ii, :], eT[ii, :]))  # Local2Global DCM using current TNB
+                    
+                    DCMg2l = DCMl2g.T
+                    dir_changed = True
 
             # Adapt ratio
 

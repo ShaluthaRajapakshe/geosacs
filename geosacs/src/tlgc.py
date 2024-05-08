@@ -22,7 +22,9 @@ class TLGCNode():
         self.processed_dir = None
         self.task = None
         self.process_data = False
-
+        self.vertical_start = False
+        self.vertical_end = False
+        
         # ROS Variables
 
         self.directrix_pub = rospy.Publisher("/tlgc/directrix", PoseArray, queue_size=10)
@@ -701,7 +703,55 @@ class TLGCNode():
         forward_window = 50
 
         y_axis_changed = False
-        vertical_end = False
+        # vertical_end = False
+        # verticl_start = False
+        
+
+        self.corr_y_changed_idx_xyz = None
+
+        #vertical/horizontal check
+
+        mean_eT_dir_at_start = self.mean_direction(eT[:window_size])
+        mean_eT_dir_at_end = self.mean_direction(eT[-window_size:])
+
+        z_diff_at_start = self.calculate_angle_between_vectors(mean_eT_dir_at_start, global_z)
+        z_diff_at_end = self.calculate_angle_between_vectors(mean_eT_dir_at_end, global_z)
+
+
+        print("############## z_diff_at_start", z_diff_at_start, "z_diff_at_end", z_diff_at_end)
+
+        if z_diff_at_start < 90:
+            if z_diff_at_start > 45:
+                self.vertical_start = True 
+                print("Vertical start", z_diff_at_start)
+            else:
+                self.vertical_start = False
+                print("Horizontal start", z_diff_at_start)
+        else:
+            if z_diff_at_start < 145:
+                self.vertical_start = True  
+                print("Vertical start", z_diff_at_start)
+            else:
+                self.vertical_start = False
+                print("Horizontal start", z_diff_at_start)
+
+        if z_diff_at_end < 90: # check for greater than 90 scenrios
+            if z_diff_at_end > 45:
+                self.vertical_end = True 
+                print("Vertical end", z_diff_at_end)
+            else:
+                self.vertical_end = False
+                print("Horizontal end", z_diff_at_end)
+
+        else:
+            if z_diff_at_end < 145:
+                self.vertical_end = True
+                print("Vertical end", z_diff_at_end)
+            else:
+                self.vertical_end = False
+                print("Horizontal end", z_diff_at_end)
+            
+
 
         for i in range(nb_points):
             eT_curr =eT[i,:]
@@ -745,7 +795,7 @@ class TLGCNode():
 
             # theta_C = np.radians(theta_C)
             # theta_X = np.radians(theta_X)
-            print(f"theta_X = {theta_X}, theta_C = {theta_C}")
+            # print(f"theta_X = {theta_X}, theta_C = {theta_C}")
             t = np.radians(theta_X)/(np.pi/2)
             
             correction_x_axis = self.slerp(projected_global_x, projected_previous_correction, t, theta_C)
@@ -764,29 +814,43 @@ class TLGCNode():
                 correction_y_axis = np.cross(T_normalized, correction_x_axis)
                 y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
 
-                if i < eT.shape[0]-forward_window-1:
-                    eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
-                    eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
-                    curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
+                both_vertical = (self.vertical_end) and (self.vertical_start)
+                both_horizontal = (not self.vertical_end) and (not self.vertical_start)
 
-                    z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
+                #If both ends are either vertical or horizontal
+                if (both_vertical) or (both_horizontal): 
 
-                    if y_axis_changed:
-                        correction_y_axis = -correction_y_axis
-                    
-                    if z_diff > 30 and (not y_axis_changed):
-                        print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
+                    if i < eT.shape[0]-forward_window-1:
+                        eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
+                        eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
+                        curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
 
+                        z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
+
+                        if y_axis_changed: #Should only apply if both ends are horizontal
+                            correction_y_axis = -correction_y_axis
+                        
+                        if z_diff > 30 and (not y_axis_changed): #Should only apply if both ends are horizontal
+                            # print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
+
+                            if y_angle_diff > 90:
+                                correction_y_axis = -correction_y_axis
+                                y_axis_changed  = True
+                                self.corr_y_changed_idx_xyz = directrix[i]
+
+                    else:
+                        ## We have to change the variable vertical end by identifying whether an end is horizontal or vertical
                         if y_angle_diff > 90:
                             correction_y_axis = -correction_y_axis
-                            y_axis_changed  = True
-                            self.corr_y_changed_idx_xyz = directrix[i]
 
-                else:
-                    ## We have to change the variable vertical end by identifying whether an end is horizontal or vertical
-                    if y_angle_diff > 90 and not vertical_end:
+                else: ###  for one horizontal and one vertical end 
+                    previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[-window_size:])
+                    projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
+                    correction_y_axis = np.cross(T_normalized, correction_x_axis)
+                    y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
+                
+                    if y_angle_diff > 90:
                         correction_y_axis = -correction_y_axis
-
 
 
                 # if y_angle_diff > 90:
@@ -1000,7 +1064,13 @@ class TLGCNode():
         model["x_corr_axes"] = x_corr_axes
         model["y_corr_axes"] = y_corr_axes
         model["q_weights"] = q_weights
-        model["xyz_corr_y"] = self.corr_y_changed_idx_xyz
+        model["vertical_start"] = self.vertical_start
+        model["vertical_end"] = self.vertical_end
+
+        if self.corr_y_changed_idx_xyz is not None:
+            model["xyz_corr_y"] = self.corr_y_changed_idx_xyz
+        else:
+            model["xyz_corr_y"] = None
 
         self.clear_viz_pub.publish("all")
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
@@ -1033,7 +1103,15 @@ class TLGCNode():
             model["x_corr_axes"] = x_corr_axes
             model["y_corr_axes"] = y_corr_axes
             model["q_weights"] = q_weights
-            model["xyz_corr_y"] = self.corr_y_changed_idx_xyz
+            # model["xyz_corr_y"] = self.corr_y_changed_idx_xyz  #TO DO:  change this when the ends are vertical
+
+            if self.corr_y_changed_idx_xyz is not None:
+                model["xyz_corr_y"] = self.corr_y_changed_idx_xyz
+            else:
+                model["xyz_corr_y"] = [0,0,0]
+
+            model["vertical_start"] = self.vertical_start
+            model["vertical_end"] = self.vertical_end
 
 
             self.clear_viz_pub.publish("all")

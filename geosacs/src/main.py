@@ -567,6 +567,11 @@ class MainNode():
         sliced_model["q"] = model["q"][keep_idxs, :] 
         sliced_model["GC"] = model["GC"][keep_idxs, :] 
 
+        sliced_model["vertical_start"] = model["vertical_start"]
+        sliced_model["vertical_end"] = model["vertical_end"]
+
+        sliced_model["xyz_corr_y"] = model["xyz_corr_y"]
+
         rospy.loginfo(f"  Sliced model directrix shape {sliced_model['directrix'].shape}")
 
         return sliced_model, direction
@@ -650,7 +655,8 @@ class MainNode():
             rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-s_model['directrix'][0,:])}")
             rospy.loginfo(f"  Rc[0]={s_model['Rc'][0]}. Starting ratio={Ratio}")
             
-            repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, model["xyz_corr_y"], direction)
+            print("#######################", s_model["xyz_corr_y"])
+            repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction)
             trajectory_xyz = repro_trajectories[0]
             # print(trajectory_xyz)
             trajectory_q = s_model["q"]
@@ -726,6 +732,10 @@ class MainNode():
                     x_corr_axes = s_model["x_corr_axes"]
                     y_corr_axes = s_model["y_corr_axes"]
 
+                    xyz_corr_y = s_model["xyz_corr_y"]
+                    vertical_start = s_model["vertical_start"]
+                    vertical_end = s_model["vertical_end"]
+
                     start_correction_time = rospy.Time.now()
                     start_position = PcurrG
                     if self.physical_robot: 
@@ -778,8 +788,8 @@ class MainNode():
                     PcurrG_corr = np.array([[PcurrG_corr[0], PcurrG_corr[1], PcurrG_corr[2]]])
                     Ratio = np.array([Ratio])
                     # Create new trajectory for remaining points
-                    small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY}
-                    newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, model["xyz_corr_y"], direction)
+                    small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY, "xyz_corr_y": xyz_corr_y, "vertical_start": vertical_start, "vertical_end": vertical_start }
+                    newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction)
 
                     
                     trajectory_xyz[i:]= newTrajectory[0]                    
