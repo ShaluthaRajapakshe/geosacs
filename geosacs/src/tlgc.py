@@ -391,6 +391,8 @@ class TLGCNode():
     def adjust_TNB(self, i, T, gc_circles, Rc, eT, eN, eB, directrix):
 
         T = T/np.linalg.norm(T)
+
+        # print("T inside the function", T)
         
         # Change N and B
         N = self.project_onto_plane(eN[i,:], T)
@@ -533,6 +535,16 @@ class TLGCNode():
         else:
             # print("No intersection")
             return False, None
+        
+    def constraint_function(self, angle, normal1, circle1, normal2, center2, i):
+        axis = np.cross(normal1, normal2)
+        rotated_normal2 = self.rodrigues_rotation(normal2, axis, angle[0])
+
+        # Check for intersection
+        intersection, _ = self.check_intersections_simple(circle1, center2, normal1, rotated_normal2, i)
+        if intersection:
+            return 1  # Return a positive value indicating an overlap
+        return 0  # No intersection
     
 
     def objective_function(self, angle, normal1, circle1, normal2, center2, i):
@@ -542,15 +554,93 @@ class TLGCNode():
 
         # Check for intersection
         intersection, penalty = self.check_intersections_simple(circle1, center2, normal1, rotated_normal2, i)
+
         if intersection:
             # Penalize intersection heavily
-            return penalty
+            return penalty + 1000  # Large penalty for intersections
 
-        return 0
+        # Add a small penalty for the angle to avoid unnecessary increases
+        return angle[0] ** 2  # Small penalty for angle itself
+    
+        # if intersection:
+        #     # Penalize intersection heavily
+        #     return penalty
+
+        # return 0
+
+
+    def check_intersections_geometric(self, circle1, center2, normal2):
+
+        for point in circle1:
+            
+            vector_pointing_to_directrix = (point[0] - center2[0], point[1] - center2[1], point[2] - center2[2])
+
+            theta_val = self.calculate_angle_between_vectors(normal2, vector_pointing_to_directrix) #in degrees
+
+            if theta_val < 90: ##Intersection exist
+                return True
+
+        else:
+            # print("No intersection")
+            return False
+
+
+    def optimize_orientation_geometric(self, i, gc_circles, directrix, eT):
+        center2 = directrix[i + 1]
+        normal2 = eT[i + 1]
+        normal1 = eT[i]
+        circle1 = gc_circles[i, :, :]
+
+        # decrement = -np.pi / 180  # Increment angle in radians (1 degree)
+        decrement = -1 # Increment angle 1 degree
+
+        initial_angle_between_two_planes = self.relative_angle_between_planes(normal1, normal2)
+
+        intersection_exist = self.check_intersections_geometric(circle1, center2, normal2)
+
+        ##
+        init_in_degrees = np.degrees(initial_angle_between_two_planes)
+
+
+        if intersection_exist:
+            print("Geometric: Insection exist in", i,"and ", i+1, "and the initial angle is", init_in_degrees)
+            unit_rotated_normal2 = normal2
+
+            for angle in range(int(init_in_degrees), 0, decrement): ##angle value decreases in degrees
+                # print("angle ", angle)
+                axis = np.cross(normal2, normal1) #this will ensure that we should always do a leftward rotation to decrease the angle
+                if np.linalg.norm(axis) == 0:
+                    return unit_rotated_normal2
+                
+                else:
+                    unit_axis = axis / np.linalg.norm(axis)
+
+                angle_to_rotate = np.radians(init_in_degrees - angle)
+                # print("angle to rotate", np.degrees(angle_to_rotate))
+
+                rotated_normal2 = self.rodrigues_rotation(normal2, unit_axis, angle_to_rotate)
+                unit_rotated_normal2 = rotated_normal2 / np.linalg.norm(rotated_normal2)
+
+                new_angle = self.relative_angle_between_planes(normal1, rotated_normal2)
+                # print ("New angle between the two planes", np.degrees(new_angle))
+
+                intersection_exist_after_rotation = self.check_intersections_geometric(circle1, center2, rotated_normal2)
+
+                if not intersection_exist_after_rotation:
+                    print(f"Intersection resolved with angle {angle} degrees between the plane and rotated", np.degrees(angle_to_rotate), "from initial")
+                    # print ("initial and rotated vectors", normal2, unit_rotated_normal2)
+                    return unit_rotated_normal2
+                
+            else:
+                print("############### couldn't find an angle without intersection at", i, "so returning the closest vector")
+                return unit_rotated_normal2
+                
+
+        print("No intersection, returning the previous normal", i)
+        return normal2
 
 
     def optimize_orientation(self, i, gc_circles, directrix, eT):
-    
         center2 = directrix[i+1]
         center1 = directrix[i]  
 
@@ -566,7 +656,7 @@ class TLGCNode():
             vector_pointing_to_directrix = (point[0] - center2[0], point[1] - center2[1], point[2] - center2[2])
             theta_val = self.calculate_angle_between_vectors(normal2, vector_pointing_to_directrix) #in degrees
             if theta_val < 90: ##Intersection exist
-                # print("intersection exist in", i)
+                print("intersection exist in", i)
                 intersection_exist = True
                 break
                 ## check the current angle between the two planes/normal vector and the rotated normal
@@ -576,18 +666,23 @@ class TLGCNode():
                 
     
         if intersection_exist:
-            initial_guess = self.relative_angle_between_planes(normal1, normal2)
-            # print("initial angle between", i, "and ", i+1, " th cross sections", initial_guess)
+            initial_angle = self.relative_angle_between_planes(normal1, normal2)
+            print("initial angle between", i, "and ", i+1, " th cross sections", initial_angle)
             
-            initial_guess = initial_guess*0.1 #initially we will adjust 10% from the initial angle between the two planes
-            
+            initial_guess = [0]  # Start with no adjustment
         
-            result = minimize(self.objective_function, initial_guess, args=(normal1, circle1, normal2, center2, i), bounds=[(-np.pi / 4, np.pi / 4)])
+            bounds = [(0, initial_angle)]
+
+            constraints = {'type': 'eq', 'fun': self.constraint_function, 'args': (normal1, circle1, normal2, center2, i)}
+            
+            result = minimize(self.objective_function, initial_guess, args=(normal1, circle1, normal2, center2, i), bounds=bounds, constraints=constraints, method='SLSQP')
+            # result = minimize(self.objective_function, initial_guess, args=(normal1, circle1, normal2, center2, i), bounds=[(-np.pi / 4, np.pi / 4)])
+            # result = minimize(self.objective_function, initial_guess, args=(normal1, circle1, normal2, center2, i), bounds=bounds)
 
             optimized_angle = result.x[0]
-            # print("the angle needed to rotate", optimized_angle)
+            print("the angle needed to rotate", optimized_angle)
             axis = np.cross(normal1, normal2)
-            optimized_normal2 = self.rodrigues_rotation(normal2, axis, optimized_angle)
+            optimized_normal2 = self.rodrigues_rotation(normal2, axis, initial_angle - optimized_angle)
 
             angle_after_opt = self.relative_angle_between_planes(normal1, optimized_normal2)
             # print("######### after opt angle between", i, "and ", i+1, " th cross sections", angle_after_opt)
@@ -595,7 +690,7 @@ class TLGCNode():
             return optimized_normal2
         
         else:
-            print("No intersection returning the previous normal")
+            print("No intersection returning the previous normal", i)
             return normal2
     
 
@@ -660,22 +755,7 @@ class TLGCNode():
         return eT
     
 
-    # Objective function for optimization
-    def objective_function_bulk_normal_test(self, intermediate_normals, eT, circles, directrix):
-        # Combine fixed start/end normals with the intermediate normals
-        all_normals = np.vstack(([eT[0]], intermediate_normals.reshape((-1, 3)), [eT[-1]]))
-        penalty = 0
 
-        for i in range(len(all_normals) - 1):
-            angle = self.relative_angle_between_planes(all_normals[i], all_normals[i + 1])
-            penalty += angle
-
-            intersection_exist,_ = self.check_intersections_simple(circles[i], directrix[i+1], all_normals[i], all_normals[i + 1], i)
-
-            if intersection_exist:
-                penalty += 10  # Large penalty for intersections
-        print("### Penalty", penalty)
-        return penalty
 
 
     def optimized_bulk_normal_test(self, model, opt_num_circles=30):
@@ -689,12 +769,17 @@ class TLGCNode():
         # Define bounds for each component of each intermediate normal
         bounds = [(-1, 1)] * (num_intermediate * 3)
 
+        # options = {
+        # 'maxiter': 50,         # Maximum number of iterations
+        # 'ftol': 1e-6,            # Function value tolerance
+        # 'gtol': 1e-6,            # Gradient tolerance
+        # }
         options = {
-        'maxiter': 50,         # Maximum number of iterations
-        'ftol': 1e-6,            # Function value tolerance
-        'gtol': 1e-6,            # Gradient tolerance
+            'maxiter': 100,         # Increase max iterations
+            'ftol': 1e-9,           # Tighten function value tolerance
+            'gtol': 1e-9,           # Tighten gradient tolerance
         }
-        
+
         result = minimize(self.objective_function_bulk_normal_test, initial_guess, args=(eT, gc_circles, directrix), bounds=bounds, options=options)
         
         optimized_normals = result.x.reshape((-1, 3))
@@ -704,6 +789,163 @@ class TLGCNode():
         model["eT"][-opt_num_circles:,:] = eT
         eT = model["eT"]
         return eT
+    
+
+        # Objective function for optimization
+    def objective_function_bulk_normal_test(self, intermediate_normals, eT, circles, directrix):
+        # Combine fixed start/end normals with the intermediate normals
+        all_normals = np.vstack(([eT[0]], intermediate_normals.reshape((-1, 3)), [eT[-1]]))
+        penalty = 0
+
+        intersection_count = 0
+
+        for i in range(len(all_normals) - 1):
+            angle = self.relative_angle_between_planes(all_normals[i], all_normals[i + 1])
+            # penalty += angle
+
+            intersection_exist,_ = self.check_intersections_simple(circles[i], directrix[i+1], all_normals[i], all_normals[i + 1], i)
+
+            if intersection_exist:  #only if there is and intersection we should try to minimize the angle
+                penalty += angle*10
+                intersection_count += 1
+                # penalty += 10  # Large penalty for intersections
+        print("### Penalty", penalty, "number of intersections: ", intersection_count)
+        return penalty
+    
+
+    def objective_function_bulk_normal_angle(self, intermediate_angles_guess, int_eT, len_eT, circles, directrix):
+        # Combine fixed start/end normals with the intermediate normals
+        # all_angles = np.vstack(([eT[0]], intermediate_angles_guess.reshape((-1, 3)), [eT[-1]]))
+
+        # all_angles = np.vstack(intermediate_angles_guess)
+        penalty = 0
+
+        intersection_count = 0
+
+        for i in range(len(intermediate_angles_guess)):
+
+            # angle = self.relative_angle_between_planes(int_eT[i], int_eT[i + 1])
+            angle = intermediate_angles_guess[i]
+            # penalty += angle
+
+            intersection_exist,_ = self.check_intersections_simple(circles[i], directrix[i+1], int_eT[i], int_eT[i + 1], i)
+
+            if intersection_exist:  #only if there is and intersection we should try to minimize the angle
+                penalty += angle
+                intersection_count += 1
+                # penalty += 10  # Large penalty for intersections
+        print("### Penalty", penalty, "number of intersections: ", intersection_count)
+        return penalty
+    
+
+
+    def optimized_bulk_normal_part(self, model, nb_points):
+
+        start = int(nb_points*3/4)
+        end = nb_points
+
+        int_gc_circles = model["GC"][start:end,:,:] 
+        int_eT = model["eT"][start:end,:]
+        int_directrix = model["directrix"][start:end,:]
+
+        num_intermediate = len(int_eT) - 2
+        # initial_guess = int_eT[1:-1].flatten()
+
+        len_eT = end - start
+
+        
+        intermediate_angles_guess = []
+        ##intermediate angles
+        for i in range(len_eT - 1):
+            angle = self.relative_angle_between_planes(int_eT[i], int_eT[i + 1])
+            intermediate_angles_guess.append(angle)
+
+        intermediate_angles_guess = np.array(intermediate_angles_guess)
+
+
+        print("LEN angles", len(intermediate_angles_guess))
+        print("LEN eT", len_eT)
+
+
+
+        # Define bounds for each component of each intermediate normal
+        # bounds = [(-1, 1)] * (num_intermediate * 3)
+        # bounds = [(-np.pi/6, np.pi/6)] * (len_eT-1)
+        bounds = [(0, np.pi/6)] * (len_eT-1)
+
+        # options = {
+        # 'maxiter': 50,         # Maximum number of iterations
+        # 'ftol': 1e-6,            # Function value tolerance
+        # 'gtol': 1e-6,            # Gradient tolerance
+        # }
+        options = {
+            'maxiter': 50,         # Increase max iterations
+            'disp': True  
+            # 'ftol': 1e-9,           # Tighten function value tolerance
+            # 'gtol': 1e-9,           # Tighten gradient tolerance
+        }
+
+        # print ("############# Before optimization, here are the initial angles", intermediate_angles_guess)
+        
+        # result = minimize(self.objective_function_bulk_normal_test, initial_guess, args=(int_eT, int_gc_circles, int_directrix), bounds=bounds, options=options)
+        result = minimize(self.objective_function_bulk_normal_angle, intermediate_angles_guess, args=(int_eT, len_eT, int_gc_circles, int_directrix), bounds=bounds, options=options)
+
+        if not result.success:
+            print("Optimization failed:", result.message)
+        
+        print("Optimization result:", result)
+        print("Number of iterations performed:", result.nit)
+
+
+        #### Take the newest angles and update
+        print ("############# Before optimization, here are the initial angles", intermediate_angles_guess)
+        print ("#############Finished optimization, here are the optimized angles", result.x)
+        
+
+
+        for i in range(len(intermediate_angles_guess)):
+            if (intermediate_angles_guess[i] != result.x[i]):
+                normal1 = int_eT[i]
+                normal2 = int_eT[i+1]
+
+                axis = np.cross(normal1, normal2)
+
+                optimized_normal2 = self.rodrigues_rotation(normal2, axis, result.x[i])
+
+                int_eT[i+1] = optimized_normal2
+
+                print ("Not equal", result.x[i])
+            else:
+                pass
+
+
+        # optimized_normals = result.x.reshape((-1, 3))
+        # int_eT[1:-1] = optimized_normals
+
+        #final eT with all tangent vectors
+        model["eT"][start:end,:] = int_eT
+
+        ### the final eT vector is now updated with the adjusted tangents
+        eT = model["eT"]
+
+        gc_circles = model["GC"]
+        directrix = model["directrix"]
+        eN = model["eN"]
+        eB = model["eB"]
+        Rc = model["Rc"]
+
+
+        for i in range(start+1, end-1): # we dont want to change anything in start or end so we avoid them
+            optimized_normal2 = eT[i]
+            gc_circles, eT, eN, eB = self.adjust_TNB(i, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
+
+        #     optimized_normal2 = self.optimize_orientation(i, gc_circles, directrix, eT)
+        #     gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
+        
+        return gc_circles, eT, eN, eB
+    
+   
+
     
     def saturate_model(self, model, min_start, min_end):
         gc_circles = model["GC"]
@@ -716,6 +958,16 @@ class TLGCNode():
 
         intersection_found_at_start = False
         intersection_found_at_end = False
+
+
+        global_x = np.array([1, 0, 0])
+        global_y = np.array([0, 1, 0])
+        global_z = np.array([0, 0, 1])
+        eT = model["eT"]
+        eN = model["eN"]
+        eB = model["eB"]
+        directrix = model["directrix"]
+        Rc = model["Rc"]
 
         for i in range(nb_points):
             circle = gc_circles[i,:,:]
@@ -731,32 +983,63 @@ class TLGCNode():
         
         if len(saturate_idxs) != 0: 
             rospy.loginfo(f"Model saturation for {len(saturate_idxs)} points ...")
+
+            for i in saturate_idxs:
+                print("saturate idxs", saturate_idxs)
+                gc_circles, eT,eN, eB = self.make_horizontal(i, gc_circles, Rc, eT, eN, eB, directrix, global_x, global_y, global_z)
+                # saturate_idxs = self.check_intersections(i, nb_points, gc_circles, min_start, min_end, directrix, saturate_idxs)
+
+            
+            # for i in range(int(nb_points*3/4), nb_points-1):
+            for i in range(0, nb_points-1):
+                # optimized_normal2 = self.optimize_orientation(i, gc_circles, directrix, eT)
+                optimized_normal2 = self.optimize_orientation_geometric(i, gc_circles, directrix, eT)
+                
+                # gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
+                gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
+
+
+
         else: 
             rospy.loginfo(f"No model saturation.")
-            return model
+            # return model
         
-        global_x = np.array([1, 0, 0])
-        global_y = np.array([0, 1, 0])
-        global_z = np.array([0, 0, 1])
-        eT = model["eT"]
-        eN = model["eN"]
-        eB = model["eB"]
-        directrix = model["directrix"]
-        Rc = model["Rc"]
         
-        #Flattening out the starting/ending circular cross sections ##Maybe just a one would also be sufficient rather than falttening a few
-        for i in saturate_idxs:
-            print("saturate idxs", saturate_idxs)
-            gc_circles, eT,eN, eB = self.make_horizontal(i, gc_circles, Rc, eT, eN, eB, directrix, global_x, global_y, global_z)
-            # saturate_idxs = self.check_intersections(i, nb_points, gc_circles, min_start, min_end, directrix, saturate_idxs)
+
+        ########################### INTERSECTING CROSS SECTION REMOVAL CODE #################################
+        # intersection_exist = True
+
+        # while intersection_exist:
+        #     for i in range(nb_points-1):
+        #         intersection, _ = self.check_intersections_simple(gc_circles[i,:,:], directrix[i+1], eT[i], eT[i+1], i)
+        #         if intersection:
+        #             gc_circles = np.delete(gc_circles, i+1, axis=0)
+        #             directrix = np.delete(directrix, i+1, axis=0)
+        #             eT = np.delete(eT, i+1, axis=0)
+        #             eN = np.delete(eN, i+1, axis=0)
+        #             eB = np.delete(eB, i+1, axis=0)
+        #             Rc = np.delete(Rc, i+1, axis=0)
+        #             model["q"] = np.delete(model["q"], i+1, axis=0)
+        #             nb_points -= 1
+        #             break
+        #     else:
+        #         intersection_exist = False
+
+
+
+        ### Latest check with optimization applied to part of the canal (end part for tests)
+        # gc_circles, eT,eN, eB = self.optimized_bulk_normal_part(model, nb_points)
+
+
 
 
         ## correcting all the circles in the canal 
         # for i in range(nb_points-1):
+        # for i in range(int(nb_points*3/4), nb_points-1):
 
         #     optimized_normal2 = self.optimize_orientation(i, gc_circles, directrix, eT)
-        #     gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
-
+        #     # gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
+        #     gc_circles, eT, eN, eB = self.adjust_TNB(i, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
 
         # print("###### Started checking for intersections ########")
         # ### checking intersections exist only in neighboring cross sections
@@ -845,7 +1128,11 @@ class TLGCNode():
         model["eN"] = eN
         model["eB"] = eB
 
-        rospy.loginfo(f"  Model saturation completed.")
+        model["directrix"] = directrix
+        model["Rc"] = Rc
+        
+
+        rospy.loginfo(f"  Model saturation function completed.")
          
         return model
 
@@ -1253,7 +1540,7 @@ class TLGCNode():
 
 
 
-
+        print("############ number of points on the canal", nb_points, len(eT))
 
         for i in range(nb_points):
             eT_curr =eT[i,:]
@@ -1266,13 +1553,22 @@ class TLGCNode():
             # y_corr_axes[i,:] = y_axis
 
             # Alternative method method
-            T_normalized = eT_curr / np.linalg.norm(eT_curr)
+
+            eT_curr_norm = np.linalg.norm(eT_curr)
+            if eT_curr_norm == 0:
+                raise ValueError("eT norm is zero at", i)
+                
+            T_normalized = eT_curr / eT_curr_norm
 
             projected_global_x = self.project_onto_plane(global_x, T_normalized)
 
 
             correction_x_axis = projected_global_x
             correction_y_axis = np.cross(T_normalized, correction_x_axis)
+
+            correction_y_axis_norm = np.linalg.norm(correction_y_axis)
+            if correction_y_axis_norm == 0:
+                raise ValueError("correction_y_axis_norm norm is zero at", i)
 
             if i == 0 : 
                 previous_correction_x_axis = correction_x_axis
@@ -1428,6 +1724,15 @@ class TLGCNode():
             previous_correction_y_axes.append(correction_y_axis)
 
             # Normalise and append
+
+            correction_x_axis_norm = np.linalg.norm(correction_x_axis)
+            if correction_x_axis_norm == 0:
+                raise ValueError("final correction_x_axis_norm norm is zero at", i)
+            
+            if correction_y_axis_norm == 0:
+                raise ValueError("final correction_x_axis_norm norm is zero at", i)
+
+
             correction_x_axis /= np.linalg.norm(correction_x_axis)
             correction_y_axis /= np.linalg.norm(correction_y_axis)
             x_corr_axes[i,:] = correction_x_axis
@@ -1671,6 +1976,8 @@ class TLGCNode():
         
         raw_demos_xyz, raw_demos_q = self.get_raw_demos(raw_dir)
         processed_demos_xyz, processed_demos_q = self.get_processed_demos(processed_dir)
+
+        print("len of processed demos in tlgc", len(processed_demos_xyz))
         demos_xyz, demos_q = self.reshape_demos(processed_demos_xyz, processed_demos_q)
         
         idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 for task 1 and 10,10 for task2 
@@ -1715,7 +2022,7 @@ class TLGCNode():
         self.clear_viz_pub.publish("all")
         self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
-        self.visualise_gc(model["GC"])
+        # self.visualise_gc(model["GC"])
         # self.visualise_gc(model["GC"][200:335,:,:])
         # self.visualise_directrix(model["directrix"], model["q"])
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
@@ -1729,7 +2036,13 @@ class TLGCNode():
             strt = int(input("Crop size start? "))
             end = int(input("Crop size end? "))
             idx = np.array([strt, end]) #These values should be adjusted depending on demo
+
+            q_mean = self.get_mean(demos_q, idx)
+            q_weights = self.get_orientation_weights(processed_demos_q, q_mean, idx)
+
+
             xyz_model = self.get_model(demos_xyz, idx)
+            xyz_model["q"] = q_mean
             
             min_start, min_end = self.get_minimums(processed_demos_xyz)
 
@@ -1743,10 +2056,9 @@ class TLGCNode():
 
             x_corr_axes, y_corr_axes = self.get_correction_axes(xyz_model)
 
-            q_mean = self.get_mean(demos_q, idx)
-            q_weights = self.get_orientation_weights(processed_demos_q, q_mean, idx)
+            
             model = xyz_model
-            model["q"] = q_mean
+            
             model["idx"] = idx
             model["x_corr_axes"] = x_corr_axes
             model["y_corr_axes"] = y_corr_axes
@@ -1776,13 +2088,15 @@ class TLGCNode():
             # # Last 50 points
             # self.visualise_gc(model["GC"][-50:,:,:])
             # self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
-            # self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
+            self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
+            # self.visualise_TNB_axes(model["eT"][162:166,:], model["directrix"][162:166,:], "eT")
 
             # self.visualise_gc(model["GC"][-10:,:,:])
+            # self.visualise_gc(model["GC"][162:,:,:])
             # self.visualise_gc(model["GC"][300:,:,:])
             self.visualise_gc(model["GC"])
             # self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
-            self.visualise_TNB_axes(model["eT"][-10:,:], model["directrix"][-10:,:], "eT")
+            # self.visualise_TNB_axes(model["eT"][-10:,:], model["directrix"][-10:,:], "eT")
 
             
             # self.visualise_correction_axes(model["x_corr_axes"][-5:,:], model["y_corr_axes"][-5:,:], model["directrix"][-5:,:])
