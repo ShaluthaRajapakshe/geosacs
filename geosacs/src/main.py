@@ -19,7 +19,7 @@ class MainNode():
         self.ratio = None
         self.x_corr = None
         self.y_corr = None
-        self.rate = rospy.Rate(10)  # (4;25) ()Prev: 17
+        self.rate = rospy.Rate(17)  # (4;25) ()Prev: 17 #10 IS GOOD WITH REAL ROBOT
         self.frame = "LIO_base_link"
         self.correction = False
         self.physical_robot = rospy.get_param("physical_robot")
@@ -582,6 +582,443 @@ class MainNode():
         rospy.loginfo(f"  Sliced model directrix shape {sliced_model['directrix'].shape}")
 
         return sliced_model, direction
+    
+
+    def correct_traj(self, s_model, i, PcurrG, QcurrG, 
+                     q_weight, current_idx, numRepro, starting, crossSectionType, strategy, direction, trajectory_xyz, trajectory_q, 
+                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance):
+        rospy.loginfo(f"  *Correction request at i={i}*")
+        self.events_pub.publish(f"Correction request at i={i}")
+        # Truncate model
+        eN = s_model["eN"][i:]
+        eB = s_model["eB"][i:]
+        eT = s_model["eT"][i:]
+        directrix = s_model["directrix"][i:]
+        Rc = s_model["Rc"][i:]
+        # Get correction axes
+        eX = s_model["x_corr_axes"][i:]
+        eY = s_model["y_corr_axes"][i:]
+        x_corr_axes = s_model["x_corr_axes"]
+        y_corr_axes = s_model["y_corr_axes"]
+
+        xyz_corr_y = s_model["xyz_corr_y"]
+        vertical_start = s_model["vertical_start"]
+        vertical_end = s_model["vertical_end"]
+
+        start_correction_time = rospy.Time.now()
+        start_position = PcurrG
+        if self.physical_robot: 
+            start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+        rospy.loginfo("    correcting trajectory...")
+        rospy.loginfo(f"      Before correction: {PcurrG}")
+        while self.correction:
+            # Integrate correction
+            raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
+            # print ("raw_joystickDisplacement: ", raw_joystickDisplacement)
+            ## Bring point to origin
+            AcurrG = PcurrG - directrix[0]
+            # print("Directrix[0]: ", directrix[0])
+            # print("AcurrG: ", AcurrG)
+            ## Apply correction
+            AcurrG_corr = AcurrG + raw_joystickDisplacement
+            # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
+            ## Saturate correction and compute ratio
+            if np.linalg.norm(AcurrG_corr) > Rc[0] : 
+                AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
+                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+                # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            else:
+                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+                # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+            ## Translate back to directrix point
+            PcurrG_corr = AcurrG_corr + directrix[0]
+            ## Change current point 
+            PcurrG = PcurrG_corr
+            self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+            self.pub_surface_pose(i, current_idx, PcurrG_corr, AcurrG_corr, QcurrG, q_weight, Ratio, "correction")
+            self.correction = False
+            rospy.sleep(0.2)
+        rospy.loginfo(f"      After correction: {PcurrG}")
+        correction_duration = rospy.Time.now() - start_correction_time
+        cumulative_correction_time += correction_duration.to_sec()
+        rospy.loginfo(f"    Correction duration: {correction_duration.to_sec()}")
+        correction_distance = np.linalg.norm(PcurrG - start_position)
+        if self.physical_robot:
+            end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+            lio_correction_distance = np.linalg.norm(start_position_lio-end_position_lio)
+            lio_cumulative_correction_distance += lio_correction_distance
+            rospy.loginfo(f"    Lio correction distance: {lio_correction_distance}")
+            self.events_pub.publish(f"Lio correction distance: {lio_correction_distance}")
+        cumulative_correction_distance += correction_distance
+        rospy.loginfo(f"    Correction distance: {correction_distance}")
+        self.events_pub.publish(f"Correction of {correction_distance} during {correction_duration.to_sec()}")
+        self.pub_correction(i,current_idx, start_position, PcurrG, QcurrG, correction_distance, correction_duration.to_sec())
+        # Get the right shape for 'reproduce' function
+        PcurrG_corr = np.array([[PcurrG_corr[0], PcurrG_corr[1], PcurrG_corr[2]]])
+        Ratio = np.array([Ratio])
+        # Create new trajectory for remaining points
+        small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY, "xyz_corr_y": xyz_corr_y, "vertical_start": vertical_start, "vertical_end": vertical_start }
+        newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction)
+
+        
+        trajectory_xyz[i:]= newTrajectory[0]                    
+        rospy.loginfo(f"  -> New trajectory_xyz of length {len(newTrajectory[0])}  with first point: {newTrajectory[0][0]}")
+        # Update visualisation
+        self.clear_rviz_pub.publish("reproduced")
+        self.visualise_trajectory(trajectory_xyz, trajectory_q )
+        # return
+        self.correction = False
+
+        return trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance
+
+
+
+    def correction_at_ends(self, s_model, PcurrG, QcurrG, t,
+                     q_weight, current_idx, 
+                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance):
+        
+        ## Because of this function, the robot might stop in the middle, untill the user presses the Y button
+ 
+        if current_idx == t["-1"]: #pick location
+            rospy.loginfo(f"  *Correction request at start*")
+            self.events_pub.publish(f"Correction request at start")
+
+        if current_idx == t["1"]: #place location
+            rospy.loginfo(f"  *Correction request at end*")
+            self.events_pub.publish(f"Correction request at end")
+
+        
+
+        directrix = s_model["directrix"][-1:]
+        Rc = s_model["Rc"][-1:]
+        
+
+        x_corr_axes = s_model["x_corr_axes"]
+        y_corr_axes = s_model["y_corr_axes"]
+
+
+        start_correction_time = rospy.Time.now()
+        start_position = PcurrG
+
+        if self.physical_robot: 
+            start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+
+        rospy.loginfo("    correcting trajectory...")
+        rospy.loginfo(f"      Before correction: {PcurrG}")
+
+        while self.correction:
+            # Integrate correction
+            raw_joystickDisplacement = self.x_corr*x_corr_axes[-1,:] + self.y_corr*y_corr_axes[-1,:]
+            # print ("raw_joystickDisplacement: ", raw_joystickDisplacement)
+            ## Bring point to origin
+            AcurrG = PcurrG - directrix[0]
+            # print("Directrix[0]: ", directrix[0])
+            # print("AcurrG: ", AcurrG)
+            ## Apply correction
+            AcurrG_corr = AcurrG + raw_joystickDisplacement
+            # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
+            ## Saturate correction and compute ratio
+            if np.linalg.norm(AcurrG_corr) > Rc[0] : 
+                AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
+                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+                # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            else:
+                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+                # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+            ## Translate back to directrix point
+            PcurrG_corr = AcurrG_corr + directrix[0]
+            ## Change current point 
+            PcurrG = PcurrG_corr
+            self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+            self.pub_surface_pose(-1, current_idx, PcurrG_corr, AcurrG_corr, QcurrG, q_weight, Ratio, "correction")
+            self.correction = False
+            rospy.sleep(0.2)
+            
+        # rospy.loginfo(f"      After correction: {PcurrG}")
+        correction_duration = rospy.Time.now() - start_correction_time
+        cumulative_correction_time += correction_duration.to_sec()
+        rospy.loginfo(f"    Correction duration: {correction_duration.to_sec()}")
+        correction_distance = np.linalg.norm(PcurrG - start_position)
+        if self.physical_robot:
+            end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+            lio_correction_distance = np.linalg.norm(start_position_lio-end_position_lio)
+            lio_cumulative_correction_distance += lio_correction_distance
+            rospy.loginfo(f"    Lio correction distance: {lio_correction_distance}")
+            self.events_pub.publish(f"Lio correction distance: {lio_correction_distance}")
+        cumulative_correction_distance += correction_distance
+        rospy.loginfo(f"    Correction distance: {correction_distance}")
+        self.events_pub.publish(f"Correction of {correction_distance} during {correction_duration.to_sec()}")
+
+        self.pub_correction(-1,current_idx, start_position, PcurrG, QcurrG, correction_distance, correction_duration.to_sec())
+
+       
+        return PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance
+
+
+    def update_states(self, goal, prev_goal, strategy, current_idx, t):
+
+        if self.change_direction_request and current_idx != t["1"] and current_idx!=t["-1"]: #if we are at the start or end, we don't need to do any strategy changes or goal changes
+                rospy.loginfo("   JOYSTICK change direction request")
+                _ = goal
+                goal = prev_goal
+                prev_goal = _
+                strategy = "fixed"
+                self.change_direction_request = False
+        elif self.gripper_change_direction_request:
+            rospy.loginfo("   GRIPPER change direction request")
+            if goal == "HOME":
+                pass
+            else:
+                prev_goal = goal
+                goal = "HOME"
+                strategy = "convergent"
+            self.gripper_change_direction_request = False
+        elif goal == "PICK": 
+            prev_goal = goal
+            goal = "HOME"
+            strategy = "convergent"
+        elif goal == "PLACE":
+            prev_goal = goal
+            goal = "HOME"
+            strategy = "convergent"
+        elif goal == "HOME" and prev_goal == "PICK":
+            prev_goal = goal
+            goal = "PLACE"
+            strategy = "fixed"
+        elif goal == "HOME" and prev_goal == "PLACE":
+            prev_goal = goal
+            goal = "PICK"
+            strategy = "fixed"
+
+        return goal, prev_goal, strategy
+
+    # def run(self):
+    #     # Specify data directory and task
+    #     data_dir = "/home/shalutha/TLGC_data"
+    #     task = input("What is the name of the task? ")
+    #     model_dir = data_dir +f"/{task}/model"
+    #     raw_dir = data_dir + f"/{task}/record-raw"
+    #     processed_dir = data_dir + f"/{task}/record-processed"
+
+
+    #     # Get model & demos
+    #     raw_demos_xyz, raw_demos_q = self.get_raw_demos(raw_dir)
+    #     processed_demos_xyz, processed_demos_q = self.get_processed_demos(processed_dir)
+    #     model = self.get_model(model_dir)
+    #     if self.weighted_pose: 
+    #         q_weights = model["q_weights"]
+    #     else:
+    #         q_weights = np.ones((model["q"].shape[0], 1))
+
+    #     self.clear_rviz_pub.publish("all")
+
+    #     self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+    #     self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+    #     # rospy.loginfo("Loading demonstration data visualisation...")
+    #     # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+    #     # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+    #     rospy.loginfo("Loading GC visualisation...")
+    #     # self.visualise_gc(model["GC"])
+    #     self.visualise_gc(model["GC"][-50:,:,:])
+    #     self.visualise_gc(model["GC"][:50,:,:])
+        
+    #     rospy.loginfo("Loading directrix visualisation...")
+    #     self.visualise_directrix(model["directrix"], model["q"])
+    #     rospy.loginfo("Loading correction axes visualisation...")
+    #     self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+
+    #     # rospy.loginfo("Loading eT visualisation...")
+    #     # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
+    #     # rospy.loginfo("Loading eN visualisation...")
+    #     # self.visualise_TNB_axes(model["eN"], model["directrix"], "eN")
+    #     # rospy.loginfo("Loading eB visualisation...")
+    #     # self.visualise_TNB_axes(model["eB"], model["directrix"], "eB")
+    #     # rospy.loginfo("Visualisation loaded.")
+
+    #     pick_idx = 0
+    #     place_idx = model["directrix"].shape[0] - 1 # -1 needed to convert length to idx
+    #     mid_idx = int(place_idx/2)
+    #     t = {"-1":pick_idx, "0": mid_idx, "1":place_idx}
+        
+    #     restart = True
+    #     prev_goal = "HOME"
+    #     goal = "PICK"
+    #     start_idx = t["0"]
+    #     end_idx = t["-1"]
+    #     current_idx = start_idx
+    #     numRepro = 1
+    #     starting = np.ones((1, numRepro), dtype=int) 
+    #     crossSectionType = "circle"
+    #     strategy = "fixed"
+    #     s_model, direction = self.slice_model(model,start_idx, end_idx)
+    #     # print(f"{s_model['x_corr_axes'].shape}, {s_model['y_corr_axes'].shape}, {s_model['eT'].shape}")
+    #     # initPoints, Ratio = randomInitialPoints(s_model, numRepro, crossSectionType)
+    #     # print(f"Initpoint {initPoints - s_model['directrix'][0,:]}")
+    #     initPoints = np.array([[model["directrix"][start_idx,:]]])
+    #     Ratio = np.array([0.])
+    #     first = True
+
+    #     start_task_time = rospy.Time.now()
+    #     cumulative_correction_time = 0
+    #     cumulative_correction_distance = 0
+    #     lio_cumulative_correction_distance = 0
+
+        
+    #     while restart:
+
+    #         # Generate trajectory from a random starting point
+    #         print("----------------------------------------------------------------------------")
+    #         rospy.loginfo("Reproduce trajectory")
+    #         rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-s_model['directrix'][0,:])}")
+    #         rospy.loginfo(f"  Rc[0]={s_model['Rc'][0]}. Starting ratio={Ratio}")
+            
+    #         # print("#######################", s_model["xyz_corr_y"])
+    #         repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction)
+    #         trajectory_xyz = repro_trajectories[0]
+    #         # print(trajectory_xyz)
+    #         trajectory_q = s_model["q"]
+    #         rospy.loginfo(f"  First trajectory point {trajectory_xyz[0]}")
+
+    #         if trajectory_xyz.shape[0] != trajectory_q.shape[0]:
+    #             rospy.logerr("main: trajectory_xyz.shape[0]!= trajectory_q.shape[0]")
+    #         self.clear_rviz_pub.publish("reproduced")
+    #         self.visualise_trajectory(trajectory_xyz, trajectory_q)
+    #         nb_points = trajectory_xyz.shape[0]
+            
+    #         # Move Lio to starting point
+    #         if self.physical_robot : self.myp_app_pub.publish("start") 
+    #         PcurrG = trajectory_xyz[0,:]
+    #         QcurrG = trajectory_q[0,:]
+    #         q_weight = q_weights[0,:]
+
+    #         self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+
+    #         if first:
+    #             rospy.loginfo("Press START button on joystick ...")
+    #             while not self.start:
+    #                 rospy.sleep(0.1)
+    #             self.events_pub.publish("Start.")
+    #             self.events_pub.publish(f"  Go from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
+    #             rospy.sleep(0.1)
+    #             first = False
+
+            
+    #         rospy.loginfo("Running trajectory ...")
+
+    #         self.task_done_and_reverse = False
+    #         self.change_direction_request = False
+
+    #         for i in range(nb_points):
+
+    #             if self.terminate:
+    #                 self.events_pub.publish("Terminate.")
+    #                 break
+                
+
+    #             ## Gripper related
+    #             while self.gripper_state == "moving":
+    #                 rospy.sleep(0.01)
+
+    #             if self.gripper_change_direction_request:
+    #                 if current_idx != t["1"] and current_idx!=t["-1"] and current_idx != t["0"]:
+    #                     self.events_pub.publish("Gripper change direction request.")
+    #                     break
+    #                 else:
+    #                     self.gripper_change_direction_request = False
+
+                
+    #             ## Arm movement related
+    #             if current_idx == t["-1"] or current_idx == t["1"]:
+    #                 print ("Reached start or end, waiting for user command to go back", i)
+    #                 while not self.change_direction_request:
+    #                     if self.correction:
+    #                         trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+    #                                                                                                           current_idx, numRepro, starting, 
+    #                                                                                                           crossSectionType, strategy, direction, 
+    #                                                                                                           trajectory_xyz, trajectory_q, cumulative_correction_time,
+    #                                                                                                           cumulative_correction_distance)
+    #                     self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+    #                     AcurrG = PcurrG - model["directrix"][current_idx,:]
+    #                     Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+    #                     self.pub_surface_pose(i, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
+    #                     # i designates the NEXT idx of the robot
+    #                     if i != 0: current_idx += 1*direction # Designates the idx AT which the robot is located
+    #                     self.rate.sleep()
+
+    #             else:
+    #                 if self.change_direction_request:
+    #                     if current_idx != t["1"] and current_idx!=t["-1"] and current_idx != t["0"]: #if not either of those edge cases we will break the loop
+    #                         self.events_pub.publish("User change direction request.")
+    #                         break
+    #                     else:
+    #                         self.change_direction_request = False
+                        
+    
+
+    #             PcurrG = trajectory_xyz[i,:]
+    #             QcurrG = trajectory_q[i,:]
+    #             q_weight = q_weights[i,:]
+
+    #             # if self.correction and i != nb_points-1: #need to change this last condition as we may want to give corrections on the last frame
+    #             if self.correction:
+    #                         trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+    #                                                                                                           current_idx, numRepro, starting, 
+    #                                                                                                           crossSectionType, strategy, direction, 
+    #                                                                                                           trajectory_xyz, trajectory_q, cumulative_correction_time,
+    #                                                                                                           cumulative_correction_distance)
+    #             self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+    #             AcurrG = PcurrG - model["directrix"][current_idx,:]
+    #             Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+    #             self.pub_surface_pose(i, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
+    #             # i designates the NEXT idx of the robot
+    #             if i != 0: current_idx += 1*direction # Designates the idx AT which the robot is located
+    #             self.rate.sleep()
+
+            
+    #         if self.terminate:
+    #             if self.physical_robot : self.myp_app_pub.publish("stop")
+    #             task_duration = (rospy.Time.now() - start_task_time).to_sec()
+    #             rospy.loginfo(f"Total task time: {task_duration} seconds")
+    #             rospy.loginfo(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
+    #             rospy.loginfo(f"Total correction time: {cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
+    #             rospy.loginfo(f"Total correction time*: {cumulative_correction_time} seconds ({(cumulative_correction_time/(task_duration-cumulative_correction_time))*100}%)")
+    #             rospy.loginfo(f"Total correction distance: {cumulative_correction_distance} meters")
+    #             rospy.loginfo(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters")
+    #             self.events_pub.publish(f"Total task time: {task_duration} seconds")
+    #             self.events_pub.publish(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
+    #             self.events_pub.publish(f"Total correction time: {cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
+    #             self.events_pub.publish(f"Total correction time*: {cumulative_correction_time} seconds ({(cumulative_correction_time/(task_duration-cumulative_correction_time))*100}%)")
+    #             self.events_pub.publish(f"Total correction distance: {cumulative_correction_distance} meters")
+    #             self.events_pub.publish(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters")
+    #             return
+            
+
+    #         rospy.loginfo("End of trajectory.")
+    #         rospy.loginfo("Compute next section")
+    #         self.events_pub.publish("End of section, compute next")
+    #         rospy.loginfo(f"PREVIOUS: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
+
+    #         goal, prev_goal, strategy = self.update_states(goal, prev_goal, strategy)
+
+
+    #         start_idx = current_idx
+    #         if goal == "PICK" : end_idx = t["-1"]
+    #         elif goal == "PLACE" : end_idx = t["1"]
+    #         elif goal == "HOME" : end_idx = t["0"]
+    #         rospy.loginfo(f"  UPDATED: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
+    #         self.events_pub.publish("--------------------------------------------------------------------")
+    #         self.events_pub.publish(f"Go from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
+
+
+    #         initPoints = np.array([PcurrG])
+    #         AcurrG = PcurrG - model["directrix"][current_idx,:]
+    #         Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+    #         rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-model['directrix'][current_idx,:])}")
+    #         rospy.loginfo(f"  Rc[current_idx]={model['Rc'][current_idx]}. Starting ratio={Ratio}")
+    #         s_model, direction = self.slice_model(model, start_idx, end_idx )
+
+
+
 
     
     def run(self):
@@ -610,14 +1047,14 @@ class MainNode():
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
         rospy.loginfo("Loading GC visualisation...")
-        # self.visualise_gc(model["GC"])
-        self.visualise_gc(model["GC"][-50:,:,:])
-        self.visualise_gc(model["GC"][:50,:,:])
+        self.visualise_gc(model["GC"])
+        # self.visualise_gc(model["GC"][-50:,:,:])
+        # self.visualise_gc(model["GC"][:50,:,:])
         
         rospy.loginfo("Loading directrix visualisation...")
-        self.visualise_directrix(model["directrix"], model["q"])
+        # self.visualise_directrix(model["directrix"], model["q"])
         rospy.loginfo("Loading correction axes visualisation...")
-        self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+        # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
 
         # rospy.loginfo("Loading eT visualisation...")
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
@@ -664,10 +1101,9 @@ class MainNode():
             rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-s_model['directrix'][0,:])}")
             rospy.loginfo(f"  Rc[0]={s_model['Rc'][0]}. Starting ratio={Ratio}")
             
-            # print("#######################", s_model["xyz_corr_y"])
             repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction)
             trajectory_xyz = repro_trajectories[0]
-            # print(trajectory_xyz)
+    
             trajectory_q = s_model["q"]
             rospy.loginfo(f"  First trajectory point {trajectory_xyz[0]}")
 
@@ -697,19 +1133,14 @@ class MainNode():
             rospy.loginfo("Running trajectory ...")
 
             self.task_done_and_reverse = False
+            self.change_direction_request = False
+
 
             for i in range(nb_points):
 
                 if self.terminate:
                     self.events_pub.publish("Terminate.")
                     break
-                
-                if self.change_direction_request:
-                    if current_idx != t["1"] and current_idx!=t["-1"] and current_idx != t["0"]:
-                        self.events_pub.publish("User change direction request.")
-                        break
-                    else:
-                        self.change_direction_request = False
                         
                 while self.gripper_state == "moving":
                     rospy.sleep(0.01)
@@ -720,201 +1151,56 @@ class MainNode():
                         break
                     else:
                         self.gripper_change_direction_request = False
-                    
-                
-                if current_idx == t["-1"] or current_idx == t["1"]:
-                    print ("Reached start or end, waiting for user command to go back", i)
-                    while not self.task_done_and_reverse:
-                        # rospy.sleep(0.01)
-
-                        if self.correction:
-                    
-                            rospy.loginfo(f"  *Correction request at i={i}*")
-                            self.events_pub.publish(f"Correction request at i={i}")
-                            # Truncate model
-                            eN = s_model["eN"][i:]
-                            eB = s_model["eB"][i:]
-                            eT = s_model["eT"][i:]
-                            directrix = s_model["directrix"][i:]
-                            Rc = s_model["Rc"][i:]
-                            # Get correction axes
-                            eX = s_model["x_corr_axes"][i:]
-                            eY = s_model["y_corr_axes"][i:]
-                            x_corr_axes = s_model["x_corr_axes"]
-                            y_corr_axes = s_model["y_corr_axes"]
-
-                            xyz_corr_y = s_model["xyz_corr_y"]
-                            vertical_start = s_model["vertical_start"]
-                            vertical_end = s_model["vertical_end"]
-
-                            start_correction_time = rospy.Time.now()
-                            start_position = PcurrG
-                            if self.physical_robot: 
-                                start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
-                            rospy.loginfo("    correcting trajectory...")
-                            rospy.loginfo(f"      Before correction: {PcurrG}")
-                            while self.correction:
-                                # Integrate correction
-                                raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
-                                # print ("raw_joystickDisplacement: ", raw_joystickDisplacement)
-                                ## Bring point to origin
-                                AcurrG = PcurrG - directrix[0]
-                                # print("Directrix[0]: ", directrix[0])
-                                # print("AcurrG: ", AcurrG)
-                                ## Apply correction
-                                AcurrG_corr = AcurrG + raw_joystickDisplacement
-                                # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
-                                ## Saturate correction and compute ratio
-                                if np.linalg.norm(AcurrG_corr) > Rc[0] : 
-                                    AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
-                                    Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                                    # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
-                                else:
-                                    Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                                    # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
-                                ## Translate back to directrix point
-                                PcurrG_corr = AcurrG_corr + directrix[0]
-                                ## Change current point 
-                                PcurrG = PcurrG_corr
-                                self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
-                                self.pub_surface_pose(i, current_idx, PcurrG_corr, AcurrG_corr, QcurrG, q_weight, Ratio, "correction")
-                                self.correction = False
-                                rospy.sleep(0.2)
-                            rospy.loginfo(f"      After correction: {PcurrG}")
-                            correction_duration = rospy.Time.now() - start_correction_time
-                            cumulative_correction_time += correction_duration.to_sec()
-                            rospy.loginfo(f"    Correction duration: {correction_duration.to_sec()}")
-                            correction_distance = np.linalg.norm(PcurrG - start_position)
-                            if self.physical_robot:
-                                end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
-                                lio_correction_distance = np.linalg.norm(start_position_lio-end_position_lio)
-                                lio_cumulative_correction_distance += lio_correction_distance
-                                rospy.loginfo(f"    Lio correction distance: {lio_correction_distance}")
-                                self.events_pub.publish(f"Lio correction distance: {lio_correction_distance}")
-                            cumulative_correction_distance += correction_distance
-                            rospy.loginfo(f"    Correction distance: {correction_distance}")
-                            self.events_pub.publish(f"Correction of {correction_distance} during {correction_duration.to_sec()}")
-                            self.pub_correction(i,current_idx, start_position, PcurrG, QcurrG, correction_distance, correction_duration.to_sec())
-                            # Get the right shape for 'reproduce' function
-                            PcurrG_corr = np.array([[PcurrG_corr[0], PcurrG_corr[1], PcurrG_corr[2]]])
-                            Ratio = np.array([Ratio])
-                            # Create new trajectory for remaining points
-                            small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY, "xyz_corr_y": xyz_corr_y, "vertical_start": vertical_start, "vertical_end": vertical_start }
-                            newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction)
-
-                            
-                            trajectory_xyz[i:]= newTrajectory[0]                    
-                            rospy.loginfo(f"  -> New trajectory_xyz of length {len(newTrajectory[0])}  with first point: {newTrajectory[0][0]}")
-                            # Update visualisation
-                            self.clear_rviz_pub.publish("reproduced")
-                            self.visualise_trajectory(trajectory_xyz, trajectory_q )
-                            # return
-                            self.correction = False
-
-                        self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
-                        AcurrG = PcurrG - model["directrix"][current_idx,:]
-                        Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
-                        self.pub_surface_pose(i, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
-                        # i designates the NEXT idx of the robot
-                        if i != 0: current_idx += 1*direction # Designates the idx AT which the robot is located
-                        self.rate.sleep()
-
-                    # print("start idx", start_idx, "end_idx", end_idx, "diection", direction)
     
-                    # self.events_pub.publish("Gripper change direction request.")
-                    # break
                 
+                # if current_idx == t["-1"] or current_idx == t["1"]: ## If we reached here, that means the canal has been shifted the other way
+                #     #therefore we will start from this location and NOT ENDING
+
+                #     # print ("Reached start or end, waiting for user command to go back", i, "self.task_done_and_reverse", self.task_done_and_reverse, "direction", direction)
+                #     print ("Reached start or end, waiting for user command to go back")
+
                 
+                    # while not self.change_direction_request:
+                    #     # rospy.sleep(0.01)
+                    #     if self.correction:
+                    
+                    #         trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+                    #                                                                                           current_idx, numRepro, starting, 
+                    #                                                                                           crossSectionType, strategy, direction, 
+                    #                                                                                           trajectory_xyz, trajectory_q, cumulative_correction_time,
+                    #                                                                                           cumulative_correction_distance, lio_cumulative_correction_distance )
+                    #     self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+                    #     AcurrG = PcurrG - model["directrix"][current_idx,:]
+                    #     Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+                    #     self.pub_surface_pose(i, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
+                    #     # i designates the NEXT idx of the robot
+                        
+                    #     self.rate.sleep()
+
+                    # current_idx += 1*direction # Designates the idx AT which the robot is located
+                    # self.change_direction_request = False
+                
+                # else:
+
+                if self.change_direction_request:
+                    if current_idx != t["1"] and current_idx!=t["-1"] and current_idx != t["0"]:
+                        self.events_pub.publish("User change direction request.")
+                        break
+                    else:
+                        self.change_direction_request = False
 
                 PcurrG = trajectory_xyz[i,:]
                 QcurrG = trajectory_q[i,:]
                 q_weight = q_weights[i,:]
 
-                # if self.correction and i != nb_points-1: #need to change this last condition as we may want to give corrections on the last frame
-                if self.correction:
+                if self.correction and i != nb_points-1:
+                    # print("########### current idx", current_idx)
                     
-                    rospy.loginfo(f"  *Correction request at i={i}*")
-                    self.events_pub.publish(f"Correction request at i={i}")
-                    # Truncate model
-                    eN = s_model["eN"][i:]
-                    eB = s_model["eB"][i:]
-                    eT = s_model["eT"][i:]
-                    directrix = s_model["directrix"][i:]
-                    Rc = s_model["Rc"][i:]
-                    # Get correction axes
-                    eX = s_model["x_corr_axes"][i:]
-                    eY = s_model["y_corr_axes"][i:]
-                    x_corr_axes = s_model["x_corr_axes"]
-                    y_corr_axes = s_model["y_corr_axes"]
-
-                    xyz_corr_y = s_model["xyz_corr_y"]
-                    vertical_start = s_model["vertical_start"]
-                    vertical_end = s_model["vertical_end"]
-
-                    start_correction_time = rospy.Time.now()
-                    start_position = PcurrG
-                    if self.physical_robot: 
-                        start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
-                    rospy.loginfo("    correcting trajectory...")
-                    rospy.loginfo(f"      Before correction: {PcurrG}")
-                    while self.correction:
-                        # Integrate correction
-                        raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
-                        # print ("raw_joystickDisplacement: ", raw_joystickDisplacement)
-                        ## Bring point to origin
-                        AcurrG = PcurrG - directrix[0]
-                        # print("Directrix[0]: ", directrix[0])
-                        # print("AcurrG: ", AcurrG)
-                        ## Apply correction
-                        AcurrG_corr = AcurrG + raw_joystickDisplacement
-                        # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
-                        ## Saturate correction and compute ratio
-                        if np.linalg.norm(AcurrG_corr) > Rc[0] : 
-                            AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
-                            Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                            # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
-                        else:
-                            Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                            # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
-                        ## Translate back to directrix point
-                        PcurrG_corr = AcurrG_corr + directrix[0]
-                        ## Change current point 
-                        PcurrG = PcurrG_corr
-                        self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
-                        self.pub_surface_pose(i, current_idx, PcurrG_corr, AcurrG_corr, QcurrG, q_weight, Ratio, "correction")
-                        self.correction = False
-                        rospy.sleep(0.2)
-                    rospy.loginfo(f"      After correction: {PcurrG}")
-                    correction_duration = rospy.Time.now() - start_correction_time
-                    cumulative_correction_time += correction_duration.to_sec()
-                    rospy.loginfo(f"    Correction duration: {correction_duration.to_sec()}")
-                    correction_distance = np.linalg.norm(PcurrG - start_position)
-                    if self.physical_robot:
-                        end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
-                        lio_correction_distance = np.linalg.norm(start_position_lio-end_position_lio)
-                        lio_cumulative_correction_distance += lio_correction_distance
-                        rospy.loginfo(f"    Lio correction distance: {lio_correction_distance}")
-                        self.events_pub.publish(f"Lio correction distance: {lio_correction_distance}")
-                    cumulative_correction_distance += correction_distance
-                    rospy.loginfo(f"    Correction distance: {correction_distance}")
-                    self.events_pub.publish(f"Correction of {correction_distance} during {correction_duration.to_sec()}")
-                    self.pub_correction(i,current_idx, start_position, PcurrG, QcurrG, correction_distance, correction_duration.to_sec())
-                    # Get the right shape for 'reproduce' function
-                    PcurrG_corr = np.array([[PcurrG_corr[0], PcurrG_corr[1], PcurrG_corr[2]]])
-                    Ratio = np.array([Ratio])
-                    # Create new trajectory for remaining points
-                    small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY, "xyz_corr_y": xyz_corr_y, "vertical_start": vertical_start, "vertical_end": vertical_start }
-                    newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction)
-
-                    
-                    trajectory_xyz[i:]= newTrajectory[0]                    
-                    rospy.loginfo(f"  -> New trajectory_xyz of length {len(newTrajectory[0])}  with first point: {newTrajectory[0][0]}")
-                    # Update visualisation
-                    self.clear_rviz_pub.publish("reproduced")
-                    self.visualise_trajectory(trajectory_xyz, trajectory_q )
-                    # return
-                    self.correction = False
-
+                    trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+                                                                                                            current_idx, numRepro, starting, 
+                                                                                                            crossSectionType, strategy, direction, 
+                                                                                                        trajectory_xyz, trajectory_q, cumulative_correction_time, cumulative_correction_distance,
+                                                                                                        lio_cumulative_correction_distance)
                 self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
                 AcurrG = PcurrG - model["directrix"][current_idx,:]
                 Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
@@ -922,6 +1208,38 @@ class MainNode():
                 # i designates the NEXT idx of the robot
                 if i != 0: current_idx += 1*direction # Designates the idx AT which the robot is located
                 self.rate.sleep()
+
+            print("current index", current_idx, "t[1] = ", t["1"] ,"t[-1] = " , t["-1"])
+
+            if current_idx == t["-1"] or current_idx == t["1"]:
+
+                while not self.change_direction_request:
+
+                    # q_weight = q_weights[current_idx,:]  #q_weights will not change anywhere
+                    # QcurrG = trajectory_q[current_idx,:] #trajector_q will not change anywhere
+
+                    # rospy.sleep(0.01)
+                    if self.correction:  ## Need to give the previous QcurrG and q_weight
+
+                        PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance = self.correction_at_ends(s_model,PcurrG, QcurrG, t, q_weight, current_idx, cumulative_correction_time,
+                                                                                                            cumulative_correction_distance, lio_cumulative_correction_distance)
+                
+                        # trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+                        #                                                                                     current_idx, numRepro, starting, 
+                        #                                                                                     crossSectionType, strategy, direction, 
+                        #                                                                                     trajectory_xyz, trajectory_q, cumulative_correction_time,
+                        #                                                                                     cumulative_correction_distance, lio_cumulative_correction_distance )
+                    self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+                    AcurrG = PcurrG - model["directrix"][current_idx,:]
+                    Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+                    self.pub_surface_pose(current_idx, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
+
+                self.change_direction_request = False
+
+            # PcurrG = trajectory_xyz[i,:]
+            # QcurrG = trajectory_q[i,:]
+            # q_weight = q_weights[i,:]
+                
             
             if self.terminate:
                 if self.physical_robot : self.myp_app_pub.publish("stop")
@@ -946,44 +1264,13 @@ class MainNode():
             self.events_pub.publish("End of section, compute next")
             rospy.loginfo(f"PREVIOUS: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
 
-            if self.change_direction_request:
-                rospy.loginfo("   JOYSTICK change direction request")
-                _ = goal
-                goal = prev_goal
-                prev_goal = _
-                strategy = "fixed"
-                self.change_direction_request = False
-            elif self.gripper_change_direction_request:
-                rospy.loginfo("   GRIPPER change direction request")
-                if goal == "HOME":
-                    pass
-                else:
-                    prev_goal = goal
-                    goal = "HOME"
-                    strategy = "convergent"
-                self.gripper_change_direction_request = False
-            elif goal == "PICK": 
-                prev_goal = goal
-                goal = "HOME"
-                strategy = "convergent"
-            elif goal == "PLACE":
-                prev_goal = goal
-                goal = "HOME"
-                strategy = "convergent"
-            elif goal == "HOME" and prev_goal == "PICK":
-                prev_goal = goal
-                goal = "PLACE"
-                strategy = "fixed"
-            elif goal == "HOME" and prev_goal == "PLACE":
-                prev_goal = goal
-                goal = "PICK"
-                strategy = "fixed"
+            goal, prev_goal, strategy = self.update_states(goal, prev_goal, strategy, current_idx, t)
 
             start_idx = current_idx
             if goal == "PICK" : end_idx = t["-1"]
             elif goal == "PLACE" : end_idx = t["1"]
             elif goal == "HOME" : end_idx = t["0"]
-            rospy.loginfo(f"  UPDATED: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
+            rospy.loginfo(f"  UPDATED: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}. Strategy : {strategy}")
             self.events_pub.publish("--------------------------------------------------------------------")
             self.events_pub.publish(f"Go from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
 
