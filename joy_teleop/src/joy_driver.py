@@ -20,6 +20,11 @@ class JoyDriver(object):
         self._ax5_init = False      
         self._a_pressed = False
 
+
+        self.start_time = rospy.Time.now()
+
+        self.cumulative_time = 0
+
         rospy.loginfo("joy_driver has been started") 
       
 
@@ -29,7 +34,10 @@ class JoyDriver(object):
         return np.sign(x)*b*((np.exp(a*np.abs(x))-1))
         
     def on_joy(self, msg):
-        ax = np.array(msg.axes)
+        ax = np.array(msg.axes) #check this one tomorrow. Ideally this should be all zeros. if there is at least one non-zero value, then collect the time here and 
+        # at the end of this function again collect the time and add the diffrence to the cumulative time.
+        # print("ax vals", ax,"time on joy", (rospy.Time.now() - self.start_time).to_sec())
+
         if ax[2] != 0:
             self._ax2_init = True
         if not self._ax2_init:
