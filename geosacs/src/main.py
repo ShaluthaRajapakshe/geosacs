@@ -19,7 +19,7 @@ class MainNode():
         self.ratio = None
         self.x_corr = None
         self.y_corr = None
-        self.rate = rospy.Rate(17)  # (4;25) ()Prev: 17 #10 IS GOOD WITH REAL ROBOT
+        self.rate = rospy.Rate(10)  # (4;25) ()Prev: 17 #10 IS GOOD WITH REAL ROBOT
         self.frame = "LIO_base_link"
         self.correction = False
         self.physical_robot = rospy.get_param("physical_robot")
@@ -734,7 +734,7 @@ class MainNode():
             self.correction = False
             rospy.sleep(0.2)
             
-        # rospy.loginfo(f"      After correction: {PcurrG}")
+        rospy.loginfo(f"      After correction: {PcurrG}")
         correction_duration = rospy.Time.now() - start_correction_time
         cumulative_correction_time += correction_duration.to_sec()
         rospy.loginfo(f"    Correction duration: {correction_duration.to_sec()}")
@@ -1087,7 +1087,7 @@ class MainNode():
         Ratio = np.array([0.])
         first = True
 
-        start_task_time = rospy.Time.now()
+        # start_task_time = rospy.Time.now()
         cumulative_correction_time = 0
         cumulative_correction_distance = 0
         lio_cumulative_correction_distance = 0
@@ -1124,6 +1124,8 @@ class MainNode():
                 rospy.loginfo("Press START button on joystick ...")
                 while not self.start:
                     rospy.sleep(0.1)
+                
+                start_task_time = rospy.Time.now()
                 self.events_pub.publish("Start.")
                 self.events_pub.publish(f"  Go from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
                 rospy.sleep(0.1)
@@ -1245,17 +1247,32 @@ class MainNode():
                 if self.physical_robot : self.myp_app_pub.publish("stop")
                 task_duration = (rospy.Time.now() - start_task_time).to_sec()
                 rospy.loginfo(f"Total task time: {task_duration} seconds")
-                rospy.loginfo(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
-                rospy.loginfo(f"Total correction time: {cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
-                rospy.loginfo(f"Total correction time*: {cumulative_correction_time} seconds ({(cumulative_correction_time/(task_duration-cumulative_correction_time))*100}%)")
+                rospy.loginfo(f"Total correction time: {cumulative_correction_time} seconds")
+
                 rospy.loginfo(f"Total correction distance: {cumulative_correction_distance} meters")
                 rospy.loginfo(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters")
+
+                # rospy.loginfo(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
+                # rospy.loginfo(f"Total correction time: {cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
+                rospy.loginfo(f"Correction time as a percentage from total:{cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
+
+                # rospy.loginfo(f"Total correction time*: {cumulative_correction_time} seconds ({(cumulative_correction_time/(task_duration-cumulative_correction_time))*100}%)")
+
                 self.events_pub.publish(f"Total task time: {task_duration} seconds")
-                self.events_pub.publish(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
-                self.events_pub.publish(f"Total correction time: {cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
-                self.events_pub.publish(f"Total correction time*: {cumulative_correction_time} seconds ({(cumulative_correction_time/(task_duration-cumulative_correction_time))*100}%)")
+                self.events_pub.publish(f"Total correction time: {cumulative_correction_time} seconds")
+
                 self.events_pub.publish(f"Total correction distance: {cumulative_correction_distance} meters")
                 self.events_pub.publish(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters")
+
+                self.events_pub.publish(f"Correction time as a percentage from total:{cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
+                
+                
+                # self.events_pub.publish(f"Total task time: {task_duration} seconds")
+                # self.events_pub.publish(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
+                # self.events_pub.publish(f"Total correction time: {cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
+                # self.events_pub.publish(f"Total correction time*: {cumulative_correction_time} seconds ({(cumulative_correction_time/(task_duration-cumulative_correction_time))*100}%)")
+                # self.events_pub.publish(f"Total correction distance: {cumulative_correction_distance} meters")
+                # self.events_pub.publish(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters")
                 return
             
 
