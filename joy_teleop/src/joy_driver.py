@@ -50,12 +50,24 @@ class JoyDriver(object):
         t.linear.x = self.mapping(ax[1])
         t.linear.y = self.mapping(ax[0])
         t.linear.z = self.mapping((ax[2]-ax[5])/2)
-        t.angular.x = self.mapping(-ax[3],low=.01,high=1)
-        t.angular.y = self.mapping(ax[4],low=.01,high=1)
+
+        # t.angular.x = self.mapping(-ax[3],low=.01,high=1)
+        # t.angular.y = self.mapping(ax[4],low=.01,high=1)
+        # if msg.buttons[4]:
+        #     t.angular.z = -np.pi/4
+        # if msg.buttons[5]:
+        #     t.angular.z = np.pi/4
+
+        t.angular.x = self.mapping(ax[4],low=.01,high=1)
+        # t.angular.y = self.mapping(ax[4],low=.01,high=1)
+        t.angular.z = self.mapping(-ax[3],low=.01,high=1)
+
         if msg.buttons[4]:
-            t.angular.z = -np.pi/4
+            t.angular.y = -np.pi/4
         if msg.buttons[5]:
-            t.angular.z = np.pi/4
+            t.angular.y = np.pi/4
+
+
         new_msg = TwistStamped()
         new_msg.twist=t
         self._twist_pub.publish(new_msg)

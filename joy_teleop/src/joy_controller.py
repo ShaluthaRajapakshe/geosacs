@@ -13,7 +13,7 @@ class PoseControllerNode():
         rospy.init_node("joy_controller") 
 
         # Variables
-        self.freq = 12
+        self.freq = 20  #10 seems okay
         self.freq_rate = 5
         self.rate = rospy.Rate(self.freq_rate)  
         self.physical_robot = rospy.get_param("physical_robot")
@@ -40,7 +40,7 @@ class PoseControllerNode():
         if self.physical_robot: 
             rospy.Subscriber("/lio_1c/pose", PoseStamped, self.lio_pose_cb)
 
-        self.pose_pub = rospy.Publisher("/commanded_pose", PoseStamped, queue_size=15)
+        self.pose_pub = rospy.Publisher("/commanded_pose", PoseStamped, queue_size=5)  #15
         self.myp_app_pub = rospy.Publisher("/myp_manager/app_control", String, queue_size=2)
 
         #Init 
