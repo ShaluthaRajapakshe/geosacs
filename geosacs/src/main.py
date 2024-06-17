@@ -24,7 +24,7 @@ class MainNode():
         # self.control_front = sys.argv[1]
 
         
-        self.control_front = False
+        self.control_front = True
 
         # self.control_front = True
         # Variables
@@ -230,7 +230,25 @@ class MainNode():
         self.previous_buttons = current_buttons
 
         if changed_buttons[1] != 0:
-            self.task_done_and_reverse = True
+            if self.control_front:
+
+                self.control_front = False
+
+                rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
+
+                # axis of joy when controlled from the rear side\
+                self.joy_x = np.array([0, -1, 0])
+                self.joy_y = np.array([1, 0, 0])
+            else:
+
+                self.control_front = True
+
+                rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
+
+                # axis of joy when controlled from the front side\
+                self.joy_x = np.array([0, 1, 0])  # Joystick X-axis (global frame)
+                self.joy_y = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
+
 
         if changed_buttons[3] != 0:
             # print("CHANGE DIRECTION")
@@ -244,6 +262,9 @@ class MainNode():
             self.start = True
         if changed_buttons[0] != 0:
             self.gripper_state_pub.publish("toggle_gripper")
+
+
+
 
         
         
@@ -629,18 +650,18 @@ class MainNode():
         return np.cross(axis1, axis2)
 
     # Function to compute a rotation matrix given an axis and angle
-    def rotation_matrix(self, axis, angle):
-        axis = axis / np.linalg.norm(axis)
-        a = np.cos(angle / 2.0)
-        b, c, d = -axis * np.sin(angle / 2.0)
-        return np.array([[a*a + b*b - c*c - d*d, 2*(b*c - a*d), 2*(b*d + a*c)],
-                        [2*(b*c + a*d), a*a + c*c - b*b - d*d, 2*(c*d - a*b)],
-                        [2*(b*d - a*c), 2*(c*d + a*b), a*a + d*d - b*b - c*c]])
+    # def rotation_matrix(self, axis, angle):
+    #     axis = axis / np.linalg.norm(axis)
+    #     a = np.cos(angle / 2.0)
+    #     b, c, d = -axis * np.sin(angle / 2.0)
+    #     return np.array([[a*a + b*b - c*c - d*d, 2*(b*c - a*d), 2*(b*d + a*c)],
+    #                     [2*(b*c + a*d), a*a + c*c - b*b - d*d, 2*(c*d - a*b)],
+    #                     [2*(b*d - a*c), 2*(c*d + a*b), a*a + d*d - b*b - c*c]])
 
-    # Function to rotate a vector by a given axis and angle
-    def rotate_vector(self, vector, axis, angle):
-        R = self.rotation_matrix(axis, angle)
-        return np.dot(R, vector)
+    # # Function to rotate a vector by a given axis and angle
+    # def rotate_vector(self, vector, axis, angle):
+    #     R = self.rotation_matrix(axis, angle)
+    #     return np.dot(R, vector)
 
 
     def calculate_angle_between_vectors(self, v1, v2):
@@ -658,7 +679,7 @@ class MainNode():
 
     def vertical_check(self, eT):
 
-        print("######eT", eT)
+        # print("######eT", eT)
     
         global_z = np.array([0, 0, 1])
         z_diff = self.calculate_angle_between_vectors(eT, global_z)
@@ -750,8 +771,6 @@ class MainNode():
                 direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
 
             
-            
-
         else:
 
             projected_corr_x = self.project_onto_plane(correction_axes[0], z ) 
@@ -765,7 +784,8 @@ class MainNode():
             projections_x, projections_y = self.compute_axis_projections(projected_corr_axes, joy_x, joy_y)
 
             # Select the most aligned correction axis for joystick X-axis
-            aligned_axis_index_x, direction_x = self.select_aligned_axis(projections_x)
+            aligned_axis_index_x, direction_x = self.select_aligned_axis(projections_x) 
+            
 
 
             # Select the most aligned correction axis for joystick Y-axis
@@ -779,17 +799,16 @@ class MainNode():
             aligned_axis_x = correction_axes[aligned_axis_index_x] 
             aligned_axis_y = correction_axes[aligned_axis_index_y]
 
+
+            ## Taking the actual correction axeses (untill now we were dealing with projected vectors on the horizontal plane)
+            ## Also this will handle cases like 45 degrees where joy axes can be mapped to one same correction axis, but the following step ensures at last it will be applied to the two axes again
+
             if (aligned_axis_x == projected_corr_x).all():
                 aligned_axis_x = correction_axes[0]
                 aligned_axis_y = correction_axes[1]
             else:
                 aligned_axis_x = correction_axes[1]
                 aligned_axis_y = correction_axes[0]
-
-
-
-
-
 
 
         # print("original correction axes", correction_axes[0], correction_axes[1])
@@ -840,9 +859,9 @@ class MainNode():
         while self.correction:
             # Integrate correction
             raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
-            print("input format", self.x_corr, self.y_corr)
-            print("x and y axes", x_corr_axes[i,:], y_corr_axes[i,:])
-            print("######### x and y after mult ", self.x_corr*x_corr_axes[i,:], self.y_corr*y_corr_axes[i,:])
+            # print("input format", self.x_corr, self.y_corr)
+            # print("x and y axes", x_corr_axes[i,:], y_corr_axes[i,:])
+            # print("######### x and y after mult ", self.x_corr*x_corr_axes[i,:], self.y_corr*y_corr_axes[i,:])
 
 
 
@@ -1406,6 +1425,7 @@ class MainNode():
 
 
             for i in range(nb_points):
+                
 
                 if self.terminate:
                     self.events_pub.publish("Terminate.")
