@@ -77,13 +77,24 @@ class MainNode():
 
         if self.control_front:
             # rospy.loginfo("Control front", self.control_front)
-            self.joy_x = np.array([0, 1, 0])  # Joystick X-axis (global frame)
+            self.joy_x = np.array([0, -1, 0])  # Joystick X-axis (global frame)
             self.joy_y = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
         
         else:
             # rospy.loginfo("Control front", self.control_front)
-            self.joy_x = np.array([0, -1, 0])
+            self.joy_x = np.array([0, 1, 0])
             self.joy_y = np.array([1, 0, 0])
+
+
+        # # ##ps5 accesss controller from front
+
+        # if self.control_front:
+        #     self.joy_x = np.array([0, -1, 0]) 
+        #     self.joy_y = np.array([1, 0, 0])
+
+        # else:
+        #     self.joy_x = np.array([0, 1, 0]) 
+        #     self.joy_y = np.array([-1, 0, 0])  
 
         
 
@@ -214,14 +225,24 @@ class MainNode():
 
 
         
-
+    # with logitech joystick controller
     def joy_cb(self, msg):
         
         if msg.axes[0] != 0 or msg.axes[1] != 0:
+
+            if (self.control_front and (self.joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (self.joy_y == np.array([1, 0, 0])).all()):
+                self.y_corr = msg.axes[1]/150
+
+            else:
+                self.y_corr = -msg.axes[1]/150
+            
             self.x_corr = msg.axes[0]/150
-            self.y_corr = msg.axes[1]/150
             self.correction = True
             return # cannot do corrections & change direction at the same time
+
+
+        
+
 
         # Filter buttons input
         current_buttons = list(msg.buttons)
@@ -237,7 +258,7 @@ class MainNode():
                 rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
 
                 # axis of joy when controlled from the rear side\
-                self.joy_x = np.array([0, -1, 0])
+                self.joy_x = np.array([0, 1, 0])
                 self.joy_y = np.array([1, 0, 0])
             else:
 
@@ -246,7 +267,7 @@ class MainNode():
                 rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
 
                 # axis of joy when controlled from the front side\
-                self.joy_x = np.array([0, 1, 0])  # Joystick X-axis (global frame)
+                self.joy_x = np.array([0, -1, 0])  # Joystick X-axis (global frame)
                 self.joy_y = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
 
 
@@ -262,6 +283,78 @@ class MainNode():
             self.start = True
         if changed_buttons[0] != 0:
             self.gripper_state_pub.publish("toggle_gripper")
+
+
+    # # with sony access controller
+    # def joy_cb(self, msg):
+
+        
+    #     # ## assuming controlling from front
+    #     # self.joy_x = np.array([0, -1, 0]) 
+    #     # self.joy_y = np.array([1, 0, 0])
+    #     if self.control_front:
+    #         self.joy_x = np.array([0, -1, 0]) 
+    #         self.joy_y = np.array([1, 0, 0])
+    #     else:
+    #         self.joy_x = np.array([0, 1, 0]) 
+    #         self.joy_y = np.array([-1, 0, 0])
+
+    #     # ## assuming controlling from back
+    #     # self.joy_x = np.array([0, 1, 0]) 
+    #     # self.joy_y = np.array([-1, 0, 0])
+        
+    #     if msg.axes[0] != 0 or msg.axes[1] != 0:
+
+    #         # if (self.control_front and (self.joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (self.joy_y == np.array([1, 0, 0])).all()):
+    #         #     self.y_corr = msg.axes[0]/150
+
+    #         # else:
+    #         #     print("I'm here")
+    #         self.y_corr = msg.axes[0]/150
+            
+    #         self.x_corr = msg.axes[1]/150
+    #         self.correction = True
+    #         return # cannot do corrections & change direction at the same time
+
+    #     # Filter buttons input
+    #     current_buttons = list(msg.buttons)
+    #     if current_buttons == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : changed_buttons = current_buttons
+    #     else: changed_buttons = [button1 - button2 for (button1, button2) in zip(current_buttons, self.previous_buttons)]
+    #     self.previous_buttons = current_buttons
+
+    #     # if changed_buttons[1] != 0:
+    #     #     if self.control_front:
+
+    #     #         self.control_front = False
+
+    #     #         rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
+
+    #     #         # axis of joy when controlled from the rear side\
+    #     #         self.joy_x = np.array([0, -1, 0])
+    #     #         self.joy_y = np.array([1, 0, 0])
+    #     #     else:
+
+    #     #         self.control_front = True
+
+    #     #         rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
+
+    #     #         # axis of joy when controlled from the front side\
+    #     #         self.joy_x = np.array([0, 1, 0])  # Joystick X-axis (global frame)
+    #     #         self.joy_y = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
+
+
+    #     if changed_buttons[1] != 0:
+    #         # print("CHANGE DIRECTION")
+    #         self.change_direction_request = True
+    #         return
+    #     if changed_buttons[9] != 0:
+    #         # print("STOP")
+    #         self.terminate = True
+    #     if changed_buttons[12] != 0:
+    #         # print("START")
+    #         self.start = True
+    #     if changed_buttons[2] != 0:
+    #         self.gripper_state_pub.publish("toggle_gripper")
 
 
 
@@ -742,33 +835,49 @@ class MainNode():
             # angle_corr_x = np.arccos(np.dot(correction_axes[0], z) / np.linalg.norm(correction_axes[0]))
             # angle_corr_y = np.arccos(np.dot(correction_axes[1], z) / np.linalg.norm(correction_axes[1]))
 
+            if (self.control_front and (joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (joy_y == np.array([1, 0, 0])).all()):
+                y_dir_mult = 1
+
+            else:
+                y_dir_mult = -1
+
             def angle_with_z(axis):
                 angle = np.arccos(np.dot(axis, z) / np.linalg.norm(axis))
-                if angle > np.pi / 2:
-                    direction = -1.0
-                else:
-                    direction = 1.0
-                return min(angle, np.pi - angle), direction
+                # if angle > np.pi / 2:
+                #     direction = -1.0
+                # else:
+                #     direction = 1.
 
-            angle_corr_x, direction_x = angle_with_z(correction_axes[0])
-            angle_corr_y, direction_y = angle_with_z(correction_axes[1])
+                
+                # return min(angle, np.pi - angle), direction
+                return min(angle, np.pi - angle)
+
+            angle_corr_x = angle_with_z(correction_axes[0])
+            angle_corr_y = angle_with_z(correction_axes[1])
 
             if angle_corr_x < angle_corr_y:
                 aligned_axis_y = correction_axes[0]
                 aligned_axis_x = correction_axes[1]
                 # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
                 direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+                direction_y = np.sign(np.dot(aligned_axis_y, z))
+                direction_y = y_dir_mult * direction_y
+
             elif angle_corr_y < angle_corr_x:
                 aligned_axis_y = correction_axes[1]
                 aligned_axis_x = correction_axes[0]
                 # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
                 direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+                direction_y = np.sign(np.dot(aligned_axis_y, z))
+                direction_y = y_dir_mult * direction_y
 
             else:
                 aligned_axis_y = correction_axes[0]
                 aligned_axis_x = correction_axes[1]
                 # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
                 direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+                direction_y = np.sign(np.dot(aligned_axis_y, z))
+                direction_y = y_dir_mult * direction_y
 
             
         else:
@@ -790,6 +899,7 @@ class MainNode():
 
             # Select the most aligned correction axis for joystick Y-axis
             aligned_axis_index_y, direction_y = self.select_aligned_axis(projections_y)
+            
 
             # print("Aligned Axis Index for Joystick Y-axis:", aligned_axis_index_y)
             # print("Direction for Joystick Y-axis:", direction_y)
@@ -858,7 +968,7 @@ class MainNode():
 
         while self.correction:
             # Integrate correction
-            raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
+            # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
             # print("input format", self.x_corr, self.y_corr)
             # print("x and y axes", x_corr_axes[i,:], y_corr_axes[i,:])
             # print("######### x and y after mult ", self.x_corr*x_corr_axes[i,:], self.y_corr*y_corr_axes[i,:])
@@ -873,7 +983,8 @@ class MainNode():
             aligned_axis_y = np.array(aligned_axis_y)
 
             # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
-            raw_joystickDisplacement = self.x_corr*aligned_axis_x* -direction_x  + self.y_corr*aligned_axis_y* direction_y
+            # raw_joystickDisplacement = self.x_corr*aligned_axis_x* -direction_x  + self.y_corr*aligned_axis_y* direction_y   #works for the normal joystick
+            raw_joystickDisplacement = self.x_corr*aligned_axis_x* direction_x  + self.y_corr*aligned_axis_y* direction_y
 
 
             ##### Test code ends here #####
@@ -991,7 +1102,7 @@ class MainNode():
             aligned_axis_y = np.array(aligned_axis_y)
 
             # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
-            raw_joystickDisplacement = self.x_corr*aligned_axis_x* -direction_x  + self.y_corr*aligned_axis_y* direction_y
+            raw_joystickDisplacement = self.x_corr*aligned_axis_x* direction_x  + self.y_corr*aligned_axis_y* direction_y
 
 
 
@@ -1340,7 +1451,7 @@ class MainNode():
         rospy.loginfo("Loading directrix visualisation...")
         # self.visualise_directrix(model["directrix"], model["q"])
         rospy.loginfo("Loading correction axes visualisation...")
-        self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+        # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
 
         # rospy.loginfo("Loading eT visualisation...")
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
