@@ -24,7 +24,7 @@ class MainNode():
         # self.control_front = sys.argv[1]
 
         
-        self.control_front = True
+        self.control_front = False
 
         # self.control_front = True
         # Variables
@@ -75,27 +75,31 @@ class MainNode():
             rospy.Subscriber("/lio_1c/pose", PoseStamped, self.lio_pose_cb)
             # self.lio_pose = None
 
-        if self.control_front:
-            # rospy.loginfo("Control front", self.control_front)
-            self.joy_x = np.array([0, -1, 0])  # Joystick X-axis (global frame)
-            self.joy_y = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
+        #standard front controlling axes will be x = [0,1,0] and y = [-1,0,0]  
+        #Assuming the global x axis will be towards the front of therobot and global Y will be twards the left of the robot
+        # Need to decide the x_dir_mul w.r.t the these two axes" Note: the values will change based on whether it is front or rear of the robot
         
-        else:
-            # rospy.loginfo("Control front", self.control_front)
-            self.joy_x = np.array([0, 1, 0])
-            self.joy_y = np.array([1, 0, 0])
+        self.joy_x_front = np.array([0, 1, 0])  # Joystick X-axis (global frame)  
+        self.joy_y_front = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
+        self.front_config = [self.joy_x_front, self.joy_y_front]
 
+        #standard rear controlling axes will be x = [0,-1,0] and y = [1,0,0]  
+        #Assuming the global x axis will be towards the front of therobot and global Y will be twards the left of the robot
+        #Need to decide the x_dir_mul w.r.t the these two axes" Note: the values will change based on whether it is front or rear of the robot
 
-        # # ##ps5 accesss controller from front
+        self.joy_x_rear = np.array([0, -1, 0]) # [0, 1, 0]
+        self.joy_y_rear = np.array([1, 0, 0])
+        self.rear_config = [self.joy_x_rear, self.joy_y_rear]
 
-        # if self.control_front:
-        #     self.joy_x = np.array([0, -1, 0]) 
-        #     self.joy_y = np.array([1, 0, 0])
+        
 
-        # else:
-        #     self.joy_x = np.array([0, 1, 0]) 
-        #     self.joy_y = np.array([-1, 0, 0])  
+        ## For XBOX joystick
+        self.x_dir_mul = -1 ## This need to be change based on how the joy will give values w.r.t the above two axes (eg: if when we press right, and the joy x will gibe negative values, then this should be -1, else 1)
+        self.y_dir_mul = 1 #1 because when w epress up (according the above define axes, the values will give positive values)
 
+        # ## For Sony PS% Access controler
+        # self.x_dir_mul = -1 ## This need to be change based on how the joy will give values w.r.t the above two axes (eg: if when we press right, and the joy x will gibe negative values, then this should be -1, else 1)
+        # self.y_dir_mul = -1 #1 because when w epress up (according the above define axes, the values will give positive values)
         
 
         self.commanded_pose_pub = rospy.Publisher("/commanded_pose", PoseStamped, queue_size=10)
@@ -229,19 +233,20 @@ class MainNode():
     def joy_cb(self, msg):
         
         if msg.axes[0] != 0 or msg.axes[1] != 0:
-
-            if (self.control_front and (self.joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (self.joy_y == np.array([1, 0, 0])).all()):
-                self.y_corr = msg.axes[1]/150
+            if self.control_front:
+                self.joy_x = self.front_config[0]
+                self.joy_y = self.front_config[1]
 
             else:
-                self.y_corr = -msg.axes[1]/150
-            
-            self.x_corr = msg.axes[0]/150
+                self.joy_x = self.rear_config[0]
+                self.joy_y = self.rear_config[1]
+                
+            ## xbox controller   
+            self.y_corr = self.y_dir_mul * msg.axes[1]/150
+            self.x_corr = self.x_dir_mul * msg.axes[0]/150
+
             self.correction = True
             return # cannot do corrections & change direction at the same time
-
-
-        
 
 
         # Filter buttons input
@@ -252,23 +257,15 @@ class MainNode():
 
         if changed_buttons[1] != 0:
             if self.control_front:
-
                 self.control_front = False
-
                 rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
-
-                # axis of joy when controlled from the rear side\
-                self.joy_x = np.array([0, 1, 0])
-                self.joy_y = np.array([1, 0, 0])
+                self.joy_x = self.front_config[0]
+                self.joy_y = self.front_config[1]
             else:
-
                 self.control_front = True
-
                 rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
-
-                # axis of joy when controlled from the front side\
-                self.joy_x = np.array([0, -1, 0])  # Joystick X-axis (global frame)
-                self.joy_y = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
+                self.joy_x = self.rear_config[0]
+                self.joy_y = self.rear_config[1]
 
 
         if changed_buttons[3] != 0:
@@ -288,31 +285,20 @@ class MainNode():
     # # with sony access controller
     # def joy_cb(self, msg):
 
-        
-    #     # ## assuming controlling from front
-    #     # self.joy_x = np.array([0, -1, 0]) 
-    #     # self.joy_y = np.array([1, 0, 0])
-    #     if self.control_front:
-    #         self.joy_x = np.array([0, -1, 0]) 
-    #         self.joy_y = np.array([1, 0, 0])
-    #     else:
-    #         self.joy_x = np.array([0, 1, 0]) 
-    #         self.joy_y = np.array([-1, 0, 0])
-
-    #     # ## assuming controlling from back
-    #     # self.joy_x = np.array([0, 1, 0]) 
-    #     # self.joy_y = np.array([-1, 0, 0])
-        
     #     if msg.axes[0] != 0 or msg.axes[1] != 0:
 
-    #         # if (self.control_front and (self.joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (self.joy_y == np.array([1, 0, 0])).all()):
-    #         #     self.y_corr = msg.axes[0]/150
+    #         if self.control_front:
+    #             self.joy_x = self.front_config[0]
+    #             self.joy_y = self.front_config[1]
 
-    #         # else:
-    #         #     print("I'm here")
-    #         self.y_corr = msg.axes[0]/150
-            
-    #         self.x_corr = msg.axes[1]/150
+    #         else:
+    #             self.joy_x = self.rear_config[0]
+    #             self.joy_y = self.rear_config[1]
+                
+    #         ##sony access controller
+    #         self.y_corr = self.y_dir_mul * msg.axes[0]/150
+    #         self.x_corr = self.x_dir_mul * msg.axes[1]/150
+
     #         self.correction = True
     #         return # cannot do corrections & change direction at the same time
 
@@ -321,26 +307,6 @@ class MainNode():
     #     if current_buttons == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : changed_buttons = current_buttons
     #     else: changed_buttons = [button1 - button2 for (button1, button2) in zip(current_buttons, self.previous_buttons)]
     #     self.previous_buttons = current_buttons
-
-    #     # if changed_buttons[1] != 0:
-    #     #     if self.control_front:
-
-    #     #         self.control_front = False
-
-    #     #         rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
-
-    #     #         # axis of joy when controlled from the rear side\
-    #     #         self.joy_x = np.array([0, -1, 0])
-    #     #         self.joy_y = np.array([1, 0, 0])
-    #     #     else:
-
-    #     #         self.control_front = True
-
-    #     #         rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
-
-    #     #         # axis of joy when controlled from the front side\
-    #     #         self.joy_x = np.array([0, 1, 0])  # Joystick X-axis (global frame)
-    #     #         self.joy_y = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
 
 
     #     if changed_buttons[1] != 0:
