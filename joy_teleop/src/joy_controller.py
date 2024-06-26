@@ -78,9 +78,16 @@ class PoseControllerNode():
                 self.cumulative_correction_time += correction_duration
                 self.correction_start_time = None
             self.correction = False
-      
 
-        
+
+        if changed_buttons[1] != 0:
+            if self.control_front:
+                self.control_front = False
+                rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
+            else:
+                self.control_front = True
+                rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
+      
     
     
         if changed_buttons[7] != 0:
