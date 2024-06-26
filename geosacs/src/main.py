@@ -24,7 +24,7 @@ class MainNode():
         # self.control_front = sys.argv[1]
 
         
-        self.control_front = False
+        self.control_front = True
 
         # self.control_front = True
         # Variables
@@ -46,6 +46,8 @@ class MainNode():
         self.prev_gripper_angle = None
         self.gripper_states = []
         self.start = False
+
+        self.gripper_change_request = False ##added newly
 
         # ROS Variables
         # Visualisaation
@@ -91,7 +93,7 @@ class MainNode():
         self.joy_y_rear = np.array([1, 0, 0])
         self.rear_config = [self.joy_x_rear, self.joy_y_rear]
 
-        
+
 
         ## For XBOX joystick
         self.x_dir_mul = -1 ## This need to be change based on how the joy will give values w.r.t the above two axes (eg: if when we press right, and the joy x will gibe negative values, then this should be -1, else 1)
@@ -229,7 +231,7 @@ class MainNode():
 
 
         
-    # with logitech joystick controller
+    ### with logitech joystick controller
     def joy_cb(self, msg):
         
         if msg.axes[0] != 0 or msg.axes[1] != 0:
@@ -247,7 +249,8 @@ class MainNode():
 
             self.correction = True
             return # cannot do corrections & change direction at the same time
-
+        
+    
 
         # Filter buttons input
         current_buttons = list(msg.buttons)
@@ -272,17 +275,23 @@ class MainNode():
             # print("CHANGE DIRECTION")
             self.change_direction_request = True
             return
+        
+        if changed_buttons[0] != 0:
+            self.gripper_state_pub.publish("toggle_gripper")
+            self.gripper_change_request = True
+
+            # rospy.sleep(3)
+
         if changed_buttons[7] != 0:
             # print("STOP")
             self.terminate = True
         if changed_buttons[6] != 0:
             # print("START")
             self.start = True
-        if changed_buttons[0] != 0:
-            self.gripper_state_pub.publish("toggle_gripper")
 
 
-    # # with sony access controller
+
+    # ### with sony access controller
     # def joy_cb(self, msg):
 
     #     if msg.axes[0] != 0 or msg.axes[1] != 0:
@@ -325,7 +334,7 @@ class MainNode():
 
 
 
-        
+
         
             
     def get_model(self, model_dir):
@@ -389,6 +398,21 @@ class MainNode():
             msg.poses.append(p)
 
         self.directrix_pub.publish(msg)
+
+    def init_pose(self):
+        msg1 = PoseStamped()
+        msg1.header.frame_id = "LIO_base_link"
+        msg1.pose.position.x = 0.20695484883032408
+        msg1.pose.position.y = 0.0005657323485566697
+        msg1.pose.position.z = 1.061217401594137
+
+        msg1.pose.orientation.w= 0.00699019334487028
+        msg1.pose.orientation.x= 0.9982331952531064
+        msg1.pose.orientation.y= -0.05193699424944531
+        msg1.pose.orientation.z= -0.02800310197296562
+        msg1.header.stamp = rospy.Time.now()
+        self.commanded_pose_pub.publish(msg1)
+
         
     def pub_cmd_pose(self, PcurrG, QcurrG, q_weight):
         msg1 = PoseStamped()
@@ -654,17 +678,17 @@ class MainNode():
     
     def slice_model(self, model, start_idx, end_idx):
         
-        rospy.loginfo(f"Slice model:")
+        # rospy.loginfo(f"Slice model:")
         if start_idx>end_idx: 
             direction = -1
         elif end_idx > start_idx: 
             direction = 1
         else : rospy.logerr("slice_model: edge case not addressed")
 
-        rospy.loginfo(f"  Slicing model from {start_idx} to {end_idx} in {direction} direction.")
+        # rospy.loginfo(f"  Slicing model from {start_idx} to {end_idx} in {direction} direction.")
         
         keep_idxs = np.arange(start_idx, end_idx+1*direction, direction)
-        rospy.loginfo(f"  Slice model to {keep_idxs.shape[0]} points")
+        # rospy.loginfo(f"  Slice model to {keep_idxs.shape[0]} points")
         sliced_model = {}
         sliced_model["directrix"] = model["directrix"][keep_idxs, :] 
         sliced_model["eT"] = model["eT"][keep_idxs, :] 
@@ -682,7 +706,7 @@ class MainNode():
 
         sliced_model["xyz_corr_y"] = model["xyz_corr_y"]
 
-        rospy.loginfo(f"  Sliced model directrix shape {sliced_model['directrix'].shape}")
+        # rospy.loginfo(f"  Sliced model directrix shape {sliced_model['directrix'].shape}")
 
         return sliced_model, direction
         
@@ -744,12 +768,12 @@ class MainNode():
         z_diff = self.calculate_angle_between_vectors(eT, global_z)
 
         if z_diff < 90:
-            if z_diff > 45:
+            if z_diff > 60:
                 return True
             else:
                 return False
         else:
-            if z_diff < 145:
+            if z_diff < 120:
                 return True
             else:
                 return False
@@ -1127,15 +1151,15 @@ class MainNode():
                 prev_goal = _
                 strategy = "fixed"
                 self.change_direction_request = False
-        elif self.gripper_change_direction_request:
-            rospy.loginfo("   GRIPPER change direction request")
-            if goal == "HOME":
-                pass
-            else:
-                prev_goal = goal
-                goal = "HOME"
-                strategy = "convergent"
-            self.gripper_change_direction_request = False
+        # elif self.gripper_change_direction_request:
+        #     rospy.loginfo("   GRIPPER change direction request")
+        #     if goal == "HOME":
+        #         pass
+        #     else:
+        #         prev_goal = goal
+        #         goal = "HOME"
+        #         strategy = "convergent"
+        #     self.gripper_change_direction_request = False
         elif goal == "PICK": 
             prev_goal = goal
             goal = "HOME"
@@ -1154,6 +1178,39 @@ class MainNode():
             strategy = "fixed"
 
         return goal, prev_goal, strategy
+    
+
+    def update_states_at_the_end(self, goal, prev_goal, strategy, current_idx, t):
+
+      
+        # elif self.gripper_change_direction_request:
+        #     rospy.loginfo("   GRIPPER change direction request")
+        #     if goal == "HOME":
+        #         pass
+        #     else:
+        #         prev_goal = goal
+        #         goal = "HOME"
+        #         strategy = "convergent"
+        #     self.gripper_change_direction_request = False
+        if goal == "PICK": 
+            prev_goal = goal
+            goal = "HOME"
+            strategy = "convergent"
+        elif goal == "PLACE":
+            prev_goal = goal
+            goal = "HOME"
+            strategy = "convergent"
+        elif goal == "HOME" and prev_goal == "PICK":
+            prev_goal = goal
+            goal = "HOME"
+            strategy = "convergent"
+        elif goal == "HOME" and prev_goal == "PLACE":
+            prev_goal = goal
+            goal = "HOME"
+            strategy = "convergent"
+
+        return goal, prev_goal, strategy
+
 
     # def run(self):
     #     # Specify data directory and task
@@ -1392,6 +1449,8 @@ class MainNode():
         raw_dir = data_dir + f"/{task}/record-raw"
         processed_dir = data_dir + f"/{task}/record-processed"
 
+        # self.init_pose()
+
 
         # Get model & demos
         raw_demos_xyz, raw_demos_q = self.get_raw_demos(raw_dir)
@@ -1482,12 +1541,17 @@ class MainNode():
             QcurrG = trajectory_q[0,:]
             q_weight = q_weights[0,:]
 
+            # start_PcurrG = PcurrG
+            # start_QcurrG = QcurrG
+            # start_q_weight = q_weight
+
             self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
             if first:
                 rospy.loginfo("Press START button on joystick ...")
                 while not self.start:
                     rospy.sleep(0.1)
-                
+
+                rospy.loginfo("##### started ####")
                 start_task_time = rospy.Time.now()
                 self.events_pub.publish("Start.")
                 self.events_pub.publish(f"  Go from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
@@ -1511,12 +1575,20 @@ class MainNode():
                 while self.gripper_state == "moving":
                     rospy.sleep(0.01)
 
-                if self.gripper_change_direction_request:
-                    if current_idx != t["1"] and current_idx!=t["-1"] and current_idx != t["0"]:
-                        self.events_pub.publish("Gripper change direction request.")
-                        break
-                    else:
-                        self.gripper_change_direction_request = False
+                if self.gripper_change_request:
+                    rospy.sleep(1.2)
+                    self.gripper_change_request = False
+
+
+                #TODO CHECK THE BELOW COMMENTED PART WILL TAKE CARE THE AUTOMATIC DIRECTION REQUEST
+                # if self.gripper_change_direction_request:
+                #     rospy.loginfo("Im here")
+                #     if current_idx != t["1"] and current_idx!=t["-1"] and current_idx != t["0"]:
+                #         self.events_pub.publish("Gripper change direction request.")
+                #         break
+                #     else:
+                #         self.gripper_change_direction_request = False
+                    
     
                 
                 # if current_idx == t["-1"] or current_idx == t["1"]: ## If we reached here, that means the canal has been shifted the other way
@@ -1584,6 +1656,10 @@ class MainNode():
                     # q_weight = q_weights[current_idx,:]  #q_weights will not change anywhere
                     # QcurrG = trajectory_q[current_idx,:] #trajector_q will not change anywhere
 
+                    if self.terminate:
+                        self.events_pub.publish("Terminate.")
+                        break
+
                     # rospy.sleep(0.01)
                     if self.correction:  ## Need to give the previous QcurrG and q_weight
 
@@ -1608,6 +1684,8 @@ class MainNode():
                 
             
             if self.terminate:
+
+                rospy.loginfo("###################################################")
                 if self.physical_robot : self.myp_app_pub.publish("stop")
                 task_duration = (rospy.Time.now() - start_task_time).to_sec()
                 rospy.loginfo(f"Total task time: {task_duration} seconds")
@@ -1630,6 +1708,7 @@ class MainNode():
 
                 self.events_pub.publish(f"Correction time as a percentage from total:{cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
                 
+                rospy.loginfo("###################################################")
                 
                 # self.events_pub.publish(f"Total task time: {task_duration} seconds")
                 # self.events_pub.publish(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
@@ -1637,6 +1716,65 @@ class MainNode():
                 # self.events_pub.publish(f"Total correction time*: {cumulative_correction_time} seconds ({(cumulative_correction_time/(task_duration-cumulative_correction_time))*100}%)")
                 # self.events_pub.publish(f"Total correction distance: {cumulative_correction_distance} meters")
                 # self.events_pub.publish(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters")
+
+                #TODO NEED TO DO THIS SMOOTHLY -> byt maybe work well with real robot
+                rospy.loginfo("task ended, moving to the intial task position")
+                # self.pub_cmd_pose(start_PcurrG, start_QcurrG, start_q_weight)
+
+
+                self.events_pub.publish("End of section, compute next")
+                # rospy.loginfo(f"PREVIOUS: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
+
+                goal, prev_goal, strategy = self.update_states_at_the_end(goal, prev_goal, strategy, current_idx, t)
+
+                start_idx = current_idx
+                if goal == "PICK" : end_idx = t["-1"]
+                elif goal == "PLACE" : end_idx = t["1"]
+                elif goal == "HOME" : end_idx = t["0"]
+                # rospy.loginfo(f"  UPDATED: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}. Strategy : {strategy}")
+                self.events_pub.publish("--------------------------------------------------------------------")
+                self.events_pub.publish(f"Go from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
+
+
+                initPoints = np.array([PcurrG])
+                AcurrG = PcurrG - model["directrix"][current_idx,:]
+                Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+                # rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-model['directrix'][current_idx,:])}")
+                # rospy.loginfo(f"  Rc[current_idx]={model['Rc'][current_idx]}. Starting ratio={Ratio}")
+                s_model, direction = self.slice_model(model, start_idx, end_idx )
+
+
+                repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction)
+                trajectory_xyz = repro_trajectories[0]
+
+                trajectory_q = s_model["q"]
+                self.clear_rviz_pub.publish("reproduced")
+                self.visualise_trajectory(trajectory_xyz, trajectory_q)
+
+                nb_points = trajectory_xyz.shape[0]
+
+                if self.physical_robot : self.myp_app_pub.publish("start")
+                PcurrG = trajectory_xyz[0,:]
+                QcurrG = trajectory_q[0,:]
+                q_weight = q_weights[0,:]
+
+                self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+
+                for i in range(nb_points):
+                    PcurrG = trajectory_xyz[i,:]
+                    QcurrG = trajectory_q[i,:]
+                    q_weight = q_weights[i,:]
+                    
+                    self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+                    AcurrG = PcurrG - model["directrix"][current_idx,:]
+                    Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+                    self.pub_surface_pose(i, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
+                    # i designates the NEXT idx of the robot
+                    if i != 0: current_idx += 1*direction # Designates the idx AT which the robot is located
+                    self.rate.sleep()
+
+
+
                 return
             
 
