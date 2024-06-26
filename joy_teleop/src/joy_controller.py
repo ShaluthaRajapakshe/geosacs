@@ -25,6 +25,8 @@ class PoseControllerNode():
         self.terminate = False
         self.start = False
 
+        self.control_front = True
+
         self.cumulative_correction_distance = 0
         self.lio_cumulative_correction_distance = 0
 
@@ -122,6 +124,7 @@ class PoseControllerNode():
 
                 while not self.start:
                     rospy.sleep(0.1)
+                rospy.loginfo("##### started ####")
 
                 # print("im out")
                 
@@ -182,11 +185,17 @@ class PoseControllerNode():
     def update_joy_pose(self):
 
         PstartG = np.array([self.commandedPose.pose.position.x, self.commandedPose.pose.position.y, self.commandedPose.pose.position.z])
-        
 
-        self.commandedPose.pose.position.x+=self.commandedVel.linear.x/self.freq
-        self.commandedPose.pose.position.y+=self.commandedVel.linear.y/self.freq
-        self.commandedPose.pose.position.z+=self.commandedVel.linear.z/self.freq
+        if self.control_front:
+            self.commandedPose.pose.position.x-=self.commandedVel.linear.x/self.freq
+            self.commandedPose.pose.position.y-=self.commandedVel.linear.y/self.freq
+            self.commandedPose.pose.position.z+=self.commandedVel.linear.z/self.freq
+        
+        else:
+
+            self.commandedPose.pose.position.x+=self.commandedVel.linear.x/self.freq
+            self.commandedPose.pose.position.y+=self.commandedVel.linear.y/self.freq
+            self.commandedPose.pose.position.z+=self.commandedVel.linear.z/self.freq
 
         PnextG = np.array([self.commandedPose.pose.position.x, self.commandedPose.pose.position.y, self.commandedPose.pose.position.z])
 
@@ -208,9 +217,16 @@ class PoseControllerNode():
         # 
         # Mapping fix to obtain same joystick control as drone_panda
         # Probably due to transforms3d library differences with C++ KDL library
-        ang_vel_x = self.commandedVel.angular.z
-        ang_vel_y = -self.commandedVel.angular.x
-        ang_vel_z = self.commandedVel.angular.y
+
+        if self.control_front:
+            ang_vel_x = -self.commandedVel.angular.z
+            ang_vel_y = +self.commandedVel.angular.x
+            ang_vel_z = self.commandedVel.angular.y
+
+        else:
+            ang_vel_x = self.commandedVel.angular.z
+            ang_vel_y = -self.commandedVel.angular.x
+            ang_vel_z = -self.commandedVel.angular.y
 
         # Rotation initialization using Roll-Pitch-Yaw (RPY)
         motion = euler.euler2mat(ang_vel_x/self.freq, ang_vel_y/self.freq, ang_vel_z/self.freq)
