@@ -47,6 +47,10 @@ class MainNode():
         self.gripper_states = []
         self.start = False
 
+
+        self.prev_circle_type = None
+        self.prev_xy_flag = None
+
         self.gripper_change_request = False ##added newly
 
         # ROS Variables
@@ -259,6 +263,7 @@ class MainNode():
         self.previous_buttons = current_buttons
 
         if changed_buttons[1] != 0:
+            
             if self.control_front:
                 self.control_front = False
                 rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
@@ -806,21 +811,96 @@ class MainNode():
         return direction_x
 
 
+
+    def check_position_in_joystick_frame(self, R_T, p_global):
+        # Transform the point to the joystick frame
+        p_joystick = np.dot(R_T, p_global)
+        
+        # Check the sign of the X-coordinate in the joystick frame
+        if p_joystick[0] > 0:
+            position = "right"
+        else:
+            position = "left"
+
+        return position, p_joystick
+    
+
+    def vertical_type(self, horizontal_axis, global_z, joy_y):
+        projected_horizontal_axis = self.project_onto_plane(horizontal_axis, global_z)
+
+        angle_with_joy_y = self.calculate_angle_between_vectors(projected_horizontal_axis, joy_y)
+
+        if angle_with_joy_y <= 30 or angle_with_joy_y >= 150:  ## TODO: this can be reduced to 20 and 160 
+            type = "typeA"
+        else:
+            type = "typeB"
+
+        print(f"########## Type", type)
+            
+        return type
+        
+
+    def direction_x_new(self, type, position, correction_x, joy_y, joy_x, global_z):
+        projected_horizontal_axis = self.project_onto_plane(correction_x, global_z)
+
+        if type == "typeA":
+            alignment = np.dot(joy_y, projected_horizontal_axis)
+            sign = np.sign(alignment)
+
+            print("######",  type, position, sign)
+
+            if position == "left":
+                return sign
+            else:
+                return -sign
+        
+        else:
+            alignment = np.dot(joy_x, projected_horizontal_axis)
+            sign = np.sign(alignment)
+
+            ## No need to check whether left or right for typeB vertical planes
+
+            return sign
         
 
 
     # Main function to map input
-    def map_input(self, correction_x, correction_y, joy_x, joy_y, eT):
+    def map_input(self, correction_x, correction_y, joy_x, joy_y, eT, directrix):
         correction_axes = [
             np.array(correction_x),
             np.array(correction_y)
         ]
 
+        
+
         z = np.array([0, 0, 1])
 
         vertical_plane = self.vertical_check(eT)
 
+
         if vertical_plane:
+
+
+            # Define global axes
+            g_x = np.array([1, 0, 0])
+            g_y = np.array([0, 1, 0])
+            g_z = np.array([0, 0, 1])
+
+            # Define joystick axes w.r.t global frame
+            j_x = joy_x
+            j_y = joy_y
+            j_z = np.cross(j_x, j_y)  # Should be [0, 0, 1]
+
+            # Rotation matrix from global frame to joystick frame
+            R = np.column_stack((j_x, j_y, j_z))
+
+            # Transpose of the rotation matrix
+            R_T = R.T
+
+            position, p_joystick = self.check_position_in_joystick_frame(R_T, directrix)
+
+            print(f"########## directrix", directrix, " and I'm on,", position,"  w.r.t joyx")
+            
 
             # angle_corr_x = np.arccos(np.dot(correction_axes[0], z) / np.linalg.norm(correction_axes[0]))
             # angle_corr_y = np.arccos(np.dot(correction_axes[1], z) / np.linalg.norm(correction_axes[1]))
@@ -848,27 +928,42 @@ class MainNode():
             if angle_corr_x < angle_corr_y:
                 aligned_axis_y = correction_axes[0]
                 aligned_axis_x = correction_axes[1]
-                # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
-                direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+
+
+                type = self.vertical_type(aligned_axis_x, g_z, joy_y)
+
+                direction_x = self.direction_x_new(type, position, aligned_axis_x, joy_y, joy_x, g_z)
+
                 direction_y = np.sign(np.dot(aligned_axis_y, z))
                 direction_y = y_dir_mult * direction_y
+                # self.prev_xy_flag = False
 
             elif angle_corr_y < angle_corr_x:
+                
                 aligned_axis_y = correction_axes[1]
                 aligned_axis_x = correction_axes[0]
-                # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
-                direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+                
+                type = self.vertical_type(aligned_axis_x, g_z, joy_y)
+
+                direction_x = self.direction_x_new(type, position, aligned_axis_x, joy_y, joy_x, g_z)
+
                 direction_y = np.sign(np.dot(aligned_axis_y, z))
                 direction_y = y_dir_mult * direction_y
+                # self.prev_xy_flag = True
 
             else:
                 aligned_axis_y = correction_axes[0]
                 aligned_axis_x = correction_axes[1]
-                # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
-                direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+                
+                type = self.vertical_type(aligned_axis_x, g_z, joy_y)
+
+                direction_x = self.direction_x_new(type, position, aligned_axis_x, joy_y, joy_x, g_z)
+                
                 direction_y = np.sign(np.dot(aligned_axis_y, z))
                 direction_y = y_dir_mult * direction_y
-
+            
+                
+                
             
         else:
 
@@ -910,6 +1005,7 @@ class MainNode():
                 aligned_axis_x = correction_axes[1]
                 aligned_axis_y = correction_axes[0]
 
+            self.prev_circle_type = "horizontal"
 
         # print("original correction axes", correction_axes[0], correction_axes[1])
         # print("rotated correction axes", correction_axes_rotated)
@@ -917,6 +1013,184 @@ class MainNode():
         # print("Aligned Axis for Joystick Y-axis:", aligned_axis_y, "Direction identifier", direction_y)
 
         return aligned_axis_x, aligned_axis_y, direction_x, direction_y
+    
+
+
+
+
+    # # Main function to map input
+    # def map_input(self, correction_x, correction_y, joy_x, joy_y, eT, directrix):
+    #     correction_axes = [
+    #         np.array(correction_x),
+    #         np.array(correction_y)
+    #     ]
+
+        
+
+    #     z = np.array([0, 0, 1])
+
+    #     vertical_plane = self.vertical_check(eT)
+
+
+    #     if vertical_plane:
+
+
+    #         # Define global axes
+    #         g_x = np.array([1, 0, 0])
+    #         g_y = np.array([0, 1, 0])
+    #         g_z = np.array([0, 0, 1])
+
+    #         # Define joystick axes w.r.t global frame
+    #         j_x = joy_x
+    #         j_y = joy_y
+    #         j_z = np.cross(j_x, j_y)  # Should be [0, 0, 1]
+
+    #         # Rotation matrix from global frame to joystick frame
+    #         R = np.column_stack((j_x, j_y, j_z))
+
+    #         # Transpose of the rotation matrix
+    #         R_T = R.T
+
+    #         position, p_joystick = self.check_position_in_joystick_frame(R_T, directrix)
+
+    #         print(f"########## directrix", directrix, " and I'm on,", position,"  w.r.t joyx")
+            
+
+    #         # angle_corr_x = np.arccos(np.dot(correction_axes[0], z) / np.linalg.norm(correction_axes[0]))
+    #         # angle_corr_y = np.arccos(np.dot(correction_axes[1], z) / np.linalg.norm(correction_axes[1]))
+
+    #         if (self.control_front and (joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (joy_y == np.array([1, 0, 0])).all()):
+    #             y_dir_mult = 1
+
+    #         else:
+    #             y_dir_mult = -1
+
+    #         def angle_with_z(axis):
+    #             angle = np.arccos(np.dot(axis, z) / np.linalg.norm(axis))
+    #             # if angle > np.pi / 2:
+    #             #     direction = -1.0
+    #             # else:
+    #             #     direction = 1.
+
+                
+    #             # return min(angle, np.pi - angle), direction
+    #             return min(angle, np.pi - angle)
+
+    #         angle_corr_x = angle_with_z(correction_axes[0])
+    #         angle_corr_y = angle_with_z(correction_axes[1])
+
+    #         if angle_corr_x < angle_corr_y:
+    #             aligned_axis_y = correction_axes[0]
+    #             aligned_axis_x = correction_axes[1]
+
+
+    #             type = self.vertical_type(aligned_axis_x, z, joy_y)
+
+                
+
+    #             # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
+    #             if self.prev_circle_type == "vertical" and self.prev_xy_flag == False:   ### here we have taken the assumptoin that the planes will be gradual so that axes will not change
+                    
+    #                 if not self.control_front:
+    #                     direction_x = -self.prev_x_dir
+    #                 else:
+    #                     direction_x = self.prev_x_dir
+                
+    #             else: #here just the xy_flag might not be enough, in order to keep it consistent, we neet to check the alignment with previous aligned_axis_x (but these are edge cases)
+    #                 direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+    #                 self.prev_x_dir =  direction_x
+
+    #             direction_y = np.sign(np.dot(aligned_axis_y, z))
+    #             direction_y = y_dir_mult * direction_y
+    #             self.prev_xy_flag = False
+
+    #         elif angle_corr_y < angle_corr_x:
+                
+    #             aligned_axis_y = correction_axes[1]
+    #             aligned_axis_x = correction_axes[0]
+    #             # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
+    #             if self.prev_circle_type == "vertical" and self.prev_xy_flag == True:
+    #                 if not self.control_front:
+    #                     direction_x = -self.prev_x_dir
+    #                 else:
+    #                     direction_x = self.prev_x_dir
+    #             else:
+    #                 direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+    #                 self.prev_x_dir =  direction_x
+
+    #             direction_y = np.sign(np.dot(aligned_axis_y, z))
+    #             direction_y = y_dir_mult * direction_y
+    #             self.prev_xy_flag = True
+
+    #         else:
+    #             aligned_axis_y = correction_axes[0]
+    #             aligned_axis_x = correction_axes[1]
+    #             # aligned_axis_x, direction_x = self.determine_x_direction(aligned_axis_y, correction_axes, joy_x)
+    #             if self.prev_circle_type == "vertical":
+    #                 if not self.control_front:
+    #                     direction_x = -self.prev_x_dir
+    #                 else:
+    #                     direction_x = self.prev_x_dir  #this because we conisder front control as default
+    #             else:
+    #                 direction_x = self.determine_x_direction_new(aligned_axis_x, correction_axes, joy_x)
+    #                 self.prev_x_dir =  direction_x
+                
+    #             direction_y = np.sign(np.dot(aligned_axis_y, z))
+    #             direction_y = y_dir_mult * direction_y
+
+    #         self.prev_circle_type = "vertical"
+            
+                
+                
+            
+    #     else:
+
+    #         projected_corr_x = self.project_onto_plane(correction_axes[0], z ) 
+    #         projected_corr_y = self.project_onto_plane(correction_axes[1], z ) 
+
+
+    #         projected_corr_axes = np.array([projected_corr_x, projected_corr_y])
+
+
+    #         # Compute the projections of the joystick axes onto the correction axes
+    #         projections_x, projections_y = self.compute_axis_projections(projected_corr_axes, joy_x, joy_y)
+
+    #         # Select the most aligned correction axis for joystick X-axis
+    #         aligned_axis_index_x, direction_x = self.select_aligned_axis(projections_x) 
+            
+
+
+    #         # Select the most aligned correction axis for joystick Y-axis
+    #         aligned_axis_index_y, direction_y = self.select_aligned_axis(projections_y)
+            
+
+    #         # print("Aligned Axis Index for Joystick Y-axis:", aligned_axis_index_y)
+    #         # print("Direction for Joystick Y-axis:", direction_y)
+
+
+    #         # The most aligned correction axes, invert if direction is negative
+    #         aligned_axis_x = correction_axes[aligned_axis_index_x] 
+    #         aligned_axis_y = correction_axes[aligned_axis_index_y]
+
+
+    #         ## Taking the actual correction axeses (untill now we were dealing with projected vectors on the horizontal plane)
+    #         ## Also this will handle cases like 45 degrees where joy axes can be mapped to one same correction axis, but the following step ensures at last it will be applied to the two axes again
+
+    #         if (aligned_axis_x == projected_corr_x).all():
+    #             aligned_axis_x = correction_axes[0]
+    #             aligned_axis_y = correction_axes[1]
+    #         else:
+    #             aligned_axis_x = correction_axes[1]
+    #             aligned_axis_y = correction_axes[0]
+
+    #         self.prev_circle_type = "horizontal"
+
+    #     # print("original correction axes", correction_axes[0], correction_axes[1])
+    #     # print("rotated correction axes", correction_axes_rotated)
+    #     # print("Aligned Axis for Joystick X-axis:", aligned_axis_x, "Direction identifier", direction_x)
+    #     # print("Aligned Axis for Joystick Y-axis:", aligned_axis_y, "Direction identifier", direction_y)
+
+    #     return aligned_axis_x, aligned_axis_y, direction_x, direction_y
     
 
     def correct_traj(self, s_model, i, PcurrG, QcurrG, 
@@ -929,6 +1203,9 @@ class MainNode():
         eB = s_model["eB"][i:]
         eT = s_model["eT"][i:]
         directrix = s_model["directrix"][i:]
+
+        directrix_point = s_model["directrix"][i,]
+
         Rc = s_model["Rc"][i:]
         # Get correction axes
         eX = s_model["x_corr_axes"][i:]
@@ -967,7 +1244,7 @@ class MainNode():
 
             # ##### Test code #####
 
-            aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[i,:], y_corr_axes[i,:], joy_x, joy_y, s_model["eT"][i,:])
+            aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[i,:], y_corr_axes[i,:], joy_x, joy_y, s_model["eT"][i,:], directrix_point)
 
             aligned_axis_x = np.array(aligned_axis_x)
             aligned_axis_y = np.array(aligned_axis_y)
@@ -1062,6 +1339,7 @@ class MainNode():
         directrix = s_model["directrix"][-1:]
         Rc = s_model["Rc"][-1:]
         
+        directrix_point = s_model["directrix"][-1,]
 
         x_corr_axes = s_model["x_corr_axes"]
         y_corr_axes = s_model["y_corr_axes"]
@@ -1086,7 +1364,7 @@ class MainNode():
             # if from_front:
             #     raw_joystickDisplacement = -self.x_corr*y_corr_axes[-1,:] + self.y_corr*-x_corr_axes[-1,:]
 
-            aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[-1,:], y_corr_axes[-1,:], joy_x, joy_y, s_model["eT"][-1,:])
+            aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[-1,:], y_corr_axes[-1,:], joy_x, joy_y, s_model["eT"][-1,:], directrix_point)
 
             aligned_axis_x = np.array(aligned_axis_x)
             aligned_axis_y = np.array(aligned_axis_y)
@@ -1463,20 +1741,22 @@ class MainNode():
 
         self.clear_rviz_pub.publish("all")
 
-        self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
-        self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+        # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+        # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
         # rospy.loginfo("Loading demonstration data visualisation...")
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
         rospy.loginfo("Loading GC visualisation...")
-        self.visualise_gc(model["GC"])
+        # self.visualise_gc(model["GC"])
         # self.visualise_gc(model["GC"][-50:,:,:])
         # self.visualise_gc(model["GC"][:50,:,:])
         
         rospy.loginfo("Loading directrix visualisation...")
         # self.visualise_directrix(model["directrix"], model["q"])
         rospy.loginfo("Loading correction axes visualisation...")
-        # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+        self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+
+        # rospy.sleep(5)
 
         # rospy.loginfo("Loading eT visualisation...")
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
@@ -1566,6 +1846,9 @@ class MainNode():
 
 
             for i in range(nb_points):
+
+                # directrix_point = s_model["directrix"][i,:]
+                # print("############ current directrix_point", directrix_point)
                 
 
                 if self.terminate:
@@ -1721,6 +2004,8 @@ class MainNode():
                 rospy.loginfo("task ended, moving to the intial task position")
                 # self.pub_cmd_pose(start_PcurrG, start_QcurrG, start_q_weight)
 
+                rospy.sleep(3)
+
 
                 self.events_pub.publish("End of section, compute next")
                 # rospy.loginfo(f"PREVIOUS: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
@@ -1772,8 +2057,6 @@ class MainNode():
                     # i designates the NEXT idx of the robot
                     if i != 0: current_idx += 1*direction # Designates the idx AT which the robot is located
                     self.rate.sleep()
-
-
 
                 return
             
