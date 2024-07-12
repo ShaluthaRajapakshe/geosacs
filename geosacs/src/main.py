@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import sys
 import os
@@ -46,6 +46,9 @@ class MainNode():
         self.prev_gripper_angle = None
         self.gripper_states = []
         self.start = False
+
+        self.task = "Other"
+        self.marsh_selected = False
 
 
         self.prev_circle_type = None
@@ -293,6 +296,9 @@ class MainNode():
         if changed_buttons[6] != 0:
             # print("START")
             self.start = True
+
+        if changed_buttons[2] != 0:
+            self.marsh_selected = True
 
 
 
@@ -1268,14 +1274,33 @@ class MainNode():
             ## Apply correction
             AcurrG_corr = AcurrG + raw_joystickDisplacement
             # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
+
+
             ## Saturate correction and compute ratio
-            if np.linalg.norm(AcurrG_corr) > Rc[0] : 
+            if np.linalg.norm(AcurrG_corr) > Rc[0] :   ###Try removing this condition and see how it behaves
                 AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
                 Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+                # print("#### ratio", Ratio)
                 # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
             else:
                 Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
                 # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+
+
+            # ##Mofidy the below code so that only if a user put too much of an effort only they will be given the chance to go beyond the circle
+            # distance_from_center = np.linalg.norm(AcurrG_corr)
+
+            # elastic_constant = 0.8
+            # if distance_from_center > Rc[0]:
+            #     elastic_extension = distance_from_center - Rc[0]
+            #     Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
+            #     AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+            #     Ratio = 1.0
+            #     print("Outside", Rc_adjusted)
+            # else:
+            #     Ratio = distance_from_center / Rc[0]
+
+
             ## Translate back to directrix point
             PcurrG_corr = AcurrG_corr + directrix[0]
             ## Change current point 
@@ -1747,7 +1772,7 @@ class MainNode():
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
         rospy.loginfo("Loading GC visualisation...")
-        # self.visualise_gc(model["GC"])
+        self.visualise_gc(model["GC"])
         # self.visualise_gc(model["GC"][-50:,:,:])
         # self.visualise_gc(model["GC"][:50,:,:])
         
@@ -1766,21 +1791,53 @@ class MainNode():
         # self.visualise_TNB_axes(model["eB"], model["directrix"], "eB")
         # rospy.loginfo("Visualisation loaded.")
 
-        pick_idx = 0
-        place_idx = model["directrix"].shape[0] - 1 # -1 needed to convert length to idx
-        mid_idx = int(place_idx/2)
-        t = {"-1":pick_idx, "0": mid_idx, "1":place_idx}
+
+        if self.task == "marshmellow":
+
+            ###### ONLY FOR MARSHMELLOW TASK ######
+            pick_idx = model["directrix"].shape[0] - 1
+            place_idx = 0
+            mid_idx = int(pick_idx/2)
+            t = {"-1":pick_idx, "0": mid_idx, "1":place_idx}
+
+            restart = True
+            prev_goal = "PICK"
+            goal = "HOME"
+            start_idx = t["-1"]
+            end_idx = t["0"]
+            current_idx = start_idx
+            numRepro = 1
+            starting = np.ones((1, numRepro), dtype=int)
+            crossSectionType = "circle"
+            strategy = "convergent"
+
+            #################################################
+
+        else:
         
-        restart = True
-        prev_goal = "HOME"
-        goal = "PICK"
-        start_idx = t["0"]
-        end_idx = t["-1"]
-        current_idx = start_idx
-        numRepro = 1
-        starting = np.ones((1, numRepro), dtype=int) 
-        crossSectionType = "circle"
-        strategy = "fixed"
+            ##### For All Other Tasks Except the Marshmellow Task ######
+            pick_idx = 0
+            place_idx = model["directrix"].shape[0] - 1 # -1 needed to convert length to idx
+            mid_idx = int(place_idx/2)
+            t = {"-1":pick_idx, "0": mid_idx, "1":place_idx}
+            
+            restart = True
+            prev_goal = "HOME"
+            goal = "PICK"
+            start_idx = t["0"]
+            end_idx = t["-1"]
+            current_idx = start_idx
+            numRepro = 1
+            starting = np.ones((1, numRepro), dtype=int) 
+            crossSectionType = "circle"
+            strategy = "fixed"
+
+            ##########################################################
+
+
+
+
+
         s_model, direction = self.slice_model(model,start_idx, end_idx)
         # print(f"{s_model['x_corr_axes'].shape}, {s_model['y_corr_axes'].shape}, {s_model['eT'].shape}")
         # initPoints, Ratio = randomInitialPoints(s_model, numRepro, crossSectionType)
@@ -1954,6 +2011,15 @@ class MainNode():
                         #                                                                                     crossSectionType, strategy, direction, 
                         #                                                                                     trajectory_xyz, trajectory_q, cumulative_correction_time,
                         #                                                                                     cumulative_correction_distance, lio_cumulative_correction_distance )
+                    
+                        # print("PcurrG", PcurrG, "QcurrG", QcurrG, "q_weight", q_weight)
+
+                    if self.task == "marshmellow" and self.marsh_selected:
+                        # print("PcuurG", PcurrG)
+                        PcurrG[2] = PcurrG[2] - 0.02
+                        # print("#################### After PcuurG", PcurrG)
+                        self.terminate = True
+
                     self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
                     AcurrG = PcurrG - model["directrix"][current_idx,:]
                     Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
@@ -2000,7 +2066,7 @@ class MainNode():
                 # self.events_pub.publish(f"Total correction distance: {cumulative_correction_distance} meters")
                 # self.events_pub.publish(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters")
 
-                #TODO NEED TO DO THIS SMOOTHLY -> byt maybe work well with real robot
+                
                 rospy.loginfo("task ended, moving to the intial task position")
                 # self.pub_cmd_pose(start_PcurrG, start_QcurrG, start_q_weight)
 

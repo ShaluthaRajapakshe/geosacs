@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import math 
 from sensor_msgs.msg import JointState, Joy
@@ -24,7 +24,10 @@ class IKinterface():
 
 
         rospy.Subscriber("/gripper_state", String, self.gripper_state_cb)
+        
         rospy.Subscriber("/panda_ik/output", Float64MultiArray, self.ik_cb)
+        # rospy.Subscriber("/pos_control/output", Float64MultiArray, self.ik_cb)  #use this for LLA work
+
         rospy.Subscriber("/lio_1c/joint_states", JointState, self.lio_joint_states_cb)
 
         #Init Message
@@ -79,6 +82,7 @@ class IKinterface():
     
     def ik_cb(self, msg):
         self.ik_js = msg.data
+        # print("received ik_js: ", self.ik_js)
 
 
 
