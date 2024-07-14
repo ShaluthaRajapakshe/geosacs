@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strategy, direction ):
+def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strategy, direction, out_of_canal ):
     if np.size(starting) != numRepro:
         raise ValueError('The number of starting points should be equal to the number of reproductions')
     if np.size(initPoint, 0) != numRepro:
@@ -31,6 +31,7 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
 
 
         PcurrG = initPoint[jj, :]
+        # print("############ started a new traj PcurrG: ", PcurrG)
         DCMl2g = np.vstack((eN[0, :], eB[0, :], eT[0, :]))  # Local2Global DCM using current TNB
         
         for ii in range(strt, szd):
@@ -68,23 +69,54 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
             else: 
                 # print("FIXED STRATEGY")
                 pass
-            
-            if crossSection == 'circle':
-                Rc = model['Rc']
 
+            transition_window = 10
+            
+            if out_of_canal:
+                if np.abs(ii - strt) < transition_window:
+                    Rc_adj = np.linalg.norm(PcurrG - directrix[ii, :])
+                    adjustment_factor = 1 - (ii - strt) / transition_window
+                    Rc_adj = Rc_adj * adjustment_factor + model['Rc'][ii] * (1 - adjustment_factor)
+                else:
+                    Rc_adj = model['Rc'][ii]  # Inside the canal boundary after transition window
+                    out_of_canal = False
+            
+            else:
+                Rc_adj = model['Rc'][ii]
+
+
+            if crossSection == 'circle':
                 PnextG0 = DCMg2l.dot(PcurrL)  # PnextG: next point in Global
                 directrix_reshaped = directrix[ii,:].reshape(3,1)
-                
+
                 test_nan = np.isnan((PnextG0 / np.linalg.norm(PnextG0)).ravel())
-                if np.isclose(Ratio, 0) or np.any(test_nan):
+                if np.isclose(ratio, 0) or np.any(test_nan):
                     PnextG = directrix_reshaped
                 else:
-                    PnextG = Ratio * Rc[ii] * PnextG0 / np.linalg.norm(PnextG0) + directrix_reshaped
-                
-                    
+                    PnextG = ratio * Rc_adj * PnextG0 / np.linalg.norm(PnextG0) + directrix_reshaped
+
                 PnextG = PnextG.reshape(-1)
+
                 newTraj[ii - strt, :] = PnextG
                 PcurrG = PnextG
+            
+
+            # if crossSection == 'circle':
+            #     Rc = model['Rc']
+
+            #     PnextG0 = DCMg2l.dot(PcurrL)  # PnextG: next point in Global
+            #     directrix_reshaped = directrix[ii,:].reshape(3,1)
+                
+            #     test_nan = np.isnan((PnextG0 / np.linalg.norm(PnextG0)).ravel())
+            #     if np.isclose(Ratio, 0) or np.any(test_nan):
+            #         PnextG = directrix_reshaped
+            #     else:
+            #         PnextG = Ratio * Rc[ii] * PnextG0 / np.linalg.norm(PnextG0) + directrix_reshaped
+                
+                    
+            #     PnextG = PnextG.reshape(-1)
+            #     newTraj[ii - strt, :] = PnextG
+            #     PcurrG = PnextG
             
     
                 

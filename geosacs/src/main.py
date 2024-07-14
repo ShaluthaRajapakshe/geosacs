@@ -47,8 +47,10 @@ class MainNode():
         self.gripper_states = []
         self.start = False
 
-        self.task = "Other"
+        self.task = "other" ##marshmellow, other
         self.marsh_selected = False
+
+        self.out_of_canal = False
 
 
         self.prev_circle_type = None
@@ -1213,6 +1215,7 @@ class MainNode():
         directrix_point = s_model["directrix"][i,]
 
         Rc = s_model["Rc"][i:]
+        # print("Rc", Rc)
         # Get correction axes
         eX = s_model["x_corr_axes"][i:]
         eY = s_model["y_corr_axes"][i:]
@@ -1276,29 +1279,38 @@ class MainNode():
             # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
 
 
-            ## Saturate correction and compute ratio
-            if np.linalg.norm(AcurrG_corr) > Rc[0] :   ###Try removing this condition and see how it behaves
-                AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print("#### ratio", Ratio)
-                # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
-            else:
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
 
+            # ###########  Saturate correction and compute ratio #############
+            # if np.linalg.norm(AcurrG_corr) > Rc[0] :   
+            #     AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print("#### ratio", Ratio)
+            #     # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            # else:
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+
+            # ################################################################
+
+
+            ############ TO use the ealstic model of going outside the canal ########
 
             # ##Mofidy the below code so that only if a user put too much of an effort only they will be given the chance to go beyond the circle
-            # distance_from_center = np.linalg.norm(AcurrG_corr)
+            distance_from_center = np.linalg.norm(AcurrG_corr)
 
-            # elastic_constant = 0.8
-            # if distance_from_center > Rc[0]:
-            #     elastic_extension = distance_from_center - Rc[0]
-            #     Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
-            #     AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
-            #     Ratio = 1.0
-            #     print("Outside", Rc_adjusted)
-            # else:
-            #     Ratio = distance_from_center / Rc[0]
+            elastic_constant = 0.8
+            if distance_from_center > Rc[0]:
+                self.out_of_canal = True
+                elastic_extension = distance_from_center - Rc[0]
+                Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
+                AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+                Ratio = 1.0
+                print("Outside", Rc_adjusted)
+            else:
+                self.out_of_canal = False
+                Ratio = distance_from_center / Rc[0]
+
+            ################################################################
 
 
             ## Translate back to directrix point
@@ -1329,7 +1341,7 @@ class MainNode():
         Ratio = np.array([Ratio])
         # Create new trajectory for remaining points
         small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY, "xyz_corr_y": xyz_corr_y, "vertical_start": vertical_start, "vertical_end": vertical_start }
-        newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction)
+        newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction, self.out_of_canal)
 
         
         trajectory_xyz[i:]= newTrajectory[0]                    
@@ -1407,14 +1419,43 @@ class MainNode():
             ## Apply correction
             AcurrG_corr = AcurrG + raw_joystickDisplacement
             # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
+
+
             ## Saturate correction and compute ratio
-            if np.linalg.norm(AcurrG_corr) > Rc[0] : 
-                AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            # if np.linalg.norm(AcurrG_corr) > Rc[0] : 
+            #     AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            # else:
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+
+
+            ############ TO use the ealstic model of going outside the canal ########
+
+            # ##Mofidy the below code so that only if a user put too much of an effort only they will be given the chance to go beyond the circle
+            distance_from_center = np.linalg.norm(AcurrG_corr)
+
+            elastic_constant = 0.8
+            if distance_from_center > Rc[0]:
+                self.out_of_canal = True
+                elastic_extension = distance_from_center - Rc[0]
+                Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
+                AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+                Ratio = 1.0
+                print("Outside", Rc_adjusted)
             else:
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+                self.out_of_canal = False
+                Ratio = distance_from_center / Rc[0]
+
+            ################################################################
+
+
+    
+
+
+
+
             ## Translate back to directrix point
             PcurrG_corr = AcurrG_corr + directrix[0]
             ## Change current point 
@@ -1771,6 +1812,7 @@ class MainNode():
         # rospy.loginfo("Loading demonstration data visualisation...")
         # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+
         rospy.loginfo("Loading GC visualisation...")
         self.visualise_gc(model["GC"])
         # self.visualise_gc(model["GC"][-50:,:,:])
@@ -1778,8 +1820,9 @@ class MainNode():
         
         rospy.loginfo("Loading directrix visualisation...")
         # self.visualise_directrix(model["directrix"], model["q"])
+
         rospy.loginfo("Loading correction axes visualisation...")
-        self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+        # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
 
         # rospy.sleep(5)
 
@@ -1860,7 +1903,7 @@ class MainNode():
             rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-s_model['directrix'][0,:])}")
             rospy.loginfo(f"  Rc[0]={s_model['Rc'][0]}. Starting ratio={Ratio}")
             
-            repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction)
+            repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction, self.out_of_canal)
             trajectory_xyz = repro_trajectories[0]
     
             trajectory_q = s_model["q"]
@@ -1987,7 +2030,7 @@ class MainNode():
                 if i != 0: current_idx += 1*direction # Designates the idx AT which the robot is located
                 self.rate.sleep()
 
-            print("current index", current_idx, "t[1] = ", t["1"] ,"t[-1] = " , t["-1"])
+            # print("current index", current_idx, "t[1] = ", t["1"] ,"t[-1] = " , t["-1"])
 
             if current_idx == t["-1"] or current_idx == t["1"]:
 
@@ -2014,7 +2057,7 @@ class MainNode():
                     
                         # print("PcurrG", PcurrG, "QcurrG", QcurrG, "q_weight", q_weight)
 
-                    if self.task == "marshmellow" and self.marsh_selected:
+                    if self.task == "marshmellow" and self.marsh_selected: #TODO might need to add this even in the middle of the canal rather than waiting until the last cross section
                         # print("PcuurG", PcurrG)
                         PcurrG[2] = PcurrG[2] - 0.02
                         # print("#################### After PcuurG", PcurrG)
@@ -2022,9 +2065,13 @@ class MainNode():
 
                     self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
                     AcurrG = PcurrG - model["directrix"][current_idx,:]
-                    Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
-                    self.pub_surface_pose(current_idx, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
 
+                    if self.out_of_canal:
+                        Ratio = np.array([1.0])
+                    else:
+                        Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+                    self.pub_surface_pose(current_idx, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
+                    # print("################### PcurrG", PcurrG)
                 self.change_direction_request = False
 
             # PcurrG = trajectory_xyz[i,:]
@@ -2095,7 +2142,7 @@ class MainNode():
                 s_model, direction = self.slice_model(model, start_idx, end_idx )
 
 
-                repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction)
+                repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction, self.out_of_canal)
                 trajectory_xyz = repro_trajectories[0]
 
                 trajectory_q = s_model["q"]
@@ -2145,7 +2192,11 @@ class MainNode():
 
             initPoints = np.array([PcurrG])
             AcurrG = PcurrG - model["directrix"][current_idx,:]
-            Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+
+            if self.out_of_canal:
+                Ratio = np.array([1.0])
+            else:
+                Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
             rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-model['directrix'][current_idx,:])}")
             rospy.loginfo(f"  Rc[current_idx]={model['Rc'][current_idx]}. Starting ratio={Ratio}")
             s_model, direction = self.slice_model(model, start_idx, end_idx )
