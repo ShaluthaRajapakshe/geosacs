@@ -13,10 +13,10 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
     eN = model['x_corr_axes']
     eB = model['y_corr_axes']
 
-    idx_corr_y = model["xyz_corr_y"]
+    # idx_corr_y = model["xyz_corr_y"]
 
-    vertical_start = model["vertical_start"]
-    vertical_end = model["vertical_end"]
+    # vertical_start = model["vertical_start"]
+    # vertical_end = model["vertical_end"]
 
     szd = directrix.shape[0]
     
@@ -52,13 +52,13 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
                 DCMl2g = np.vstack((eN[ii, :], -eB[ii, :], eT[ii, :]))  # Local2Global DCM using current TNB
                 DCMg2l = DCMl2g.T
 
-            if not vertical_start and not vertical_end:
-                if (directrix[ii,:] == idx_corr_y).all() and not dir_changed:
-                    if direction == 1:
-                        DCMl2g = np.vstack((eN[ii, :], -eB[ii, :], eT[ii, :]))  # Local2Global DCM using current TNB
+            # if not vertical_start and not vertical_end:
+            #     if (directrix[ii,:] == idx_corr_y).all() and not dir_changed:
+            #         if direction == 1:
+            #             DCMl2g = np.vstack((eN[ii, :], -eB[ii, :], eT[ii, :]))  # Local2Global DCM using current TNB
                     
-                    DCMg2l = DCMl2g.T
-                    dir_changed = True
+            #         DCMg2l = DCMl2g.T
+            #         dir_changed = True
 
             # Adapt ratio
 
@@ -71,6 +71,8 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
                 pass
 
             transition_window = 10
+
+            # print("out of the canal status", out_of_canal)
             
             if out_of_canal:
                 if np.abs(ii - strt) < transition_window:

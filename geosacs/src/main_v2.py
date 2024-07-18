@@ -31,7 +31,7 @@ class MainNode():
         self.ratio = None
         self.x_corr = None
         self.y_corr = None
-        self.rate = rospy.Rate(13)  # (4;25) ()Prev: 17 #10 IS GOOD WITH REAL ROBOT
+        self.rate = rospy.Rate(15)  # (4;25) ()Prev: 17 #10 IS GOOD WITH REAL ROBOT
         self.frame = "LIO_base_link"
         self.correction = False
         self.physical_robot = rospy.get_param("physical_robot")
@@ -47,9 +47,7 @@ class MainNode():
         self.gripper_states = []
         self.start = False
 
-        # self.task = "marshmellow" ##marshmellow, other
-        self.task = "other" ##marshmellow, other
-
+        self.task = "marshmellow" ##marshmellow, other
         self.marsh_selected = False
 
         self.out_of_canal = False
@@ -716,10 +714,10 @@ class MainNode():
         sliced_model["q"] = model["q"][keep_idxs, :] 
         sliced_model["GC"] = model["GC"][keep_idxs, :] 
 
-        # sliced_model["vertical_start"] = model["vertical_start"]
-        # sliced_model["vertical_end"] = model["vertical_end"]
+        sliced_model["vertical_start"] = model["vertical_start"]
+        sliced_model["vertical_end"] = model["vertical_end"]
 
-        # sliced_model["xyz_corr_y"] = model["xyz_corr_y"]
+        sliced_model["xyz_corr_y"] = model["xyz_corr_y"]
 
         # rospy.loginfo(f"  Sliced model directrix shape {sliced_model['directrix'].shape}")
 
@@ -1224,16 +1222,15 @@ class MainNode():
         x_corr_axes = s_model["x_corr_axes"]
         y_corr_axes = s_model["y_corr_axes"]
 
-        # xyz_corr_y = s_model["xyz_corr_y"]
-        # vertical_start = s_model["vertical_start"]
-        # vertical_end = s_model["vertical_end"]
+        xyz_corr_y = s_model["xyz_corr_y"]
+        vertical_start = s_model["vertical_start"]
+        vertical_end = s_model["vertical_end"]
 
         from_front = True
 
         start_correction_time = rospy.Time.now()
         start_position = PcurrG
         if self.physical_robot: 
-            # print("############################## here in")
             start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
         rospy.loginfo("    correcting trajectory...")
         rospy.loginfo(f"      Before correction: {PcurrG}")
@@ -1247,23 +1244,23 @@ class MainNode():
 
         while self.correction:
             # Integrate correction
-            raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
+            # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
             # print("input format", self.x_corr, self.y_corr)
             # print("x and y axes", x_corr_axes[i,:], y_corr_axes[i,:])
             # print("######### x and y after mult ", self.x_corr*x_corr_axes[i,:], self.y_corr*y_corr_axes[i,:])
 
 
 
-            # # ##### Test code #####
+            # ##### Test code #####
 
-            # aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[i,:], y_corr_axes[i,:], joy_x, joy_y, s_model["eT"][i,:], directrix_point)
+            aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[i,:], y_corr_axes[i,:], joy_x, joy_y, s_model["eT"][i,:], directrix_point)
 
-            # aligned_axis_x = np.array(aligned_axis_x)
-            # aligned_axis_y = np.array(aligned_axis_y)
+            aligned_axis_x = np.array(aligned_axis_x)
+            aligned_axis_y = np.array(aligned_axis_y)
 
-            # # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
-            # # raw_joystickDisplacement = self.x_corr*aligned_axis_x* -direction_x  + self.y_corr*aligned_axis_y* direction_y   #works for the normal joystick
-            # raw_joystickDisplacement = self.x_corr*aligned_axis_x* direction_x  + self.y_corr*aligned_axis_y* direction_y
+            # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
+            # raw_joystickDisplacement = self.x_corr*aligned_axis_x* -direction_x  + self.y_corr*aligned_axis_y* direction_y   #works for the normal joystick
+            raw_joystickDisplacement = self.x_corr*aligned_axis_x* direction_x  + self.y_corr*aligned_axis_y* direction_y
 
 
             ##### Test code ends here #####
@@ -1283,15 +1280,35 @@ class MainNode():
 
 
 
-            ###########  Saturate correction and compute ratio #############
-            if np.linalg.norm(AcurrG_corr) > Rc[0] :   
-                AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print("#### ratio", Ratio)
-                # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            # ###########  Saturate correction and compute ratio #############
+            # if np.linalg.norm(AcurrG_corr) > Rc[0] :   
+            #     AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print("#### ratio", Ratio)
+            #     # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            # else:
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+
+            # ################################################################
+
+
+            ############ TO use the ealstic model of going outside the canal ########
+
+            # ##Mofidy the below code so that only if a user put too much of an effort only they will be given the chance to go beyond the circle
+            distance_from_center = np.linalg.norm(AcurrG_corr)
+
+            elastic_constant = 0.8
+            if distance_from_center > Rc[0]:
+                self.out_of_canal = True
+                elastic_extension = distance_from_center - Rc[0]
+                Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
+                AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+                Ratio = 1.0
+                print("Outside", Rc_adjusted)
             else:
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+                self.out_of_canal = False
+                Ratio = distance_from_center / Rc[0]
 
             ################################################################
 
@@ -1323,7 +1340,7 @@ class MainNode():
         PcurrG_corr = np.array([[PcurrG_corr[0], PcurrG_corr[1], PcurrG_corr[2]]])
         Ratio = np.array([Ratio])
         # Create new trajectory for remaining points
-        small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY}
+        small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY, "xyz_corr_y": xyz_corr_y, "vertical_start": vertical_start, "vertical_end": vertical_start }
         newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction, self.out_of_canal)
 
         
@@ -1379,18 +1396,18 @@ class MainNode():
 
         while self.correction:
             # Integrate correction
-            raw_joystickDisplacement = self.x_corr*x_corr_axes[-1,:] + self.y_corr*y_corr_axes[-1,:]
+            # raw_joystickDisplacement = self.x_corr*x_corr_axes[-1,:] + self.y_corr*y_corr_axes[-1,:]
 
             # if from_front:
             #     raw_joystickDisplacement = -self.x_corr*y_corr_axes[-1,:] + self.y_corr*-x_corr_axes[-1,:]
 
-            # aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[-1,:], y_corr_axes[-1,:], joy_x, joy_y, s_model["eT"][-1,:], directrix_point)
+            aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[-1,:], y_corr_axes[-1,:], joy_x, joy_y, s_model["eT"][-1,:], directrix_point)
 
-            # aligned_axis_x = np.array(aligned_axis_x)
-            # aligned_axis_y = np.array(aligned_axis_y)
+            aligned_axis_x = np.array(aligned_axis_x)
+            aligned_axis_y = np.array(aligned_axis_y)
 
-            # # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
-            # raw_joystickDisplacement = self.x_corr*aligned_axis_x* direction_x  + self.y_corr*aligned_axis_y* direction_y
+            # raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
+            raw_joystickDisplacement = self.x_corr*aligned_axis_x* direction_x  + self.y_corr*aligned_axis_y* direction_y
 
 
 
@@ -1404,14 +1421,38 @@ class MainNode():
             # print("AcurrG_corr: ", AcurrG_corr, "of norm: ", np.linalg.norm(AcurrG_corr))
 
 
-            # Saturate correction and compute ratio
-            if np.linalg.norm(AcurrG_corr) > Rc[0] : 
-                AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            ## Saturate correction and compute ratio
+            # if np.linalg.norm(AcurrG_corr) > Rc[0] : 
+            #     AcurrG_corr = Rc[0] * AcurrG_corr / np.linalg.norm(AcurrG_corr)
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print(f"Rc[0]={Rc[0]} and (saturated) ratio={Ratio}")
+            # else:
+            #     Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
+            #     # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+
+
+            ############ TO use the ealstic model of going outside the canal ########
+
+            # ##Mofidy the below code so that only if a user put too much of an effort only they will be given the chance to go beyond the circle
+            distance_from_center = np.linalg.norm(AcurrG_corr)
+
+            elastic_constant = 0.8
+            if distance_from_center > Rc[0]:
+                self.out_of_canal = True
+                elastic_extension = distance_from_center - Rc[0]
+                Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
+                AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+                Ratio = 1.0
+                print("Outside", Rc_adjusted)
             else:
-                Ratio = np.sqrt(AcurrG_corr[0]**2 + AcurrG_corr[1]**2 + AcurrG_corr[2]**2) / Rc[0]
-                # print(f"Rc[0]={Rc[0]} and (corr): ratio={Ratio}")
+                self.out_of_canal = False
+                Ratio = distance_from_center / Rc[0]
+
+            ################################################################
+
+
+    
+
 
 
 
@@ -1773,7 +1814,7 @@ class MainNode():
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
 
         rospy.loginfo("Loading GC visualisation...")
-        # self.visualise_gc(model["GC"])
+        self.visualise_gc(model["GC"])
         # self.visualise_gc(model["GC"][-50:,:,:])
         # self.visualise_gc(model["GC"][:50,:,:])
         
@@ -1813,8 +1854,6 @@ class MainNode():
             crossSectionType = "circle"
             strategy = "convergent"
 
-            
-
             #################################################
 
         else:
@@ -1835,7 +1874,6 @@ class MainNode():
             starting = np.ones((1, numRepro), dtype=int) 
             crossSectionType = "circle"
             strategy = "fixed"
-
 
             ##########################################################
 
@@ -1938,6 +1976,36 @@ class MainNode():
                 #     else:
                 #         self.gripper_change_direction_request = False
                     
+    
+                
+                # if current_idx == t["-1"] or current_idx == t["1"]: ## If we reached here, that means the canal has been shifted the other way
+                #     #therefore we will start from this location and NOT ENDING
+
+                #     # print ("Reached start or end, waiting for user command to go back", i, "self.task_done_and_reverse", self.task_done_and_reverse, "direction", direction)
+                #     print ("Reached start or end, waiting for user command to go back")
+
+                
+                    # while not self.change_direction_request:
+                    #     # rospy.sleep(0.01)
+                    #     if self.correction:
+                    
+                    #         trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+                    #                                                                                           current_idx, numRepro, starting, 
+                    #                                                                                           crossSectionType, strategy, direction, 
+                    #                                                                                           trajectory_xyz, trajectory_q, cumulative_correction_time,
+                    #                                                                                           cumulative_correction_distance, lio_cumulative_correction_distance )
+                    #     self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+                    #     AcurrG = PcurrG - model["directrix"][current_idx,:]
+                    #     Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+                    #     self.pub_surface_pose(i, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
+                    #     # i designates the NEXT idx of the robot
+                        
+                    #     self.rate.sleep()
+
+                    # current_idx += 1*direction # Designates the idx AT which the robot is located
+                    # self.change_direction_request = False
+                
+                # else:
 
                 if self.change_direction_request:
                     if current_idx != t["1"] and current_idx!=t["-1"] and current_idx != t["0"]:
@@ -1994,28 +2062,18 @@ class MainNode():
                         # print("PcurrG", PcurrG, "QcurrG", QcurrG, "q_weight", q_weight)
 
                     if self.task == "marshmellow" and self.marsh_selected: #TODO might need to add this even in the middle of the canal rather than waiting until the last cross section
-                        print("PcuurG before", PcurrG)
+                        # print("PcuurG", PcurrG)
                         PcurrG[2] = PcurrG[2] - 0.03
-                        print("#################### After PcuurG", PcurrG)
+                        # print("#################### After PcuurG", PcurrG)
                         self.terminate = True
-
-                        count = 0
-
-                        while count < 50:
-                            self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
-                            AcurrG = PcurrG - model["directrix"][current_idx,:]
-
-                            
-                            Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
-                            self.pub_surface_pose(current_idx, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
-                            count += 1
-                            rospy.sleep(0.1)
 
                     self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
                     AcurrG = PcurrG - model["directrix"][current_idx,:]
 
-                    
-                    Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+                    if self.out_of_canal:
+                        Ratio = np.array([1.0])
+                    else:
+                        Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
                     self.pub_surface_pose(current_idx, current_idx, PcurrG, AcurrG, QcurrG, q_weight, Ratio, "")
                     # print("################### PcurrG", PcurrG)
                 self.change_direction_request = False
@@ -2051,18 +2109,6 @@ class MainNode():
                 self.events_pub.publish(f"Correction time as a percentage from total:{cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
                 
                 rospy.loginfo("###################################################")
-
-
-                file_path = '/home/shalutha/geosacs_ws/src/geosacs/geosacs/data/experiment_data_geosacs.txt'
-
-                # Write the values to the file
-                with open(file_path, 'a') as file:
-                    file.write(f"Total task time: {task_duration} seconds\n")
-                    file.write(f"Total correction time: {cumulative_correction_time} seconds\n")
-                    file.write(f"Total correction distance: {cumulative_correction_distance} meters\n")
-                    file.write(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters\n")
-                    file.write(f"Correction time as a percentage from total:  ({(cumulative_correction_time/task_duration)*100}%)\n")
-                    file.write("\n")  # Adding a newline for separation between entries
                 
                 # self.events_pub.publish(f"Total task time: {task_duration} seconds")
                 # self.events_pub.publish(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
@@ -2078,7 +2124,7 @@ class MainNode():
                 rospy.sleep(3)
 
 
-                # self.events_pub.publish("End of section, compute next")
+                self.events_pub.publish("End of section, compute next")
                 # rospy.loginfo(f"PREVIOUS: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
 
                 goal, prev_goal, strategy = self.update_states_at_the_end(goal, prev_goal, strategy, current_idx, t)
@@ -2151,8 +2197,10 @@ class MainNode():
             initPoints = np.array([PcurrG])
             AcurrG = PcurrG - model["directrix"][current_idx,:]
 
-            
-            Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
+            if self.out_of_canal:
+                Ratio = np.array([1.0])
+            else:
+                Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
             rospy.loginfo(f"  Starting point {initPoints} with of norm {np.linalg.norm(initPoints[0]-model['directrix'][current_idx,:])}")
             rospy.loginfo(f"  Rc[current_idx]={model['Rc'][current_idx]}. Starting ratio={Ratio}")
             s_model, direction = self.slice_model(model, start_idx, end_idx )

@@ -2,6 +2,8 @@
   <!-- Simulation Parameter -->
     <arg name="virtual_robot" default="true"/>
     <arg name="physical_robot" default="false"/>
+    <!-- <arg name="control_front" default="true"/> -->
+    
     <arg name="use_joy" default="true"/>
     <arg name="use_joy_controller" default="false"/>
     <arg name="output" default="/ik_interface/joint_states_sim"/>
@@ -9,8 +11,10 @@
     <arg name="fp_ik" default="false"/>
 
   <param name="physical_robot" type="bool" value="$(arg physical_robot)" />
+  <param name="weighted_pose" type="bool" value="$(arg weighted_pose)"/>
+  <!-- <param name="control_front" type="bool" value="$(arg control_front)" /> -->
 
-  <node pkg="lio_specific_pkg" type="ik_interface.py" name="ik_interface" output="screen"/>
+  <node pkg="lio_specific_pkg" type="ik_interface_pos_control.py" name="ik_interface" output="screen"/>
   <node pkg="geosacs" type="visualisation_rviz.py" name="visualisation_rviz" output="screen"/>
 
 
@@ -32,6 +36,9 @@
       <include file="$(find teleop_twist_joy)/launch/teleop.launch">  
         <arg name="joy_dev" value="/dev/input/js0" />
       </include>
+        
+        <!-- <node pkg="joy_teleop" type="joy_driver.py" name="joy_driver" output="screen"/> -->
+
     </group>
 
     <group if="$(arg virtual_robot)">

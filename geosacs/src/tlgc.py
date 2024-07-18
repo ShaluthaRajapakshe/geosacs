@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import os
 import numpy as np
@@ -475,6 +475,74 @@ class TLGCNode():
             return False
 
 
+    def optimize_orientation_scipy(self, i, gc_circles, directrix, eT):
+        center2 = directrix[i + 1]
+        normal2 = eT[i + 1]
+        normal1 = eT[i]
+        circle1 = gc_circles[i, :, :]
+
+        prev_unit_rotated_normal2 = None
+
+        initial_angle_between_two_planes = self.relative_angle_between_planes(normal1, normal2)
+
+        intersection_exist = self.check_intersections_geometric(circle1, center2, normal2)
+
+        init_in_degrees = np.degrees(initial_angle_between_two_planes)
+
+        if intersection_exist:
+            print("Geometric: Intersection exists in", i, "and", i + 1, "with the initial angle", np.degrees(initial_angle_between_two_planes))
+            
+            def objective(angle):
+                axis = np.cross(normal2, normal1)
+                if np.linalg.norm(axis) == 0:
+                    return prev_unit_rotated_normal2
+                
+                unit_axis = axis / np.linalg.norm(axis)
+
+                # angle = np.radians(init_in_degrees - angle) ##Not sure whether this is needed or nor
+
+                rotated_normal2 = self.rodrigues_rotation(normal2, unit_axis, np.radians(angle))
+                unit_rotated_normal2 = rotated_normal2 / np.linalg.norm(rotated_normal2)
+
+                new_angle = self.relative_angle_between_planes(normal1, rotated_normal2) #onl for debugging
+                print ("New angle between the two planes", np.degrees(new_angle))
+
+                intersection_exist_after_rotation = self.check_intersections_geometric(circle1, center2, unit_rotated_normal2)
+                
+                prev_unit_rotated_normal2 = unit_rotated_normal2
+
+                # return 0 if not intersection_exist_after_rotation else np.degrees(self.relative_angle_between_planes(normal1, unit_rotated_normal2))
+                if not intersection_exist_after_rotation:
+                    return 0
+                
+                else:
+                    return np.degrees(self.relative_angle_between_planes(normal1, unit_rotated_normal2))
+
+            result = minimize(objective, x0=np.degrees(initial_angle_between_two_planes), bounds=[(0, np.degrees(initial_angle_between_two_planes))])
+            
+            optimized_angle = result.x[0]
+            print("final angle", optimized_angle, "initial angle", init_in_degrees) #check this and see whether the angle has been reduced
+            ## based on that decide whether to directly use this angle or reduce it from the initial angle like below
+            # optimized_angle = np.radians(init_in_degrees - optimized_angle) ##Not sure whether this is needed or not
+
+            axis = np.cross(normal2, normal1)
+            unit_axis = axis / np.linalg.norm(axis)
+            optimized_rotated_normal2 = self.rodrigues_rotation(normal2, unit_axis, np.radians(optimized_angle))
+            unit_rotated_normal2 = optimized_rotated_normal2 / np.linalg.norm(optimized_rotated_normal2)
+
+            if not self.check_intersections_geometric(circle1, center2, unit_rotated_normal2):
+                print(f"Intersection resolved with optimized angle {optimized_angle} degrees")
+                return unit_rotated_normal2
+            else:
+                print("############### couldn't find an angle without intersection at", i, "so returning the closest vector")
+                return unit_rotated_normal2
+
+        print("No intersection, returning the previous normal", i)
+        return normal2
+
+
+
+
     def optimize_orientation_geometric(self, i, gc_circles, directrix, eT):
         center2 = directrix[i + 1]
         normal2 = eT[i + 1]
@@ -579,7 +647,10 @@ class TLGCNode():
             # for i in range(int(nb_points*3/4), nb_points-1):
             for i in range(0, nb_points-1):
                 # optimized_normal2 = self.optimize_orientation(i, gc_circles, directrix, eT)
+
+
                 optimized_normal2 = self.optimize_orientation_geometric(i, gc_circles, directrix, eT)
+                # optimized_normal2 = self.optimize_orientation_scipy(i, gc_circles, directrix, eT)
                 
                 # gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
                 gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
@@ -983,49 +1054,49 @@ class TLGCNode():
             
 
             if i >= window_size:
-                # previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[-window_size:])
-                previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[:window_size])
+                # # previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[-window_size:])
+                # previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[:window_size])
+                # projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
+                # correction_y_axis = np.cross(T_normalized, correction_x_axis)
+                # y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
+
+                # both_vertical = (self.vertical_end) and (self.vertical_start)
+                # both_horizontal = (not self.vertical_end) and (not self.vertical_start)
+
+                #If both ends are either vertical or horizontal
+                # if (both_vertical) or (both_horizontal): 
+
+                #     if i < eT.shape[0]-forward_window-1:
+                #         eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
+                #         eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
+                #         curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
+
+                #         z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
+
+                #         if y_axis_changed: #Should only apply if both ends are horizontal
+                #             correction_y_axis = -correction_y_axis
+                        
+                #         if z_diff > 30 and (not y_axis_changed): #Should only apply if both ends are horizontal
+                #             # print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
+
+                #             if y_angle_diff > 90:
+                #                 correction_y_axis = -correction_y_axis
+                #                 y_axis_changed  = True
+                #                 self.corr_y_changed_idx_xyz = directrix[i]
+
+                #     else:
+                #         ## We have to change the variable vertical end by identifying whether an end is horizontal or vertical
+                #         if y_angle_diff > 90:
+                #             correction_y_axis = -correction_y_axis
+
+                # else: ###  for one horizontal and one vertical end 
+                previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[-window_size:])
                 projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
                 correction_y_axis = np.cross(T_normalized, correction_x_axis)
                 y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
-
-                both_vertical = (self.vertical_end) and (self.vertical_start)
-                both_horizontal = (not self.vertical_end) and (not self.vertical_start)
-
-                #If both ends are either vertical or horizontal
-                if (both_vertical) or (both_horizontal): 
-
-                    if i < eT.shape[0]-forward_window-1:
-                        eT_mean =  self.mean_direction(eT[i+1:i+forward_window])
-                        eT_mean_diff_with_z = self.calculate_angle_between_vectors(eT_mean, global_z)
-                        curr_eT_diff_with_z = self.calculate_angle_between_vectors(T_normalized, global_z)
-
-                        z_diff = np.abs(eT_mean_diff_with_z - curr_eT_diff_with_z)
-
-                        if y_axis_changed: #Should only apply if both ends are horizontal
-                            correction_y_axis = -correction_y_axis
-                        
-                        if z_diff > 30 and (not y_axis_changed): #Should only apply if both ends are horizontal
-                            # print(i, "eT mean angle", eT_mean_diff_with_z, " curr eT angle", curr_eT_diff_with_z, z_diff)
-
-                            if y_angle_diff > 90:
-                                correction_y_axis = -correction_y_axis
-                                y_axis_changed  = True
-                                self.corr_y_changed_idx_xyz = directrix[i]
-
-                    else:
-                        ## We have to change the variable vertical end by identifying whether an end is horizontal or vertical
-                        if y_angle_diff > 90:
-                            correction_y_axis = -correction_y_axis
-
-                else: ###  for one horizontal and one vertical end 
-                    previous_mean_correction_y_axis = self.mean_direction(previous_correction_y_axes[-window_size:])
-                    projected_previous_mean_y_correction = self.project_onto_plane(previous_mean_correction_y_axis, T_normalized)
-                    correction_y_axis = np.cross(T_normalized, correction_x_axis)
-                    y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
-                
-                    if y_angle_diff > 90:
-                        correction_y_axis = -correction_y_axis
+            
+                if y_angle_diff > 90:
+                    correction_y_axis = -correction_y_axis
 
             else:
                 if previous_correction_y_axes == []: 
@@ -1283,7 +1354,8 @@ class TLGCNode():
         print("len of processed demos in tlgc", len(processed_demos_xyz))
         demos_xyz, demos_q = self.reshape_demos(processed_demos_xyz, processed_demos_q)
         
-        idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 for task 1 and 10,10 for task2 
+        idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 for task 1 and 10,10 for task2  #for marsh_demo5 2,20 is goog 8,30 fro safe conditions
+        ## for new marsh demos taken on 18th Jul, 10, 58 is good
         xyz_model = self.get_model(demos_xyz, idx)
         
         # min points along the z axis
@@ -1331,7 +1403,7 @@ class TLGCNode():
         self.clear_viz_pub.publish("all")
         self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
         self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
-        # self.visualise_gc(model["GC"])
+        self.visualise_gc(model["GC"])
         # self.visualise_gc(model["GC"][200:335,:,:])
         # self.visualise_directrix(model["directrix"], model["q"])
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
@@ -1365,10 +1437,9 @@ class TLGCNode():
 
             x_corr_axes, y_corr_axes = self.get_correction_axes(xyz_model)
 
-            ## Refine the below as necessary
+            ## Refine the below as necessary ONLY FOR PAINTING TASK
 
             # print("final x and y corr axes", x_corr_axes[-1], y_corr_axes[-1])
-
             # x_corr_axes[-1] = [0,1,0]
             # y_corr_axes[-1] = [0,0,1]
             # print("after final x and y corr axes", x_corr_axes[-1], y_corr_axes[-1])

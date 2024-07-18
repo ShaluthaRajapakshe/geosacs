@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import os
 import numpy as np
@@ -6,6 +6,7 @@ from geometry_msgs.msg import PoseStamped, Pose, PoseArray
 from std_msgs.msg import String, Empty
 from pathlib import Path
 from scipy.spatial.transform import Rotation 
+from sensor_msgs.msg import Joy, JointState
 
 
 
@@ -16,13 +17,15 @@ class TeachingTCP():
         # Variables
         self.move_rate = rospy.Rate(10)
         self.recording = False  
-        self.observations = {"position":[], "orientation":[]}
+        self.observations = {"position":[], "orientation":[], "joint_states":[]}
         self.demo_index = 1
         self.release_to_record = False
         self.frame = "LIO_base_link"
 
         # ROS Variables
-        rospy.Subscriber("/lio_1c/pose", PoseStamped, self.pose_cb )
+        rospy.Subscriber("/lio_1c/pose", PoseStamped, self.pose_cb )  
+        rospy.Subscriber("/lio_1c/joint_states", JointState, self.lio_joint_states_cb)
+
         rospy.Subscriber("/service2topic/status", String, self.status_cb)  # its directly listening to lio gripper
         self.lio_req_tcp_pub = rospy.Publisher("/request_tcp_pub", String, queue_size=2)
         self.commanded_pos_pub = rospy.Publisher("/commanded_pose", PoseStamped, queue_size=2)
@@ -47,6 +50,14 @@ class TeachingTCP():
         else: self.recording= False
 
 
+    def lio_joint_states_cb(self, msg):
+
+        if self.recording:
+            joint_states = msg.position[0:6] 
+            self.observations["joint_states"].append(joint_states)
+            print (self.observations["joint_states"])
+        
+
     def extract_position(self, msg):
 
         position = msg.pose.position
@@ -65,7 +76,7 @@ class TeachingTCP():
             self.observations["orientation"].append(orientation)    
     
 
-    def change_frame(self, raw_dict):
+    def change_frame(self, raw_pose_dict):
 
         # Define transform matrix
         angle =  1.570
@@ -78,8 +89,8 @@ class TeachingTCP():
         T_ab = np.vstack((T_ab, _))
 
         # Get and check data
-        positions_b = raw_dict["position"]
-        orientations_b = raw_dict["orientation"]
+        positions_b = raw_pose_dict["position"]
+        orientations_b = raw_pose_dict["orientation"]
         if positions_b.shape[0] != orientations_b.shape[0]:
             rospy.logerr("change_frame function: Nb positions != nb orientations")
             return
@@ -106,15 +117,22 @@ class TeachingTCP():
             orientations_a[i,:] = q_a
 
         # Update data
-        raw_dict["position"] = positions_a
-        raw_dict["orientation"] = orientations_a
+        raw_pose_dict["position"] = positions_a
+        raw_pose_dict["orientation"] = orientations_a
         
-        return raw_dict    
+        return raw_pose_dict    
     
-    def request_save(self, demo_file, raw_dict):
+    def request_save(self, demo_file, raw_pose_dict):
 
         if input("Save this demo? (y/n) ")=="y": 
-            np.savez(str(demo_file), **raw_dict)
+            np.savez(str(demo_file), **raw_pose_dict)
+            print(f"Demo {self.demo_index} saved in {demo_file}")
+        else: print(f"Demo {self.demo_index} not saved")
+
+    def request_save_array(self, demo_file, raw_pose_dict):
+
+        if input("Save this demo? (y/n) ")=="y": 
+            np.savez(str(demo_file), raw_pose_dict)
             print(f"Demo {self.demo_index} saved in {demo_file}")
         else: print(f"Demo {self.demo_index} not saved")
 
@@ -130,6 +148,7 @@ class TeachingTCP():
         # Clear previous data
         self.observations["position"].clear()
         self.observations["orientation"].clear()
+        self.observations["joint_states"].clear()
 
         # Recording will start&stop when Lio released.
         self.lio_status_req_pub.publish("start") 
@@ -153,6 +172,8 @@ class TeachingTCP():
         raw_list_pos = self.observations["position"]
         raw_list_ori = self.observations["orientation"]
 
+        raw_list_joint_states = self.observations["joint_states"]
+
         # Check data
         if len(raw_list_pos) == 0:
             rospy.logerr("No data points record. Abort")
@@ -165,22 +186,28 @@ class TeachingTCP():
         raw_array_ori = np.zeros((len(raw_list_ori), len(raw_list_ori[0])))
         for i in range(len(raw_list_ori)):
             raw_array_ori[i] = np.array(raw_list_ori[i])
+
+        raw_array_joint_states = np.zeros((len(raw_list_joint_states), len(raw_list_joint_states[0])))
+        for i in range(len(raw_list_joint_states)):
+            raw_array_joint_states[i] = np.array(raw_list_joint_states[i])
        
         # Display messages
         print("Position np.array shape", raw_array_pos.shape)
         print("Orientation np.array shape", raw_array_ori.shape)
+        print("Joint States np.array shape", raw_array_joint_states.shape)
 
         # Convert to dictionary
-        raw_dict = {"position": raw_array_pos, "orientation": raw_array_ori}
+        raw_pose_dict = {"position": raw_array_pos, "orientation": raw_array_ori}
+        # raw_array_joint_states = {"joint_states": raw_array_joint_states}
 
-        return raw_dict
+        return raw_pose_dict, raw_array_joint_states
 
 
-    def visualise_demo(self, raw_dict):
+    def visualise_demo(self, raw_pose_dict):
         
         # Get and check data
-        positions = raw_dict["position"]
-        orientations = raw_dict["orientation"]
+        positions = raw_pose_dict["position"]
+        orientations = raw_pose_dict["orientation"]
         if positions.shape[0] != orientations.shape[0] : 
             rospy.logerr("Cannot visualise pose trajectory. Nb positions != nb orientations")
             return 
@@ -219,11 +246,18 @@ class TeachingTCP():
 
         while more:
             demo_file = raw_dir / f"{task}-{self.demo_index}.npz"
-            raw_dict = self.record_demo()
-            raw_dict = self.change_frame(raw_dict)
-            self.visualise_demo(raw_dict)
-            self.request_save(demo_file, raw_dict)
+            demo_file_joints = raw_dir / f"{task}-{self.demo_index}-joint_states.npz"
+
+            raw_pose_dict, raw_joint_states = self.record_demo()
+            raw_pose_dict = self.change_frame(raw_pose_dict)
+
+            self.visualise_demo(raw_pose_dict)
+
+            self.request_save(demo_file, raw_pose_dict)
+            self.request_save_array(demo_file_joints, raw_joint_states)
+
             if input("Another demo? (y/n) ")=="n": more = False
+
             self.clear_viz_pub.publish("all")
             self.demo_index += 1
 

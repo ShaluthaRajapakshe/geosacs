@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from geometry_msgs.msg import Pose, PoseStamped
 from geometry_msgs.msg import Twist, TwistStamped
@@ -68,6 +68,7 @@ class PoseControllerNode():
         self.previous_buttons = current_buttons
 
         if ax != [0, 0, 1, 0, 0, 1, 0, 0] or changed_buttons[4] !=0 or changed_buttons[5] !=0:
+            # print("correction given")
             if not self.correction:
                 self.correction_start_time = rospy.Time.now()
             self.correction = True
@@ -126,7 +127,7 @@ class PoseControllerNode():
 
                 if self.physical_robot: 
                     self.start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
-
+                    rospy.loginfo("##### physical robot ####")
                 
 
                 while not self.start:
@@ -160,9 +161,11 @@ class PoseControllerNode():
 
                     self.update_joy_pose()
                     self.publish_commanded_pose()
+                    self.rate.sleep()
 
                 self.update_joy_pose()
                 self.publish_commanded_pose()
+                self.rate.sleep()
                     
 
 
