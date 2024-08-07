@@ -9,6 +9,9 @@ import torch.nn as nn
 from std_msgs.msg import String
 from scipy.spatial.transform import Rotation 
 
+import tf
+import tf2_ros
+
 
 
 # conditional autoencoder
@@ -73,7 +76,8 @@ class Model(object):
 
         if task == "marshmellow":
             # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_updatedv7', map_location='cpu')
-            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry_18th', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry_18th', map_location='cpu')
+            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_simple4', map_location='cpu')
         else:
             model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry', map_location='cpu')
         
@@ -112,6 +116,15 @@ class PoseControllerNode():
         self.terminate = False
         self.start = False
 
+        self.tfBuffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tfBuffer)
+
+        
+
+        # self.lio_pose.pose.position = []
+        
+        # self.lio_pose.pose.orientation = []
+
         
 
         # ROS Variables
@@ -129,11 +142,13 @@ class PoseControllerNode():
         if self.physical_robot:
             print("Physical robot active")
             rospy.Subscriber("/lio_1c/joint_states", JointState, self.lio_joint_states_cb)
-            rospy.Subscriber("/lio_1c/pose", PoseStamped, self.lio_pose_cb)
+            # rospy.Subscriber("/lio_1c/pose", PoseStamped, self.lio_pose_cb)
         else:
             rospy.Subscriber("ik_interface/joint_states_sim", JointState, self.joint_states_sim_cb)
 
         rospy.Subscriber("/panda_ik/output", Float64MultiArray, self.ik_cb_end)
+
+        # rospy.Timer(rospy.Duration(0.01), self.transform_callback)
 
             
         # rospy.Subscriber("ik_interface/joint_states_lio", JointState, self.joint_states_lio_cb)
@@ -156,7 +171,9 @@ class PoseControllerNode():
 
             
             # self.initial_joint_positions = [-1.3858905781607287, 0.7159300780040135, 0.4632712412584416, -1.2268456073293923, 1.6233500351764731, -0.03530500317349961]
-            self.initial_joint_positions = [-1.410956, 0.383656, 1.350812, 1.518535, -1.492571, -2.692524]
+            # self.initial_joint_positions = [-1.410956, 0.383656, 1.350812, 1.518535, -1.492571, -2.692524] #this was the workig one
+            # self.initial_joint_positions = [-1.72873,-0.52013,1.72421,2.66727,-0.71898,-2.68907]
+            self.initial_joint_positions =  [-1.565891, -0.287631, 1.032714, 0.026283, -0.068027, 0.056256]
         else:
             ### Laundry ####
             self.initial_joint_positions = [-1.1657304272784037, 1.0865569625827096, 0.7532967406451435, -0.9674269093442143, 1.6453289999999998, 0.3506041628038431]
@@ -167,6 +184,24 @@ class PoseControllerNode():
         
         # Init
         rospy.loginfo("joy_controller for lla has been started")
+
+    
+    # def transform_callback(self, event):
+
+        
+
+    #     # try:
+    #         # Lookup the transform from the 'base_footprint' to 'tcp_joint'
+    #     self.transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+
+    #     # self.lio_pose.pose.position = transform.transform.translation
+    #     # self.lio_pose.pose.orientation = transform.transform.rotation
+    #         # print("Translation x: ", transform.transform.translation.x)
+    #         # print("Translation x: ", self.lio_pose.pose.position.x)
+    #         # print("Rotationx: ", transform.transform.rotation.x)
+
+    #     # except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
+    #     #     rospy.logerr("Transform lookup failed")
 
 
     def lio_pose_cb(self,msg):
@@ -324,7 +359,10 @@ class PoseControllerNode():
                 
                 while self.correction:
                     if self.physical_robot:
-                        self.current_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+                        transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+                         
+                        self.current_position_lio = np.array([[transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z]])
+                        # self.current_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
                         lio_correction_distance = np.linalg.norm(self.current_position_lio - self.start_position_lio)
                         self.lio_cumulative_correction_distance += lio_correction_distance
 
@@ -354,8 +392,11 @@ class PoseControllerNode():
                         # print("Before position vals", self.lio_pose.pose.position)
                         print("Before ik vals", self.lio_joint_positions)
 
-                        pos_vals = [self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z - 0.05]
-                        ori_vals = [self.lio_pose.pose.orientation.w, self.lio_pose.pose.orientation.x, self.lio_pose.pose.orientation.y, self.lio_pose.pose.orientation.z]
+                        transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+
+                        # pos_vals = [self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z - 0.05]
+                        pos_vals = [transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z - 0.05]
+                        ori_vals = [transform.transform.rotation.w, transform.transform.rotation.x, transform.transform.rotation.y, transform.transform.rotation.z]
 
                         pos_vals_new, ori_vals_new = self.change_frame(pos_vals, ori_vals)
 
@@ -465,7 +506,8 @@ class PoseControllerNode():
             # Get model output in rad/s
             # print("################# Before joint positions", self.lio_joint_positions)
             action_velocities = self.model.decoder(self.joystick_input, self.lio_joint_positions)  # Model output in rad/s
-            # print("action velocities", action_velocities)
+
+            print("action velocities", action_velocities)
 
             # Convert velocity commands to position commands
             for i in range(len(self.joint_positions)):
