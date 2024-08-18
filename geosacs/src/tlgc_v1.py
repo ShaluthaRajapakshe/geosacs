@@ -740,6 +740,8 @@ class TLGCNode():
         processed_demos_xyz, processed_demos_q = self.get_processed_demos(processed_dir)
         demos_xyz, demos_q = self.reshape_demos(processed_demos_xyz, processed_demos_q)
         
+        print("len of processed demos in tlgc", len(processed_demos_xyz))
+
         idx = np.array([0, 0]) #These values should be adjusted depending on demo #3,20 for tnb vs tny
         xyz_model = self.get_model(demos_xyz, idx)
         
@@ -780,6 +782,9 @@ class TLGCNode():
 
             x_corr_axes, y_corr_axes = self.get_correction_axes(xyz_model)
 
+            # x_corr_axes[-1] = [0,0,1]
+            # y_corr_axes[-1] = [0,-1,0]
+
             q_mean = self.get_mean(demos_q, idx)
             q_weights = self.get_orientation_weights(processed_demos_q, q_mean, idx)
             model = xyz_model
@@ -792,16 +797,19 @@ class TLGCNode():
             self.clear_viz_pub.publish("all")
             self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
             self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+
+            self.visualise_gc(model["GC"])
+            self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
             # First 50 points
-            self.visualise_gc(model["GC"][:50,:,:])
-            self.visualise_directrix(model["directrix"][:50,:], model["q"][:50,:])
-            self.visualise_TNB_axes(model["eT"][:50,:], model["directrix"][:50,:], "eT")
-            self.visualise_correction_axes(model["x_corr_axes"][:50,:], model["y_corr_axes"][:50,:], model["directrix"][:50,:])
-            # Last 50 points
-            self.visualise_gc(model["GC"][-50:,:,:])
-            self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
-            self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
-            self.visualise_correction_axes(model["x_corr_axes"][-50:,:], model["y_corr_axes"][-50:,:], model["directrix"][-50:,:])
+            # self.visualise_gc(model["GC"][:50,:,:])
+            # self.visualise_directrix(model["directrix"][:50,:], model["q"][:50,:])
+            # self.visualise_TNB_axes(model["eT"][:50,:], model["directrix"][:50,:], "eT")
+            # self.visualise_correction_axes(model["x_corr_axes"][:50,:], model["y_corr_axes"][:50,:], model["directrix"][:50,:])
+            # # Last 50 points
+            # # self.visualise_gc(model["GC"][-50:,:,:])
+            # self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
+            # self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
+            # self.visualise_correction_axes(model["x_corr_axes"][-50:,:], model["y_corr_axes"][-50:,:], model["directrix"][-50:,:])
 
             if input("Crop again ? ([y]/n]") == "n":
                 crop=False

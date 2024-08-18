@@ -51,8 +51,8 @@ class MainNode():
         self.gripper_states = []
         self.start = False
 
-        self.task = "marshmellow" ##marshmellow, other
-        # self.task = "other" ##marshmellow, other
+        # self.task = "marshmellow" ##marshmellow, other
+        self.task = "other" ##marshmellow, other
 
         self.marsh_selected = False
 
@@ -268,8 +268,12 @@ class MainNode():
                 self.joy_y = self.rear_config[1]
                 
             ## xbox controller   
-            self.y_corr = self.y_dir_mul * msg.axes[1]/150
-            self.x_corr = self.x_dir_mul * msg.axes[0]/150
+            # self.y_corr = self.y_dir_mul * msg.axes[1]/150
+            # self.x_corr = self.x_dir_mul * msg.axes[0]/150
+
+            # axes were changed for user convenience
+            self.y_corr = self.y_dir_mul * msg.axes[0]/150
+            self.x_corr = self.x_dir_mul * msg.axes[1]/150
 
             self.correction = True
             return # cannot do corrections & change direction at the same time
@@ -922,7 +926,7 @@ class MainNode():
 
             position, p_joystick = self.check_position_in_joystick_frame(R_T, directrix)
 
-            print(f"########## directrix", directrix, " and I'm on,", position,"  w.r.t joyx")
+            # print(f"########## directrix", directrix, " and I'm on,", position,"  w.r.t joyx")
             
 
             # angle_corr_x = np.arccos(np.dot(correction_axes[0], z) / np.linalg.norm(correction_axes[0]))
@@ -1809,7 +1813,7 @@ class MainNode():
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
 
         rospy.loginfo("Loading GC visualisation...")
-        self.visualise_gc(model["GC"])
+        # self.visualise_gc(model["GC"])
         # self.visualise_gc(model["GC"][-50:,:,:])
         # self.visualise_gc(model["GC"][:50,:,:])
         

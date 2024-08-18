@@ -24,7 +24,7 @@ class MainNode():
         # self.control_front = sys.argv[1]
 
         
-        self.control_front = True
+        
 
         # self.control_front = True
         # Variables
@@ -47,7 +47,7 @@ class MainNode():
         self.gripper_states = []
         self.start = False
 
-        self.task = "marshmellow" ##marshmellow, other
+        self.task = "other" ##marshmellow, other
         self.marsh_selected = False
 
         self.out_of_canal = False
@@ -90,6 +90,24 @@ class MainNode():
         #Assuming the global x axis will be towards the front of therobot and global Y will be twards the left of the robot
         # Need to decide the x_dir_mul w.r.t the these two axes" Note: the values will change based on whether it is front or rear of the robot
         
+
+        # ## For front control  #object relocation task
+        # self.control_front = True
+        # self.control_rear = False
+        # self.control_left = False
+
+        ## For rear control  #painting task
+        self.control_front = False
+        self.control_rear = True
+        self.control_left = False
+
+        # ### For left control  #laundry task
+        # self.control_front = False
+        # self.control_rear = False
+        # self.control_left = True
+
+
+
         self.joy_x_front = np.array([0, 1, 0])  # Joystick X-axis (global frame)  
         self.joy_y_front = np.array([-1, 0, 0]) # Joystick Y-axis (global frame)
         self.front_config = [self.joy_x_front, self.joy_y_front]
@@ -101,6 +119,11 @@ class MainNode():
         self.joy_x_rear = np.array([0, -1, 0]) # [0, 1, 0]
         self.joy_y_rear = np.array([1, 0, 0])
         self.rear_config = [self.joy_x_rear, self.joy_y_rear]
+
+
+        self.joy_x_left = np.array([-1, 0, 0]) # [0, 1, 0] #robot's left (as the robot is in front facing to the user)and user's right
+        self.joy_y_left = np.array([0, -1, 0])
+        self.left_config = [self.joy_x_left, self.joy_y_left]
 
 
 
@@ -248,9 +271,14 @@ class MainNode():
                 self.joy_x = self.front_config[0]
                 self.joy_y = self.front_config[1]
 
-            else:
+            elif self.control_rear:
                 self.joy_x = self.rear_config[0]
                 self.joy_y = self.rear_config[1]
+
+            elif self.control_left:
+                # print("#############IN LEFT")
+                self.joy_x = self.left_config[0]
+                self.joy_y = self.left_config[1]
                 
             ## xbox controller   
             self.y_corr = self.y_dir_mul * msg.axes[1]/150
@@ -267,18 +295,27 @@ class MainNode():
         else: changed_buttons = [button1 - button2 for (button1, button2) in zip(current_buttons, self.previous_buttons)]
         self.previous_buttons = current_buttons
 
-        if changed_buttons[1] != 0:
+        # if changed_buttons[1] != 0:
             
-            if self.control_front:
-                self.control_front = False
-                rospy.loginfo("###### Mapping done considering the user is in rear side of the robot")
-                self.joy_x = self.front_config[0]
-                self.joy_y = self.front_config[1]
-            else:
-                self.control_front = True
-                rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
-                self.joy_x = self.rear_config[0]
-                self.joy_y = self.rear_config[1]
+        #     if self.control_front:
+        #         # self.control_front = False
+        #         rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
+        #         # self.joy_x = self.front_config[0]
+        #         # self.joy_y = self.front_config[1]
+
+        #         self.joy_x = self.rear_config[0]
+        #         self.joy_y = self.rear_config[1]
+        #     else:
+        #         self.control_front = True
+        #         rospy.loginfo("###### Mapping done considering the user is in front side of the robot")
+        #         ## self.joy_x = self.rear_config[0]
+        #         ## self.joy_y = self.rear_config[1]
+
+        #         # self.joy_x = self.front_config[0]
+        #         # self.joy_y = self.front_config[1]
+
+        #         self.joy_x = self.left_config[0]
+        #         self.joy_y = self.left_config[1]
 
 
         if changed_buttons[3] != 0:
@@ -913,11 +950,14 @@ class MainNode():
             # angle_corr_x = np.arccos(np.dot(correction_axes[0], z) / np.linalg.norm(correction_axes[0]))
             # angle_corr_y = np.arccos(np.dot(correction_axes[1], z) / np.linalg.norm(correction_axes[1]))
 
-            if (self.control_front and (joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (joy_y == np.array([1, 0, 0])).all()):
+            # if (self.control_front and (joy_y == np.array([-1, 0, 0])).all()) or (not self.control_front and (joy_y == np.array([1, 0, 0])).all()):
+            if (self.control_front and (joy_y == np.array([-1, 0, 0])).all()) or (self.control_rear and (joy_y == np.array([1, 0, 0])).all()) or (self.control_left and (joy_y == np.array([0, -1, 0])).all()): #config for left side cotrol
                 y_dir_mult = 1
 
             else:
                 y_dir_mult = -1
+
+                print("########### Y dir mult", y_dir_mult)
 
             def angle_with_z(axis):
                 angle = np.arccos(np.dot(axis, z) / np.linalg.norm(axis))
@@ -975,6 +1015,8 @@ class MainNode():
             
         else:
 
+            # print("############     Horizontal Plane")
+
             projected_corr_x = self.project_onto_plane(correction_axes[0], z ) 
             projected_corr_y = self.project_onto_plane(correction_axes[1], z ) 
 
@@ -1002,16 +1044,25 @@ class MainNode():
             aligned_axis_x = correction_axes[aligned_axis_index_x] 
             aligned_axis_y = correction_axes[aligned_axis_index_y]
 
+            # print("aligned x axis for Joyx", )
 
-            ## Taking the actual correction axeses (untill now we were dealing with projected vectors on the horizontal plane)
-            ## Also this will handle cases like 45 degrees where joy axes can be mapped to one same correction axis, but the following step ensures at last it will be applied to the two axes again
-
-            if (aligned_axis_x == projected_corr_x).all():
+            # if 45 degree case, we will assign correctionX to joyx and correctionY to joyy
+            if (aligned_axis_x == aligned_axis_y).all(): 
                 aligned_axis_x = correction_axes[0]
                 aligned_axis_y = correction_axes[1]
-            else:
-                aligned_axis_x = correction_axes[1]
-                aligned_axis_y = correction_axes[0]
+
+
+            # ## Taking the actual correction axeses (untill now we were dealing with projected vectors on the horizontal plane)
+            # ## Also this will handle cases like 45 degrees where joy axes can be mapped to one same correction axis, but the following step ensures at last it will be applied to the two axes again
+
+            # if (aligned_axis_x == projected_corr_x).all():
+            #     print("########### here in if condition")
+            #     aligned_axis_x = correction_axes[0]
+            #     aligned_axis_y = correction_axes[1]
+            # else:
+            #     print("########### here in else")
+            #     aligned_axis_x = correction_axes[1]
+            #     aligned_axis_y = correction_axes[0]
 
             self.prev_circle_type = "horizontal"
 
@@ -1304,6 +1355,7 @@ class MainNode():
                 elastic_extension = distance_from_center - Rc[0]
                 Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
                 AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+                AcurrG_corr = AcurrG_corr * Rc_adjusted / distance_from_center  #vectorize
                 Ratio = 1.0
                 print("Outside", Rc_adjusted)
             else:
@@ -1342,7 +1394,7 @@ class MainNode():
         # Create new trajectory for remaining points
         small_model = {"eN":eN, "eB":eB, "eT":eT, "directrix":directrix, "Rc":Rc, "x_corr_axes":eX, "y_corr_axes":eY, "xyz_corr_y": xyz_corr_y, "vertical_start": vertical_start, "vertical_end": vertical_start }
         newTrajectory = reproduce(small_model, numRepro, starting, PcurrG_corr, Ratio, crossSectionType, strategy, direction, self.out_of_canal)
-
+        self.out_of_canal = False
         
         trajectory_xyz[i:]= newTrajectory[0]                    
         rospy.loginfo(f"  -> New trajectory_xyz of length {len(newTrajectory[0])}  with first point: {newTrajectory[0][0]}")
@@ -1815,6 +1867,9 @@ class MainNode():
 
         rospy.loginfo("Loading GC visualisation...")
         self.visualise_gc(model["GC"])
+        # self.visualise_gc(model["GC"][120:220,:,:])
+        # self.visualise_gc(model["GC"][60:80,:,:])
+        
         # self.visualise_gc(model["GC"][-50:,:,:])
         # self.visualise_gc(model["GC"][:50,:,:])
         
@@ -1909,6 +1964,7 @@ class MainNode():
             
             repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction, self.out_of_canal)
             trajectory_xyz = repro_trajectories[0]
+            self.out_of_canal = False  #we need to do this as after reproduction the points will be inside
     
             trajectory_q = s_model["q"]
             rospy.loginfo(f"  First trajectory point {trajectory_xyz[0]}")
@@ -2133,7 +2189,7 @@ class MainNode():
                 if goal == "PICK" : end_idx = t["-1"]
                 elif goal == "PLACE" : end_idx = t["1"]
                 elif goal == "HOME" : end_idx = t["0"]
-                # rospy.loginfo(f"  UPDATED: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}. Strategy : {strategy}")
+                rospy.loginfo(f"  UPDATED: from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}. Strategy : {strategy}")
                 self.events_pub.publish("--------------------------------------------------------------------")
                 self.events_pub.publish(f"Go from {prev_goal} go {goal}, from idx {start_idx} to idx{end_idx}")
 
@@ -2148,6 +2204,7 @@ class MainNode():
 
                 repro_trajectories = reproduce(s_model, numRepro, starting, initPoints, Ratio, crossSectionType, strategy, direction, self.out_of_canal)
                 trajectory_xyz = repro_trajectories[0]
+                self.out_of_canal = False
 
                 trajectory_q = s_model["q"]
                 self.clear_rviz_pub.publish("reproduced")

@@ -487,7 +487,7 @@ class TLGCNode():
 
         intersection_exist = self.check_intersections_geometric(circle1, center2, normal2)
 
-        init_in_degrees = np.degrees(initial_angle_between_two_planes)
+        init_in_degrees = np.degrees(initial_angle_between_two_planes)  #We first find the initial angle
 
         if intersection_exist:
             print("Geometric: Intersection exists in", i, "and", i + 1, "with the initial angle", np.degrees(initial_angle_between_two_planes))
@@ -557,14 +557,14 @@ class TLGCNode():
         intersection_exist = self.check_intersections_geometric(circle1, center2, normal2)
 
         ##
-        init_in_degrees = np.degrees(initial_angle_between_two_planes)
+        init_in_degrees = np.degrees(initial_angle_between_two_planes)  # We first find the initial angle
 
 
         if intersection_exist:
             print("Geometric: Insection exist in", i,"and ", i+1, "and the initial angle is", init_in_degrees)
             unit_rotated_normal2 = normal2
 
-            for angle in range(int(init_in_degrees), 0, decrement): ##angle value decreases in degrees
+            for angle in range(int(init_in_degrees), 0, decrement): ##angle value decreases in degrees (From the initial angle till zero)
                 # print("angle ", angle)
                 axis = np.cross(normal2, normal1) #this will ensure that we should always do a leftward rotation to decrease the angle
                 if np.linalg.norm(axis) == 0:
@@ -1354,7 +1354,7 @@ class TLGCNode():
         print("len of processed demos in tlgc", len(processed_demos_xyz))
         demos_xyz, demos_q = self.reshape_demos(processed_demos_xyz, processed_demos_q)
         
-        idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 for task 1 and 10,10 for task2  #for marsh_demo5 2,20 is goog 8,30 fro safe conditions
+        idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 (10,60 is the latest)for task 1 and 10,10 for task2  #for marsh_demo5 2,20 is goog 8,30 fro safe conditions
         ## for new marsh demos taken on 18th Jul, 10, 58 is good
         xyz_model = self.get_model(demos_xyz, idx)
         
