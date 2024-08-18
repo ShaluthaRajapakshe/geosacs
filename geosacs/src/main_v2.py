@@ -11,6 +11,10 @@ from geosacs.msg import WeightedPose, Correction, SurfacePose
 from randomInitialPoints import randomInitialPoints
 from reproduce import reproduce
 
+import tf
+import tf2_ros
+
+
 
 class MainNode(): 
     def __init__(self):
@@ -141,6 +145,9 @@ class MainNode():
         self.myp_app_pub = rospy.Publisher("/myp_manager/app_control", String, queue_size=2)
         self.gripper_state_pub =rospy.Publisher("/gripper_state", String, queue_size=10)
 
+
+        self.tfBuffer = tf2_ros.Buffer()
+        self.listener = tf2_ros.TransformListener(self.tfBuffer)
 
         #Init Message
         rospy.sleep(1)
@@ -1282,7 +1289,14 @@ class MainNode():
         start_correction_time = rospy.Time.now()
         start_position = PcurrG
         if self.physical_robot: 
-            start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+            # print("############################## here in")
+            transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+
+            ##changed
+            start_position_lio = np.array([[transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z]])
+            # start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+
+        
         rospy.loginfo("    correcting trajectory...")
         rospy.loginfo(f"      Before correction: {PcurrG}")
 
@@ -1379,7 +1393,13 @@ class MainNode():
         rospy.loginfo(f"    Correction duration: {correction_duration.to_sec()}")
         correction_distance = np.linalg.norm(PcurrG - start_position)
         if self.physical_robot:
-            end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+
+            transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+
+            ##changed
+            end_position_lio = np.array([[transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z]])
+            # end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+            
             lio_correction_distance = np.linalg.norm(start_position_lio-end_position_lio)
             lio_cumulative_correction_distance += lio_correction_distance
             rospy.loginfo(f"    Lio correction distance: {lio_correction_distance}")
@@ -1438,7 +1458,12 @@ class MainNode():
         start_position = PcurrG
 
         if self.physical_robot: 
-            start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+
+            transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+
+            ##changed
+            start_position_lio = np.array([[transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z]])
+            # start_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
 
         rospy.loginfo("    correcting trajectory...")
         rospy.loginfo(f"      Before correction: {PcurrG}")
@@ -1523,7 +1548,13 @@ class MainNode():
         rospy.loginfo(f"    Correction duration: {correction_duration.to_sec()}")
         correction_distance = np.linalg.norm(PcurrG - start_position)
         if self.physical_robot:
-            end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+                        
+            transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+
+            ##changed
+            end_position_lio = np.array([[transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z]])
+            # end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
+            
             lio_correction_distance = np.linalg.norm(start_position_lio-end_position_lio)
             lio_cumulative_correction_distance += lio_correction_distance
             rospy.loginfo(f"    Lio correction distance: {lio_correction_distance}")
@@ -2165,6 +2196,18 @@ class MainNode():
                 self.events_pub.publish(f"Correction time as a percentage from total:{cumulative_correction_time} seconds ({(cumulative_correction_time/task_duration)*100}%)")
                 
                 rospy.loginfo("###################################################")
+
+
+                file_path = '/home/shalutha/geosacs_ws/src/geosacs/geosacs/data/experiment_data_geosacsv2.txt'
+
+                # Write the values to the file
+                with open(file_path, 'a') as file:
+                    file.write(f"Total task time: {task_duration} seconds\n")
+                    file.write(f"Total correction time: {cumulative_correction_time} seconds\n")
+                    file.write(f"Total correction distance: {cumulative_correction_distance} meters\n")
+                    file.write(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters\n")
+                    file.write(f"Correction time as a percentage from total:  ({(cumulative_correction_time/task_duration)*100}%)\n")
+                    file.write("\n")  # Adding a newline for separation between entries
                 
                 # self.events_pub.publish(f"Total task time: {task_duration} seconds")
                 # self.events_pub.publish(f"Total task time*: {task_duration-cumulative_correction_time} seconds")
