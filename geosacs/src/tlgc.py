@@ -42,6 +42,8 @@ class TLGCNode():
         self.x_corr_axis_pub = rospy.Publisher("/tlgc/x_correction_axis", PoseArray, queue_size=10)
         self.y_corr_axis_pub = rospy.Publisher("/tlgc/y_correction_axis", PoseArray, queue_size=10)
 
+        self.saturate_end_idxs = []
+        self.saturate_start_idxs = []
         #Init Message
         rospy.sleep(1)
         rospy.loginfo("tlgc_node has been started") 
@@ -331,6 +333,32 @@ class TLGCNode():
         # Normalise
         T = T/np.linalg.norm(T)
         N = N/np.linalg.norm(N)
+
+        # ## Correcting the N and B to be fully vertical and fully horizontal
+        # def angle_with_z(axis):
+        #     angle = np.arccos(np.dot(axis, global_z) / np.linalg.norm(axis))
+
+        #     angle = np.degrees(angle)
+        #     if angle < 90:
+        #         if angle <= 45:
+        #             axis_new = global_z
+        #         else:
+        #             # print ("here ")
+        #             axis_new = self.project_onto_plane(axis, global_z)
+        #     else:
+        #         if angle >= 135:
+        #             axis_new = -global_z
+        #         else:
+        #             axis_new = self.project_onto_plane(axis, -global_z)
+
+        #     # print("###############I'm in here with axis", axis, axis_new)
+        #     return axis_new
+
+        # N = angle_with_z(N)
+        # N = N/np.linalg.norm(N)
+
+        # print("normalized N", N)
+
         B = np.cross(N, T)
         B = B/np.linalg.norm(B)
         
@@ -490,7 +518,7 @@ class TLGCNode():
         init_in_degrees = np.degrees(initial_angle_between_two_planes)  #We first find the initial angle
 
         if intersection_exist:
-            print("Geometric: Intersection exists in", i, "and", i + 1, "with the initial angle", np.degrees(initial_angle_between_two_planes))
+            # print("Geometric: Intersection exists in", i, "and", i + 1, "with the initial angle", np.degrees(initial_angle_between_two_planes))
             
             def objective(angle):
                 axis = np.cross(normal2, normal1)
@@ -505,7 +533,7 @@ class TLGCNode():
                 unit_rotated_normal2 = rotated_normal2 / np.linalg.norm(rotated_normal2)
 
                 new_angle = self.relative_angle_between_planes(normal1, rotated_normal2) #onl for debugging
-                print ("New angle between the two planes", np.degrees(new_angle))
+                # print ("New angle between the two planes", np.degrees(new_angle))
 
                 intersection_exist_after_rotation = self.check_intersections_geometric(circle1, center2, unit_rotated_normal2)
                 
@@ -521,7 +549,7 @@ class TLGCNode():
             result = minimize(objective, x0=np.degrees(initial_angle_between_two_planes), bounds=[(0, np.degrees(initial_angle_between_two_planes))])
             
             optimized_angle = result.x[0]
-            print("final angle", optimized_angle, "initial angle", init_in_degrees) #check this and see whether the angle has been reduced
+            # print("final angle", optimized_angle, "initial angle", init_in_degrees) #check this and see whether the angle has been reduced
             ## based on that decide whether to directly use this angle or reduce it from the initial angle like below
             # optimized_angle = np.radians(init_in_degrees - optimized_angle) ##Not sure whether this is needed or not
 
@@ -531,13 +559,13 @@ class TLGCNode():
             unit_rotated_normal2 = optimized_rotated_normal2 / np.linalg.norm(optimized_rotated_normal2)
 
             if not self.check_intersections_geometric(circle1, center2, unit_rotated_normal2):
-                print(f"Intersection resolved with optimized angle {optimized_angle} degrees")
+                # print(f"Intersection resolved with optimized angle {optimized_angle} degrees")
                 return unit_rotated_normal2
             else:
-                print("############### couldn't find an angle without intersection at", i, "so returning the closest vector")
+                # print("############### couldn't find an angle without intersection at", i, "so returning the closest vector")
                 return unit_rotated_normal2
 
-        print("No intersection, returning the previous normal", i)
+        # print("No intersection, returning the previous normal", i)
         return normal2
 
 
@@ -561,7 +589,7 @@ class TLGCNode():
 
 
         if intersection_exist:
-            print("Geometric: Insection exist in", i,"and ", i+1, "and the initial angle is", init_in_degrees)
+            # print("Geometric: Insection exist in", i,"and ", i+1, "and the initial angle is", init_in_degrees)
             unit_rotated_normal2 = normal2
 
             for angle in range(int(init_in_degrees), 0, decrement): ##angle value decreases in degrees (From the initial angle till zero)
@@ -585,16 +613,16 @@ class TLGCNode():
                 intersection_exist_after_rotation = self.check_intersections_geometric(circle1, center2, rotated_normal2)
 
                 if not intersection_exist_after_rotation:
-                    print(f"Intersection resolved with angle {angle} degrees between the plane and rotated", np.degrees(angle_to_rotate), "from initial")
+                    # print(f"Intersection resolved with angle {angle} degrees between the plane and rotated", np.degrees(angle_to_rotate), "from initial")
                     # print ("initial and rotated vectors", normal2, unit_rotated_normal2)
                     return unit_rotated_normal2
                 
             else:
-                print("############### couldn't find an angle without intersection at", i, "so returning the closest vector")
+                # print("############### couldn't find an angle without intersection at", i, "so returning the closest vector")
                 return unit_rotated_normal2
                 
 
-        print("No intersection, returning the previous normal", i)
+        # print("No intersection, returning the previous normal", i)
         return normal2
     
 
@@ -648,6 +676,117 @@ class TLGCNode():
             for i in range(0, nb_points-1):
                 # optimized_normal2 = self.optimize_orientation(i, gc_circles, directrix, eT)
 
+
+                optimized_normal2 = self.optimize_orientation_geometric(i, gc_circles, directrix, eT)
+                # optimized_normal2 = self.optimize_orientation_scipy(i, gc_circles, directrix, eT)
+                
+                # gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
+                gc_circles, eT, eN, eB = self.adjust_TNB(i+1, optimized_normal2, gc_circles, Rc, eT, eN, eB, directrix)
+
+
+
+        else: 
+            rospy.loginfo(f"No model saturation.")
+            # return model
+
+        # Update model
+        model["GC"] = gc_circles
+        model["eT"] = eT
+        model["eN"] = eN
+        model["eB"] = eB
+
+        model["directrix"] = directrix
+        model["Rc"] = Rc
+        
+
+        rospy.loginfo(f"  Model saturation function completed.")
+         
+        return model
+    
+
+
+
+
+    
+    def saturate_model_horizontal(self, model):
+        gc_circles = model["GC"]
+        nb_points = gc_circles.shape[0]
+        saturate_start_idxs = []
+        saturate_end_idxs = []
+
+
+        global_x = np.array([1, 0, 0])
+        global_y = np.array([0, 1, 0])
+        global_z = np.array([0, 0, 1])
+        eT = model["eT"]
+        eN = model["eN"]
+        eB = model["eB"]
+        directrix = model["directrix"]
+        Rc = model["Rc"]
+
+
+        if not self.vertical_start:
+            
+            gc_circles, eT,eN, eB = self.make_horizontal(0, gc_circles, Rc, eT, eN, eB, directrix, global_x, global_y, global_z)
+
+            eT_vert = eT[0]
+
+            directrix_at_start = directrix[0]
+
+            for i in range(int(nb_points/5)):
+                circle = gc_circles[i+1,:,:]
+                for point in circle:
+                    vector_pointing_to_directrix = (directrix_at_start[0] - point[0], directrix_at_start[1] - point[1], directrix_at_start[2] - point[2])
+
+                    theta_val = self.calculate_angle_between_vectors(eT_vert, vector_pointing_to_directrix) #in degrees
+
+                    if theta_val < 90: ##Intersection exist
+                        saturate_start_idxs.append(i+1)
+                        break
+
+
+        if not self.vertical_end:
+            
+            gc_circles, eT,eN, eB = self.make_horizontal(-1, gc_circles, Rc, eT, eN, eB, directrix,  global_x, global_y, global_z)
+
+            eT_vert = eT[-1]
+
+            directrix_at_end = directrix[-1]
+
+            for j in range(nb_points-1, int(4*nb_points/5), -1):
+                circle = gc_circles[j-1,:,:]
+                for point in circle:
+                    vector_pointing_to_directrix = (directrix_at_end[0] - point[0], directrix_at_end[1] - point[1], directrix_at_end[2] - point[2])
+
+                    theta_val = self.calculate_angle_between_vectors(eT_vert, vector_pointing_to_directrix) #in degrees
+
+                    if theta_val < 90: ##Intersection exist
+                        saturate_end_idxs.append(j-1)
+                        break
+
+        
+        if len(saturate_start_idxs) != 0: 
+            # rospy.loginfo(f"Model saturation for {len(saturate_idxs)} points ...")
+
+            for i in saturate_start_idxs:
+                print("saturate_start_idxs", saturate_start_idxs)
+                gc_circles, eT,eN, eB = self.make_horizontal(i, gc_circles, Rc, eT, eN, eB, directrix, global_x, global_y, global_z)
+                # saturate_idxs = self.check_intersections(i, nb_points, gc_circles, min_start, min_end, directrix, saturate_idxs)
+
+        if len(saturate_end_idxs) != 0: 
+            # rospy.loginfo(f"Model saturation for {len(saturate_idxs)} points ...")
+
+            for i in saturate_end_idxs:
+                print("saturate_start_idxs", saturate_end_idxs)
+                gc_circles, eT,eN, eB = self.make_horizontal(i, gc_circles, Rc, eT, eN, eB, directrix, global_x, global_y, global_z)
+                # saturate_idxs = self.check_intersections(i, nb_points, gc_circles, min_start, min_end, directrix, saturate_idxs)
+
+
+        if len(saturate_start_idxs) != 0 or len(saturate_end_idxs) != 0:
+
+            # for i in range(int(nb_points*3/4), nb_points-1):
+            for i in range(0, nb_points-1):
+                # optimized_normal2 = self.optimize_orientation(i, gc_circles, directrix, eT)
 
                 optimized_normal2 = self.optimize_orientation_geometric(i, gc_circles, directrix, eT)
                 # optimized_normal2 = self.optimize_orientation_scipy(i, gc_circles, directrix, eT)
@@ -1033,6 +1172,7 @@ class TLGCNode():
                 x_corr_axes[i,:] = correction_x_axis
                 y_corr_axes[i,:] = correction_y_axis
                 continue
+
             
             ### Weighting the importance w.r.t global x and projected previous correction x axis
             #project previous correction x axis onto the plane
@@ -1051,6 +1191,46 @@ class TLGCNode():
             t = np.radians(theta_X)/(np.pi/2)
             
             correction_x_axis = self.slerp(projected_global_x, projected_previous_correction, t, theta_C)
+
+
+
+            ################# for perfect alignment of axes in the vertical planes ####################
+            if i in self.saturate_end_idxs:
+                angle = np.arccos(np.dot(correction_x_axis, global_z) / np.linalg.norm(correction_x_axis)) 
+                angle = np.degrees(angle)
+
+                if angle < 90:
+                    if angle <= 45:
+                        correction_x_axis = global_z
+                    else:
+                        # print ("here in > 45 < 90")
+                        correction_x_axis = self.project_onto_plane(correction_x_axis, global_z)
+                else:
+                    if angle >= 135:
+                        correction_x_axis = -global_z
+                    else:
+                        correction_x_axis = self.project_onto_plane(correction_x_axis, -global_z)
+
+                print("Done something", i)
+
+
+            if i in self.saturate_start_idxs:
+                angle = np.arccos(np.dot(correction_x_axis, global_z) / np.linalg.norm(correction_x_axis)) 
+                angle = np.degrees(angle)
+
+                if angle < 90:
+                    if angle <= 45:
+                        correction_x_axis = global_z
+                    else:
+                        # print ("here in > 45 < 90")
+                        correction_x_axis = self.project_onto_plane(correction_x_axis, global_z)
+                else:
+                    if angle >= 135:
+                        correction_x_axis = -global_z
+                    else:
+                        correction_x_axis = self.project_onto_plane(correction_x_axis, -global_z)
+            
+
             
 
             if i >= window_size:
@@ -1108,7 +1288,9 @@ class TLGCNode():
                     y_angle_diff = self.calculate_angle_between_vectors(correction_y_axis, projected_previous_mean_y_correction)
                     if y_angle_diff > 90:
                         correction_y_axis = -correction_y_axis
-                   
+
+
+               
             
             previous_correction_x_axis = correction_x_axis
             previous_correction_y_axes.append(correction_y_axis)
@@ -1232,8 +1414,8 @@ class TLGCNode():
 
         gc_circles = model["GC"]
         nb_points = gc_circles.shape[0]
-        saturate_start_idxs = []
-        saturate_end_idxs = []
+        self.saturate_start_idxs = []
+        self.saturate_end_idxs = []
 
         global_z = np.array([0, 0, 1])
 
@@ -1254,12 +1436,12 @@ class TLGCNode():
 
             #verticalizing the first circle
             gc_circles, eT,eN, eB = self.make_vertical(-1, gc_circles, Rc, eT, eN, eB, directrix)
-
+            self.saturate_start_idxs.append(0)
             ### Here we have to ensure that the starting circle is orthogonal to the projected vector ::: Need to write a verticalizing function
 
             directrix_at_start = directrix[0]
             
-            for i in range(int(nb_points/20)):
+            for i in range(int(nb_points/5)):  #20
                 circle = gc_circles[i+1,:,:]
                 for point in circle:
                     vector_pointing_to_directrix = (directrix_at_start[0] - point[0], directrix_at_start[1] - point[1], directrix_at_start[2] - point[2])
@@ -1267,7 +1449,7 @@ class TLGCNode():
                     theta_val = self.calculate_angle_between_vectors(projected_vertical_start_tangent, vector_pointing_to_directrix) #in degrees
 
                     if theta_val < 90: ##Intersection exist
-                        saturate_start_idxs.append(i+1)
+                        self.saturate_start_idxs.append(i+1)
                         break
                 
         if self.vertical_end:
@@ -1280,12 +1462,14 @@ class TLGCNode():
 
             #verticalizing the final circle
             gc_circles, eT,eN, eB = self.make_vertical(-1, gc_circles, Rc, eT, eN, eB, directrix)
+            self.saturate_end_idxs.append(nb_points-1)
+
 
             directrix_at_end = directrix[-1]
 
             # print("Found a vertical end and the shape of gc_circles is", gc_circles.shape)
 
-            for j in range(nb_points-1, int(19*nb_points/20), -1):
+            for j in range(nb_points-1, int(4*nb_points/5), -1): #19/20
                 circle = gc_circles[j-1,:,:]
                 for point in circle:
                     vector_pointing_to_directrix = (directrix_at_end[0] - point[0], directrix_at_end[1] - point[1], directrix_at_end[2] - point[2])
@@ -1293,23 +1477,23 @@ class TLGCNode():
                     theta_val = self.calculate_angle_between_vectors(projected_vertical_end_tangent, vector_pointing_to_directrix) #in degrees
 
                     if theta_val < 90: ##Intersection exist
-                        print("intersection exist")
-                        saturate_end_idxs.append(j-1)
+                        # print("intersection exist")
+                        self.saturate_end_idxs.append(j-1)
                         break
 
-        if len(saturate_start_idxs) != 0: 
-            for i in saturate_start_idxs:
-                # print("saturate_start_idxs", saturate_start_idxs)
+        if len(self.saturate_start_idxs) != 0: 
+            for i in self.saturate_start_idxs:
+                print("saturate_start_idxs", self.saturate_start_idxs)
                 gc_circles, eT,eN, eB = self.make_vertical(i, gc_circles, Rc, eT, eN, eB, directrix, location = "start")
 
 
-        if len(saturate_end_idxs) != 0: 
-            for i in saturate_end_idxs:
-                # print("saturate_end_idxs", saturate_end_idxs)
+        if len(self.saturate_end_idxs) != 0: 
+            for i in self.saturate_end_idxs:
+                print("saturate_end_idxs", self.saturate_end_idxs)
                 gc_circles, eT,eN, eB = self.make_vertical(i, gc_circles, Rc, eT, eN, eB, directrix, location = "end")
 
 
-        if len(saturate_end_idxs) != 0 or len(saturate_start_idxs) != 0:
+        if len(self.saturate_end_idxs) != 0 or len(self.saturate_start_idxs) != 0:
             for i in range(0, nb_points-1):
                 optimized_normal2 = self.optimize_orientation_geometric(i, gc_circles, directrix, eT)
                 
@@ -1354,8 +1538,8 @@ class TLGCNode():
         print("len of processed demos in tlgc", len(processed_demos_xyz))
         demos_xyz, demos_q = self.reshape_demos(processed_demos_xyz, processed_demos_q)
         
-        idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 (10,60 is the latest)for task 1 and 10,10 for task2  #for marsh_demo5 2,20 is goog 8,30 fro safe conditions
-        ## for new marsh demos taken on 18th Jul, 10, 58 is good
+        idx = np.array([20,20]) #These values should be adjusted depending on demo #3,20 for tnb vs tny  #20,70 (10,60 is the latest)for task 1 and 10,10 (10, 65 is the latest) for task2  #for marsh_demo5 2,20 is goog 8,30 fro safe conditions
+        ## for new marsh demos taken on 18th Jul, 10, 58 is good  ## for paint test4, use 20 and 60  #for train v2, 30, 95
         xyz_model = self.get_model(demos_xyz, idx)
         
         # min points along the z axis
@@ -1430,7 +1614,8 @@ class TLGCNode():
             self.start_end_check(xyz_model)
 
             # xyz_model_prev = self.saturate_model(xyz_model, min_start, min_end)
-            xyz_model = self.saturate_model(xyz_model, min_start, min_end)
+            # xyz_model = self.saturate_model(xyz_model, min_start, min_end)
+            xyz_model = self.saturate_model_horizontal(xyz_model)
             # xyz_model = self.saturate_model_new(xyz_model, min_start, min_end)
 
             xyz_model = self.saturate_model_vertical(xyz_model)
@@ -1466,13 +1651,16 @@ class TLGCNode():
 
             # self.visualise_gc(model["GC"])
 
-            self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
-            self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+            # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+            # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+
+            # print("length of correction axes x", len(model["x_corr_axes"]))
+
             # # First 50 points
             # self.visualise_gc(model["GC"][:50,:,:])
             # self.visualise_directrix(model["directrix"][:50,:], model["q"][:50,:])
             # self.visualise_TNB_axes(model["eT"][:50,:], model["directrix"][:50,:], "eT")
-            self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+            # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
             # # Last 50 points
             # self.visualise_gc(model["GC"][-50:,:,:])
             # self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
