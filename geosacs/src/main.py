@@ -14,6 +14,7 @@ from reproduce import reproduce
 import tf
 import tf2_ros
 
+import datetime
 
 
 class MainNode(): 
@@ -609,7 +610,7 @@ class MainNode():
     def visualise_correction_axes(self, x_axes, y_axes, directrix):
         
         nb_points = directrix.shape[0]
-        for i in range(nb_points):
+        for i in range(nb_points, 2):
             strt_arrow = Pose()
             strt_arrow.position.x = directrix[i,:][0]
             strt_arrow.position.y = directrix[i,:][1]
@@ -1222,7 +1223,7 @@ class MainNode():
 
     def correct_traj(self, s_model, i, PcurrG, QcurrG, 
                      q_weight, current_idx, numRepro, starting, crossSectionType, strategy, direction, trajectory_xyz, trajectory_q, 
-                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance):
+                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance, start_task_time):
         rospy.loginfo(f"  *Correction request at i={i}*")
         self.events_pub.publish(f"Correction request at i={i}")
         # Truncate model
@@ -1270,6 +1271,14 @@ class MainNode():
 
         while self.correction:
             # Integrate correction
+
+            running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+
+            if running_task_time >= 480:
+                self.terminate = True
+                break
+
+
             raw_joystickDisplacement = self.x_corr*x_corr_axes[i,:] + self.y_corr*y_corr_axes[i,:]
             # print("input format", self.x_corr, self.y_corr)
             # print("x and y axes", x_corr_axes[i,:], y_corr_axes[i,:])
@@ -1365,13 +1374,13 @@ class MainNode():
         # return
         self.correction = False
 
-        return trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance
+        return trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance
 
 
 
     def correction_at_ends(self, s_model, PcurrG, QcurrG, t,
                      q_weight, current_idx, 
-                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance):
+                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance, start_task_time):
         
         ## Because of this function, the robot might stop in the middle, untill the user presses the Y button
  
@@ -1414,6 +1423,13 @@ class MainNode():
 
         while self.correction:
             # Integrate correction
+
+            running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+            if running_task_time >= 480:
+                self.terminate = True
+                break
+
+
             raw_joystickDisplacement = self.x_corr*x_corr_axes[-1,:] + self.y_corr*y_corr_axes[-1,:]
 
             # if from_front:
@@ -1955,6 +1971,10 @@ class MainNode():
 
                 # directrix_point = s_model["directrix"][i,:]
                 # print("############ current directrix_point", directrix_point)
+
+                running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+                if running_task_time >= 480:
+                    self.terminate = True
                 
 
                 if self.terminate:
@@ -1993,11 +2013,11 @@ class MainNode():
                 if self.correction and i != nb_points-1:
                     # print("########### current idx", current_idx)
                     
-                    trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+                    trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
                                                                                                             current_idx, numRepro, starting, 
                                                                                                             crossSectionType, strategy, direction, 
                                                                                                         trajectory_xyz, trajectory_q, cumulative_correction_time, cumulative_correction_distance,
-                                                                                                        lio_cumulative_correction_distance)
+                                                                                                        lio_cumulative_correction_distance, start_task_time)
                 self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
                 AcurrG = PcurrG - model["directrix"][current_idx,:]
                 Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
@@ -2012,6 +2032,10 @@ class MainNode():
 
                 while not self.change_direction_request:
 
+                    running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+                    if running_task_time >= 480:
+                        self.terminate = True
+
                     # q_weight = q_weights[current_idx,:]  #q_weights will not change anywhere
                     # QcurrG = trajectory_q[current_idx,:] #trajector_q will not change anywhere
 
@@ -2023,7 +2047,7 @@ class MainNode():
                     if self.correction:  ## Need to give the previous QcurrG and q_weight
 
                         PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance = self.correction_at_ends(s_model,PcurrG, QcurrG, t, q_weight, current_idx, cumulative_correction_time,
-                                                                                                            cumulative_correction_distance, lio_cumulative_correction_distance)
+                                                                                                            cumulative_correction_distance, lio_cumulative_correction_distance, start_task_time)
                 
                         # trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
                         #                                                                                     current_idx, numRepro, starting, 
@@ -2093,10 +2117,14 @@ class MainNode():
                 rospy.loginfo("###################################################")
 
 
-                file_path = '/home/shalutha/geosacs_ws/src/geosacs/geosacs/data/experiment_data_geosacs.txt'
+                file_path = '/home/shalutha/geosacs_ws/src/geosacs/geosacs/data/experiment_data_geosacsv1.txt'
+
+                now = datetime.datetime.now()
+
 
                 # Write the values to the file
                 with open(file_path, 'a') as file:
+                    file.write(f"Date and time: {now.strftime('%Y-%m-%d %H:%M:%S')}\n")
                     file.write(f"Total task time: {task_duration} seconds\n")
                     file.write(f"Total correction time: {cumulative_correction_time} seconds\n")
                     file.write(f"Total correction distance: {cumulative_correction_distance} meters\n")

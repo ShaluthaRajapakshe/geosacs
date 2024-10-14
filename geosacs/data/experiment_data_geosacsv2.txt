@@ -1,0 +1,879 @@
+
+################## 0010 ###################################
+
+Date and time: 2024-08-20 14:58:32
+Total task time: 277.583024263 seconds
+Total correction time: 111.91581988499996 seconds
+Total correction distance: 2.0861736788064205 meters
+Total Lio correction distance: 0.8943604617961413 meters
+Correction time as a percentage from total:  (40.317962592324704%)
+
+Date and time: 2024-08-20 15:03:52
+Total task time: 210.043818474 seconds
+Total correction time: 33.636204717000005 seconds
+Total correction distance: 0.7182570638765698 meters
+Total Lio correction distance: 0.07845871561361602 meters
+Correction time as a percentage from total:  (16.01389889089434%)
+
+
+Date and time: 2024-08-20 15:17:13
+Total task time: 443.722102165 seconds
+Total correction time: 223.85068726599997 seconds
+Total correction distance: 3.491766401386996 meters
+Total Lio correction distance: 1.719620417077743 meters
+Correction time as a percentage from total:  (50.44839690738689%)
+
+Date and time: 2024-08-20 15:25:07
+Total task time: 276.198976994 seconds
+Total correction time: 24.804079291000004 seconds
+Total correction distance: 0.4656763774865726 meters
+Total Lio correction distance: 0.04273388937145235 meters
+Correction time as a percentage from total:  (8.980510920407513%)
+
+###################################################################
+
+
+Date and time: 2024-08-22 10:30:51
+Total task time: 239.949540377 seconds
+Total correction time: 47.458880664 seconds
+Total correction distance: 0.8978987086075366 meters
+Total Lio correction distance: 0.11008481646923798 meters
+Correction time as a percentage from total:  (19.77869204893426%)
+Number of times went outside of the canal:  4 
+
+
+Date and time: 2024-08-22 10:37:44
+Total task time: 260.970177412 seconds
+Total correction time: 88.732189186 seconds
+Total correction distance: 1.636015778397353 meters
+Total Lio correction distance: 0.02432092778941094 meters
+Correction time as a percentage from total:  (34.00089238775982%)
+Number of times went outside of the canal:  9 
+
+
+Date and time: 2024-08-22 10:49:57
+Total task time: 480.609966993 seconds
+Total correction time: 276.29046940599994 seconds
+Total correction distance: 3.9124465154339085 meters
+Total Lio correction distance: 1.404143885081066 meters
+Correction time as a percentage from total:  (57.487461430450125%)
+Number of times went outside of the canal:  15 
+
+
+
+Date and time: 2024-08-22 11:07:03
+Total task time: 285.387399912 seconds
+Total correction time: 56.914728876999995 seconds
+Total correction distance: 0.9460490471312548 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (19.942971867205706%)
+Number of times went outside of the canal:  6 
+
+
+#######################################################
+
+
+Date and time: 2024-08-22 15:59:43
+Total task time: 263.715952158 seconds
+Total correction time: 78.49313401899998 seconds
+Total correction distance: 1.2506886011110068 meters
+Total Lio correction distance: 0.17924559371174692 meters
+Correction time as a percentage from total:  (29.764272269723158%)
+Number of times went outside of the canal:  6 
+
+
+Date and time: 2024-08-22 16:07:02
+Total task time: 201.883799553 seconds
+Total correction time: 42.49455953000001 seconds
+Total correction distance: 1.0319584987923165 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (21.049019101131012%)
+Number of times went outside of the canal:  2 
+
+
+Date and time: 2024-08-22 16:14:57
+Total task time: 248.057115554 seconds
+Total correction time: 85.693325756 seconds
+Total correction distance: 1.618813870866183 meters
+Total Lio correction distance: 0.5399825394315615 meters
+Correction time as a percentage from total:  (34.54580432599816%)
+Number of times went outside of the canal:  0 
+
+
+Date and time: 2024-08-22 16:25:01
+Total task time: 286.246919393 seconds
+Total correction time: 81.118596555 seconds
+Total correction distance: 1.3829968467276208 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (28.338679321690442%)
+Number of times went outside of the canal:  10 
+
+
+##########################################################
+
+
+Date and time: 2024-08-23 14:57:07
+Total task time: 164.0837574 seconds
+Total correction time: 86.463373183 seconds
+Total correction distance: 0.9460483538441778 meters
+Total Lio correction distance: 1.1670573055404292 meters
+Correction time as a percentage from total:  (52.694657017282566%)
+Number of times went outside of the canal:  10 
+
+Date and time: 2024-08-23 15:01:21
+Total task time: 186.246156692 seconds
+Total correction time: 34.236345293 seconds
+Total correction distance: 0.5918063484689293 meters
+Total Lio correction distance: 0.9585688560434961 meters
+Correction time as a percentage from total:  (18.38230968149185%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-08-23 15:08:52
+Total task time: 306.79889965 seconds
+Total correction time: 124.53679704000002 seconds
+Total correction distance: 2.11374577348495 meters
+Total Lio correction distance: 3.611627671197519 meters
+Correction time as a percentage from total:  (40.592321935337175%)
+Number of times went outside of the canal:  2 
+
+Date and time: 2024-08-23 15:19:01
+Total task time: 432.95918417 seconds
+Total correction time: 114.99703335600002 seconds
+Total correction distance: 2.106522450076669 meters
+Total Lio correction distance: 2.8870801960094177 meters
+Correction time as a percentage from total:  (26.560710006984582%)
+Number of times went outside of the canal:  10 
+
+###############################################################
+
+
+Date and time: 2024-08-26 17:09:31
+Total task time: 206.185627699 seconds
+Total correction time: 43.31332946000002 seconds
+Total correction distance: 0.9301478723123701 meters
+Total Lio correction distance: 1.4567033053206495 meters
+Correction time as a percentage from total:  (21.00695860490866%)
+Number of times went outside of the canal:  4 
+
+Date and time: 2024-08-26 17:14:10
+Total task time: 212.767727613 seconds
+Total correction time: 50.33244896099999 seconds
+Total correction distance: 1.010435177338141 meters
+Total Lio correction distance: 1.7841011315477509 meters
+Correction time as a percentage from total:  (23.656054198477374%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-08-26 17:23:04
+Total task time: 326.060745478 seconds
+Total correction time: 188.93367957899997 seconds
+Total correction distance: 1.726229411495963 meters
+Total Lio correction distance: 2.625684248097834 meters
+Correction time as a percentage from total:  (57.94431933289796%)
+Number of times went outside of the canal:  10 
+
+Date and time: 2024-08-26 17:32:04
+Total task time: 413.76345706 seconds
+Total correction time: 130.12950777400005 seconds
+Total correction distance: 2.6404665532678977 meters
+Total Lio correction distance: 3.3150864825469317 meters
+Correction time as a percentage from total:  (31.45021764334541%)
+Number of times went outside of the canal:  20 
+
+###############################################################
+
+
+
+Date and time: 2024-08-27 15:39:47
+Total task time: 242.111649036 seconds
+Total correction time: 26.110943077 seconds
+Total correction distance: 0.5107806976787161 meters
+Total Lio correction distance: 0.9162543771036631 meters
+Correction time as a percentage from total:  (10.784670287846216%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-08-27 15:44:15
+Total task time: 195.468407631 seconds
+Total correction time: 36.34988570299999 seconds
+Total correction distance: 0.7890243350424774 meters
+Total Lio correction distance: 1.1685122404336121 meters
+Correction time as a percentage from total:  (18.59629704029734%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-08-27 15:55:34
+Total task time: 470.652859926 seconds
+Total correction time: 235.74092626699996 seconds
+Total correction distance: 3.259859556551004 meters
+Total Lio correction distance: 4.100944958581398 meters
+Correction time as a percentage from total:  (50.088068370404706%)
+Number of times went outside of the canal:  4 
+
+Date and time: 2024-08-27 16:04:50
+Total task time: 298.56391716 seconds
+Total correction time: 101.83626556200001 seconds
+Total correction distance: 1.533811850665446 meters
+Total Lio correction distance: 2.4210252527324174 meters
+Correction time as a percentage from total:  (34.10869824146435%)
+Number of times went outside of the canal:  5 
+
+
+##########################################################
+
+
+Date and time: 2024-08-28 16:10:16
+Total task time: 76.788888931 seconds
+Total correction time: 21.463032008000003 seconds
+Total correction distance: 0.3170415423204582 meters
+Total Lio correction distance: 0.5532449869898216 meters
+Correction time as a percentage from total:  (27.950700038499036%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-08-28 16:14:52
+Total task time: 194.177263736 seconds
+Total correction time: 42.042728664999984 seconds
+Total correction distance: 0.677341140106374 meters
+Total Lio correction distance: 1.176044936559571 meters
+Correction time as a percentage from total:  (21.651725776793594%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-08-28 16:20:48
+Total task time: 203.058061362 seconds
+Total correction time: 92.12418628100001 seconds
+Total correction distance: 1.1782046491283529 meters
+Total Lio correction distance: 1.8781219497853554 meters
+Correction time as a percentage from total:  (45.368396439462906%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-08-28 16:29:34
+Total task time: 344.730136156 seconds
+Total correction time: 70.08000779500001 seconds
+Total correction distance: 1.2038510139042446 meters
+Total Lio correction distance: 1.8512744170030118 meters
+Correction time as a percentage from total:  (20.32894732570954%)
+Number of times went outside of the canal:  9 
+
+##############################################################
+
+
+Date and time: 2024-08-29 11:52:19
+Total task time: 275.041461467 seconds
+Total correction time: 25.49447894 seconds
+Total correction distance: 0.6177054773278967 meters
+Total Lio correction distance: 0.6416818422625132 meters
+Correction time as a percentage from total:  (9.269322088393164%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-08-29 11:58:24
+Total task time: 226.767862082 seconds
+Total correction time: 64.10482072900001 seconds
+Total correction distance: 1.1747894078440948 meters
+Total Lio correction distance: 1.6785332292815462 meters
+Correction time as a percentage from total:  (28.268917888293842%)
+Number of times went outside of the canal:  7 
+
+Date and time: 2024-08-29 12:07:18
+Total task time: 346.571745634 seconds
+Total correction time: 196.0487329979999 seconds
+Total correction distance: 2.501243071875711 meters
+Total Lio correction distance: 2.9994971631249783 meters
+Correction time as a percentage from total:  (56.56800805829071%)
+Number of times went outside of the canal:  13 
+
+Date and time: 2024-08-29 12:17:55
+Total task time: 480.024794102 seconds
+Total correction time: 142.94037699700002 seconds
+Total correction distance: 1.7786249007787633 meters
+Total Lio correction distance: 2.370639037089612 meters
+Correction time as a percentage from total:  (29.777707058737214%)
+Number of times went outside of the canal:  11 
+
+
+###########################################################
+
+Date and time: 2024-08-29 16:27:49
+Total task time: 43.973896742 seconds
+Total correction time: 20.896208288 seconds
+Total correction distance: 0.35481467285814383 meters
+Total Lio correction distance: 0.271107629560341 meters
+Correction time as a percentage from total:  (47.51957373848513%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-08-29 16:32:35
+Total task time: 204.586744309 seconds
+Total correction time: 36.54254460200001 seconds
+Total correction distance: 0.8968362063166434 meters
+Total Lio correction distance: 1.0775575011293057 meters
+Correction time as a percentage from total:  (17.861638458260785%)
+Number of times went outside of the canal:  2 
+
+Date and time: 2024-08-29 16:42:01
+Total task time: 468.275207281 seconds
+Total correction time: 240.19819164300006 seconds
+Total correction distance: 4.434839795141924 meters
+Total Lio correction distance: 4.657901199012921 meters
+Correction time as a percentage from total:  (51.2942363610686%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-08-29 16:50:15
+Total task time: 372.734970569 seconds
+Total correction time: 106.62817240199999 seconds
+Total correction distance: 2.215253979353993 meters
+Total Lio correction distance: 2.351702785365164 meters
+Correction time as a percentage from total:  (28.606967636877844%)
+Number of times went outside of the canal:  9 
+
+##########################################################
+
+
+Date and time: 2024-08-30 10:45:34
+Total task time: 372.95063591 seconds
+Total correction time: 59.72073912600002 seconds
+Total correction distance: 0.6993411487357016 meters
+Total Lio correction distance: 1.0018414236172584 meters
+Correction time as a percentage from total:  (16.01304123809344%)
+Number of times went outside of the canal:  8 
+
+
+Date and time: 2024-08-30 10:51:59
+Total task time: 198.127372026 seconds
+Total correction time: 33.383033271 seconds
+Total correction distance: 0.7525325241557185 meters
+Total Lio correction distance: 1.1115815423605016 meters
+Correction time as a percentage from total:  (16.849278789514855%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-08-30 11:00:22
+Total task time: 268.375809192 seconds
+Total correction time: 122.87650370499999 seconds
+Total correction distance: 1.4432318887834141 meters
+Total Lio correction distance: 1.9022899655286465 meters
+Correction time as a percentage from total:  (45.78523827275816%)
+Number of times went outside of the canal:  9 
+
+Date and time: 2024-08-30 11:11:11
+Total task time: 480.196302175 seconds
+Total correction time: 163.483630181 seconds
+Total correction distance: 2.329510414748702 meters
+Total Lio correction distance: 3.190356335672809 meters
+Correction time as a percentage from total:  (34.04516641226049%)
+Number of times went outside of the canal:  11 
+
+##############################################################
+
+
+
+Date and time: 2024-09-02 10:42:43
+Total task time: 59.893543482 seconds
+Total correction time: 16.492651939 seconds
+Total correction distance: 0.3545807961182694 meters
+Total Lio correction distance: 0.3694114391179984 meters
+Correction time as a percentage from total:  (27.536610759983827%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-09-02 10:46:40
+Total task time: 170.536837101 seconds
+Total correction time: 27.745745898 seconds
+Total correction distance: 0.6424307722758953 meters
+Total Lio correction distance: 0.8009408368369255 meters
+Correction time as a percentage from total:  (16.269649636792344%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-09-02 10:52:43
+Total task time: 232.985085011 seconds
+Total correction time: 84.33524727900003 seconds
+Total correction distance: 1.9554639584442497 meters
+Total Lio correction distance: 2.386098380501511 meters
+Correction time as a percentage from total:  (36.197702215581%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-09-02 10:59:11
+Total task time: 207.041918039 seconds
+Total correction time: 12.082319499 seconds
+Total correction distance: 0.256497078023547 meters
+Total Lio correction distance: 0.35979165448687545 meters
+Correction time as a percentage from total:  (5.835687581257861%)
+Number of times went outside of the canal:  0 
+
+
+Date and time: 2024-09-02 11:03:27
+Total task time: 121.774974346 seconds
+Total correction time: 46.692682028 seconds
+Total correction distance: 0.6173817558189773 meters
+Total Lio correction distance: 0.7766065355721258 meters
+Correction time as a percentage from total:  (38.34341356158433%)
+Number of times went outside of the canal:  7 
+
+
+###################################################################
+
+
+
+Date and time: 2024-09-02 14:28:17
+Total task time: 193.775732279 seconds
+Total correction time: 47.597568985 seconds
+Total correction distance: 0.8599590251460824 meters
+Total Lio correction distance: 0.7702468373292166 meters
+Correction time as a percentage from total:  (24.563224932866518%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-09-02 14:33:48
+Total task time: 253.759815693 seconds
+Total correction time: 51.508522985000006 seconds
+Total correction distance: 1.1915432751608035 meters
+Total Lio correction distance: 1.1043288356730343 meters
+Correction time as a percentage from total:  (20.29814013079017%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-09-02 14:41:07
+Total task time: 262.756411791 seconds
+Total correction time: 92.37811231399998 seconds
+Total correction distance: 1.8825350632493263 meters
+Total Lio correction distance: 2.034398119446802 meters
+Correction time as a percentage from total:  (35.157319923929684%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-09-02 14:57:33
+Total task time: 312.829936027 seconds
+Total correction time: 87.70604276399999 seconds
+Total correction distance: 1.5351705389496288 meters
+Total Lio correction distance: 2.0625516121507887 meters
+Correction time as a percentage from total:  (28.03633305619133%)
+Number of times went outside of the canal:  4 
+
+#################################################################
+
+Date and time: 2024-09-03 11:20:01
+Total task time: 99.701733113 seconds
+Total correction time: 35.734869244 seconds
+Total correction distance: 0.7066903385928124 meters
+Total Lio correction distance: 0.7210761074679248 meters
+Correction time as a percentage from total:  (35.841773385723194%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-09-03 11:25:39
+Total task time: 273.70467949 seconds
+Total correction time: 97.86055635999998 seconds
+Total correction distance: 1.722482892003912 meters
+Total Lio correction distance: 1.8557390730403776 meters
+Correction time as a percentage from total:  (35.7540676843179%)
+Number of times went outside of the canal:  10 
+
+Date and time: 2024-09-03 11:33:06
+Total task time: 344.862053394 seconds
+Total correction time: 137.12344050299998 seconds
+Total correction distance: 3.127684994728279 meters
+Total Lio correction distance: 4.547477851115309 meters
+Correction time as a percentage from total:  (39.76182335907465%)
+Number of times went outside of the canal:  1 
+
+
+Date and time: 2024-09-03 11:47:22
+Total task time: 382.527255535 seconds
+Total correction time: 115.96749997199998 seconds
+Total correction distance: 1.7359639017857595 meters
+Total Lio correction distance: 2.2386214729732297 meters
+Correction time as a percentage from total:  (30.31614043025735%)
+Number of times went outside of the canal:  7 
+
+###############################################################
+
+
+
+
+Date and time: 2024-09-04 10:51:04
+Total task time: 480.006007433 seconds
+Total correction time: 57.80246019100001 seconds
+Total correction distance: 1.038839565056098 meters
+Total Lio correction distance: 1.5307726102926091 meters
+Correction time as a percentage from total:  (12.042028494626324%)
+Number of times went outside of the canal:  5 
+
+Date and time: 2024-09-04 10:56:08
+Total task time: 185.892154216 seconds
+Total correction time: 30.537793635999996 seconds
+Total correction distance: 0.7530509336853295 meters
+Total Lio correction distance: 0.7437980539278901 meters
+Correction time as a percentage from total:  (16.427693661840177%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-09-04 11:07:19
+Total task time: 415.430547238 seconds
+Total correction time: 188.14219403600003 seconds
+Total correction distance: 4.293511293684468 meters
+Total Lio correction distance: 5.882389483381549 meters
+Correction time as a percentage from total:  (45.28848330650405%)
+Number of times went outside of the canal:  6 
+
+Date and time: 2024-09-04 11:18:36
+Total task time: 480.051947593 seconds
+Total correction time: 137.43590020999997 seconds
+Total correction distance: 2.3223920217846192 meters
+Total Lio correction distance: 3.5385485942004102 meters
+Correction time as a percentage from total:  (28.62938081995275%)
+Number of times went outside of the canal:  11 
+
+################################################################
+
+
+
+Date and time: 2024-09-04 16:03:37
+Total task time: 67.750044584 seconds
+Total correction time: 19.406193496999997 seconds
+Total correction distance: 0.4917530653458473 meters
+Total Lio correction distance: 0.45261655046238813 meters
+Correction time as a percentage from total:  (28.64380919032341%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-09-04 16:08:14
+Total task time: 193.698380948 seconds
+Total correction time: 38.70666551200001 seconds
+Total correction distance: 0.9352926135250826 meters
+Total Lio correction distance: 1.3010061486010314 meters
+Correction time as a percentage from total:  (19.982957690488465%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-09-04 16:15:48
+Total task time: 351.810623169 seconds
+Total correction time: 179.19708515000002 seconds
+Total correction distance: 3.4969604160034824 meters
+Total Lio correction distance: 4.211287761309543 meters
+Correction time as a percentage from total:  (50.93566633544171%)
+Number of times went outside of the canal:  9 
+
+Date and time: 2024-09-04 16:26:26
+Total task time: 347.917078495 seconds
+Total correction time: 80.313335655 seconds
+Total correction distance: 1.795002305440917 meters
+Total Lio correction distance: 2.306759051956099 meters
+Correction time as a percentage from total:  (23.08404519904998%)
+Number of times went outside of the canal:  10 
+
+
+############################################################################3
+
+
+
+Date and time: 2024-09-05 10:43:15
+Total task time: 480.058030367 seconds
+Total correction time: 191.01935315300003 seconds
+Total correction distance: 2.1962033070181946 meters
+Total Lio correction distance: 2.464685320666899 meters
+Correction time as a percentage from total:  (39.79088799055553%)
+Number of times went outside of the canal:  12 
+
+Date and time: 2024-09-05 10:50:54
+Total task time: 306.402464629 seconds
+Total correction time: 143.21717143400002 seconds
+Total correction distance: 2.3832559965207407 meters
+Total Lio correction distance: 2.690287576684255 meters
+Correction time as a percentage from total:  (46.74152070134653%)
+Number of times went outside of the canal:  10 
+
+Date and time: 2024-09-05 11:00:05
+Total task time: 354.618810892 seconds
+Total correction time: 206.76069546099995 seconds
+Total correction distance: 2.260111192610002 meters
+Total Lio correction distance: 2.5904986081301065 meters
+Correction time as a percentage from total:  (58.305055769861404%)
+Number of times went outside of the canal:  9 
+
+Date and time: 2024-09-05 11:10:40
+Total task time: 480.069399834 seconds
+Total correction time: 179.582312826 seconds
+Total correction distance: 2.5556244249983684 meters
+Total Lio correction distance: 2.9125880765670145 meters
+Correction time as a percentage from total:  (37.40757334004137%)
+Number of times went outside of the canal:  17 
+
+
+################################################################
+
+
+Date and time: 2024-09-10 14:54:12
+Total task time: 129.488311052 seconds
+Total correction time: 12.633392334 seconds
+Total correction distance: 0.3572993924634487 meters
+Total Lio correction distance: 0.4699917917644883 meters
+Correction time as a percentage from total:  (9.756395949072711%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-09-10 14:58:21
+Total task time: 179.838065862 seconds
+Total correction time: 27.129624364 seconds
+Total correction distance: 0.6554455941579325 meters
+Total Lio correction distance: 0.9616044397541003 meters
+Correction time as a percentage from total:  (15.085585042278037%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-09-10 15:05:12
+Total task time: 294.032099009 seconds
+Total correction time: 139.412925721 seconds
+Total correction distance: 2.6419544596984585 meters
+Total Lio correction distance: 3.2453398521837515 meters
+Correction time as a percentage from total:  (47.41418579497768%)
+Number of times went outside of the canal:  7 
+
+Date and time: 2024-09-10 15:12:28
+Total task time: 321.900880337 seconds
+Total correction time: 71.66979598900001 seconds
+Total correction distance: 1.3925192997503721 meters
+Total Lio correction distance: 1.9467878614468737 meters
+Correction time as a percentage from total:  (22.2645542049989%)
+Number of times went outside of the canal:  7 
+
+
+#####################################################################
+
+
+
+
+Date and time: 2024-09-17 10:43:53
+Total task time: 480.006664276 seconds
+Total correction time: 138.92951226300008 seconds
+Total correction distance: 2.2106219039267976 meters
+Total Lio correction distance: 2.847022400144355 meters
+Correction time as a percentage from total:  (28.94324654274315%)
+Number of times went outside of the canal:  6 
+
+Date and time: 2024-09-17 10:49:55
+Total task time: 254.319631577 seconds
+Total correction time: 79.81844639799999 seconds
+Total correction distance: 1.3721388529612204 meters
+Total Lio correction distance: 1.6867404561890151 meters
+Correction time as a percentage from total:  (31.38509044821161%)
+Number of times went outside of the canal:  1 
+
+
+Painting time is incorrect, Refer to the video and out the time
+Date and time: 2024-09-17 11:10:53
+Total task time: 167.486904145 seconds
+Total correction time: 91.38962626199998 seconds
+Total correction distance: 1.4835482536866311 meters
+Total Lio correction distance: 2.5726475847407837 meters
+Correction time as a percentage from total:  (54.56523704258118%)
+Number of times went outside of the canal:  12 
+
+Date and time: 2024-09-17 11:21:53
+Total task time: 480.010516406 seconds
+Total correction time: 200.35810184900012 seconds
+Total correction distance: 2.4221142775977484 meters
+Total Lio correction distance: 3.7585385958035564 meters
+Correction time as a percentage from total:  (41.740356721587794%)
+Number of times went outside of the canal:  11 
+
+
+############################################################
+
+Participant 30 with wheelchair
+
+Date and time: 2024-09-20 10:21:14
+Total task time: 228.665872573 seconds
+Total correction time: 76.82204890199999 seconds
+Total correction distance: 1.1359443231861563 meters
+Total Lio correction distance: 1.2286068297215573 meters
+Correction time as a percentage from total:  (33.59576487631537%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-09-20 10:27:26
+Total task time: 283.278592586 seconds
+Total correction time: 71.217945096 seconds
+Total correction distance: 1.376400907802014 meters
+Total Lio correction distance: 1.5164540358385414 meters
+Correction time as a percentage from total:  (25.140602558726382%)
+Number of times went outside of the canal:  2 
+
+Date and time: 2024-09-20 10:38:06
+Total task time: 467.839155912 seconds
+Total correction time: 206.21899652700003 seconds
+Total correction distance: 2.9749319440338757 meters
+Total Lio correction distance: 3.89430941194344 meters
+Correction time as a percentage from total:  (44.07903740442571%)
+Number of times went outside of the canal:  6 
+
+Date and time: 2024-09-20 10:44:56
+Total task time: 120.47198081 seconds
+Total correction time: 47.70173526000001 seconds
+Total correction distance: 0.5194551556223672 meters
+Total Lio correction distance: 0.3110599849294488 meters
+Correction time as a percentage from total:  (39.59570925892872%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-09-20 10:58:35
+Total task time: 310.268925667 seconds
+Total correction time: 133.436936142 seconds
+Total correction distance: 1.3772613834006024 meters
+Total Lio correction distance: 1.8158529639594057 meters
+Correction time as a percentage from total:  (43.00686440162972%)
+Number of times went outside of the canal:  8 
+
+Date and time: 2024-09-20 11:12:02
+Total task time: 436.638651371 seconds
+Total correction time: 94.08641672299999 seconds
+Total correction distance: 1.0708034827115158 meters
+Total Lio correction distance: 1.303957794267476 meters
+Correction time as a percentage from total:  (21.547890098042952%)
+Number of times went outside of the canal:  8 
+
+
+#######################################################################
+
+Participant 31 with wheelchair
+
+Date and time: 2024-09-25 15:22:04
+Total task time: 103.382801771 seconds
+Total correction time: 25.337271931000004 seconds
+Total correction distance: 0.5025410528195432 meters
+Total Lio correction distance: 0.6171334437337354 meters
+Correction time as a percentage from total:  (24.508207842077834%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-09-25 15:29:05
+Total task time: 338.739375829 seconds
+Total correction time: 116.08991884700002 seconds
+Total correction distance: 1.8685543949483912 meters
+Total Lio correction distance: 2.438487737076661 meters
+Correction time as a percentage from total:  (34.27116158636477%)
+Number of times went outside of the canal:  12 
+
+Date and time: 2024-09-25 15:41:04
+Total task time: 524.52354312 seconds
+Total correction time: 246.992880342 seconds
+Total correction distance: 3.529208214052605 meters
+Total Lio correction distance: 4.153031750060922 meters
+Correction time as a percentage from total:  (47.08899792616043%)
+Number of times went outside of the canal:  4 
+
+Date and time: 2024-09-25 15:52:36
+Total task time: 500.185820818 seconds
+Total correction time: 202.78290986899998 seconds
+Total correction distance: 2.727659153865449 meters
+Total Lio correction distance: 3.552162004920551 meters
+Correction time as a percentage from total:  (40.541515058817616%)
+Number of times went outside of the canal:  17 
+
+Date and time: 2024-09-25 15:58:33
+Total task time: 126.801462174 seconds
+Total correction time: 0 seconds
+Total correction distance: 0 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (0.0%)
+Number of times went outside of the canal:  0 
+
+Date and time: 2024-09-25 16:04:38
+Total task time: 160.158176184 seconds
+Total correction time: 0 seconds
+Total correction distance: 0 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (0.0%)
+Number of times went outside of the canal:  0 
+
+
+####################################################################
+
+
+Date and time: 2024-09-26 11:03:43
+Total task time: 133.229335308 seconds
+Total correction time: 48.07894563800001 seconds
+Total correction distance: 1.02040186331833 meters
+Total Lio correction distance: 1.1045334942353495 meters
+Correction time as a percentage from total:  (36.087356832375505%)
+Number of times went outside of the canal:  2 
+
+Date and time: 2024-09-26 11:10:34
+Total task time: 273.35973072 seconds
+Total correction time: 96.982557059 seconds
+Total correction distance: 1.624322299727208 meters
+Total Lio correction distance: 2.0183168898430544 meters
+Correction time as a percentage from total:  (35.47799699815273%)
+Number of times went outside of the canal:  3 
+
+Date and time: 2024-09-26 11:20:57
+Total task time: 362.798793793 seconds
+Total correction time: 160.01994060700002 seconds
+Total correction distance: 3.5571837345400836 meters
+Total Lio correction distance: 3.725287577784072 meters
+Correction time as a percentage from total:  (44.10707624852294%)
+Number of times went outside of the canal:  2 
+
+Date and time: 2024-09-26 11:31:48
+Total task time: 480.051701784 seconds
+Total correction time: 124.353574753 seconds
+Total correction distance: 2.6008026033969327 meters
+Total Lio correction distance: 2.9880685580710233 meters
+Correction time as a percentage from total:  (25.90420454523315%)
+Number of times went outside of the canal:  8 
+
+#######################################################################3
+
+Wheelchari user #3
+
+Date and time: 2024-09-26 12:19:11
+Total task time: 218.980749607 seconds
+Total correction time: 53.52583312799999 seconds
+Total correction distance: 1.0194989193333395 meters
+Total Lio correction distance: 1.6228783905988824 meters
+Correction time as a percentage from total:  (24.443168280345024%)
+Number of times went outside of the canal:  5 
+
+Date and time: 2024-09-26 12:25:19
+Total task time: 290.061530352 seconds
+Total correction time: 113.69460082 seconds
+Total correction distance: 1.9349746593060484 meters
+Total Lio correction distance: 2.590725972804648 meters
+Correction time as a percentage from total:  (39.19671825561547%)
+Number of times went outside of the canal:  8 
+
+Date and time: 2024-09-26 12:35:24
+Total task time: 447.664443255 seconds
+Total correction time: 230.9206531 seconds
+Total correction distance: 3.3854854581236027 meters
+Total Lio correction distance: 3.850807065797618 meters
+Correction time as a percentage from total:  (51.5834251701921%)
+Number of times went outside of the canal:  8 
+
+Date and time: 2024-09-26 12:55:23
+Total task time: 531.654283762 seconds
+Total correction time: 203.65413951700006 seconds
+Total correction distance: 2.846913615172378 meters
+Total Lio correction distance: 3.524006658757357 meters
+Correction time as a percentage from total:  (38.30574599642796%)
+Number of times went outside of the canal:  17 
+
+##########################################################################
+
+
+Date and time: 2024-09-26 14:12:26
+Total task time: 293.205167532 seconds
+Total correction time: 59.316963193999996 seconds
+Total correction distance: 0.8578308300360906 meters
+Total Lio correction distance: 1.0622695038278072 meters
+Correction time as a percentage from total:  (20.230531301098647%)
+Number of times went outside of the canal:  2 
+
+Date and time: 2024-09-26 14:17:45
+Total task time: 226.441540241 seconds
+Total correction time: 38.679597856 seconds
+Total correction distance: 0.8848972100333545 meters
+Total Lio correction distance: 1.2723788354640335 meters
+Correction time as a percentage from total:  (17.08149388792957%)
+Number of times went outside of the canal:  3 
+
+
+Date and time: 2024-09-26 15:03:39
+Total task time: 353.800090313 seconds
+Total correction time: 152.84130263499998 seconds
+Total correction distance: 1.8863546358675785 meters
+Total Lio correction distance: 1.8875371400261183 meters
+Correction time as a percentage from total:  (43.19990492364891%)
+Number of times went outside of the canal:  1 
+
+Date and time: 2024-09-26 15:13:42
+Total task time: 431.839259148 seconds
+Total correction time: 102.39470934899998 seconds
+Total correction distance: 1.7274207171104745 meters
+Total Lio correction distance: 2.518204346214604 meters
+Correction time as a percentage from total:  (23.711301642889133%)
+Number of times went outside of the canal:  12 
+
+
+##############################################################################
+

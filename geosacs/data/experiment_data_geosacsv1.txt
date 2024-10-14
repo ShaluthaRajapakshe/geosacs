@@ -1,0 +1,642 @@
+################## 0010 ###################################
+
+Date and time: 2024-08-20 14:16:38
+Total task time: 472.516896486 seconds
+Total correction time: 172.786757473 seconds
+Total correction distance: 1.9076531446785472 meters
+Total Lio correction distance: 0.18190680494911643 meters
+Correction time as a percentage from total:  (36.567318281732476%)
+
+Date and time: 2024-08-20 14:22:33
+Total task time: 246.261216402 seconds
+Total correction time: 54.613942862 seconds
+Total correction distance: 1.098003521200157 meters
+Total Lio correction distance: 0.1305837571910756 meters
+Correction time as a percentage from total:  (22.17724076082183%)
+
+Date and time: 2024-08-20 14:32:59
+Total task time: 414.160903216 seconds
+Total correction time: 205.17692255700007 seconds
+Total correction distance: 4.5085460664420545 meters
+Total Lio correction distance: 3.259935127179776 meters
+Correction time as a percentage from total:  (49.5403890043172%)
+
+Date and time: 2024-08-20 14:44:49
+Total task time: 492.541968584 seconds
+Total correction time: 126.5431869 seconds
+Total correction distance: 1.861657719152596 meters
+Total Lio correction distance: 0.24781184450431354 meters
+Correction time as a percentage from total:  (25.691858759527985%)
+
+##############################################################
+Date and time: 2024-08-22 11:13:05
+Total task time: 86.435023785 seconds
+Total correction time: 42.33516812300001 seconds
+Total correction distance: 0.724199864990799 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (48.979182591891515%)
+
+Date and time: 2024-08-22 11:19:58
+Total task time: 339.477101088 seconds
+Total correction time: 135.433433533 seconds
+Total correction distance: 2.0464684700451508 meters
+Total Lio correction distance: 0.0678023251770521 meters
+Correction time as a percentage from total:  (39.89471840632121%)
+
+Date and time: 2024-08-22 11:30:29
+Total task time: 483.07209897 seconds
+Total correction time: 263.77858185300005 seconds
+Total correction distance: 3.7232954973546084 meters
+Total Lio correction distance: 1.7264680757733872 meters
+Correction time as a percentage from total:  (54.60439185277421%)
+
+Date and time: 2024-08-22 11:40:43
+Total task time: 465.265911579 seconds
+Total correction time: 125.79030060900001 seconds
+Total correction distance: 1.6434203784174028 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (27.036216812467124%)
+
+
+###############################################################
+
+Date and time: 2024-08-22 16:34:06
+Total task time: 130.47473669 seconds
+Total correction time: 59.28007364500001 seconds
+Total correction distance: 1.1565151436890222 meters
+Total Lio correction distance: 0 meters
+Correction time as a percentage from total:  (45.43413931989443%)
+
+Date and time: 2024-08-22 16:39:15
+Total task time: 222.306349039 seconds
+Total correction time: 50.383481743000004 seconds
+Total correction distance: 1.1043782055014544 meters
+Total Lio correction distance: 0.03502168008941332 meters
+Correction time as a percentage from total:  (22.66398686353355%)
+
+Date and time: 2024-08-22 16:46:02
+Total task time: 257.006321192 seconds
+Total correction time: 105.49156570400001 seconds
+Total correction distance: 2.167031048838187 meters
+Total Lio correction distance: 0.5285159029248511 meters
+Correction time as a percentage from total:  (41.046292252551694%)
+
+Date and time: 2024-08-22 16:55:05
+Total task time: 290.218793631 seconds
+Total correction time: 50.43479609600001 seconds
+Total correction distance: 0.9234020344569924 meters
+Total Lio correction distance: 0.07893388627883159 meters
+Correction time as a percentage from total:  (17.378197829643508%)
+
+##############################################################
+
+Date and time: 2024-08-23 14:22:18
+Total task time: 359.059866905 seconds
+Total correction time: 107.55567074000002 seconds
+Total correction distance: 1.4771210013880367 meters
+Total Lio correction distance: 2.0868275265437344 meters
+Correction time as a percentage from total:  (29.954801595372142%)
+
+Date and time: 2024-08-23 14:27:52
+Total task time: 198.917998552 seconds
+Total correction time: 30.641287803999997 seconds
+Total correction distance: 0.4897764875296218 meters
+Total Lio correction distance: 0.7993691257391096 meters
+Correction time as a percentage from total:  (15.403979542851637%)
+
+Date and time: 2024-08-23 14:35:56
+Total task time: 249.252187253 seconds
+Total correction time: 124.39487003900001 seconds
+Total correction distance: 1.5453147204951776 meters
+Total Lio correction distance: 2.37302340262861 meters
+Correction time as a percentage from total:  (49.90723307584648%)
+
+Date and time: 2024-08-23 14:38:29
+Total task time: 116.488728285 seconds
+Total correction time: 48.894667864999995 seconds
+Total correction distance: 0.3749429885411689 meters
+Total Lio correction distance: 0.5543989850028928 meters
+Correction time as a percentage from total:  (41.97373306829727%)
+
+Date and time: 2024-08-23 14:49:51
+Total task time: 480.068868399 seconds
+Total correction time: 140.253495455 seconds
+Total correction distance: 2.000674054970061 meters
+Total Lio correction distance: 2.8414293605075893 meters
+Correction time as a percentage from total:  (29.215286532271247%)
+
+
+#############################################################
+
+
+
+Date and time: 2024-08-26 16:15:30
+Total task time: 480.008863688 seconds
+Total correction time: 130.62360692200002 seconds
+Total correction distance: 2.839711197143075 meters
+Total Lio correction distance: 3.4383855315526244 meters
+Correction time as a percentage from total:  (27.21274893100803%)
+
+Date and time: 2024-08-26 16:28:58
+Total task time: 388.677258253 seconds
+Total correction time: 155.76987862399997 seconds
+Total correction distance: 2.5607494141474754 meters
+Total Lio correction distance: 3.7250215222319283 meters
+Correction time as a percentage from total:  (40.076921228719115%)
+
+Date and time: 2024-08-26 16:41:39
+Total task time: 480.077710152 seconds
+Total correction time: 222.215338943 seconds
+Total correction distance: 4.115235725622333 meters
+Total Lio correction distance: 5.52635567714092 meters
+Correction time as a percentage from total:  (46.287368533032534%)
+
+
+Date and time: 2024-08-26 16:55:34
+Total task time: 480.203504562 seconds
+Total correction time: 103.82308555500003 seconds
+Total correction distance: 1.5261845557164202 meters
+Total Lio correction distance: 3.192008676266862 meters
+Correction time as a percentage from total:  (21.6206430333528%)
+
+
+#############################################################
+
+Date and time: 2024-08-27 16:09:44
+Total task time: 36.579442501 seconds
+Total correction time: 8.595817804 seconds
+Total correction distance: 0.18072686196716517 meters
+Total Lio correction distance: 0.20065829407328567 meters
+Correction time as a percentage from total:  (23.49903994235289%)
+
+Date and time: 2024-08-27 16:11:40
+Total task time: 84.789329767 seconds
+Total correction time: 9.201902149999999 seconds
+Total correction distance: 0.22069493848488234 meters
+Total Lio correction distance: 0.34759469107692065 meters
+Correction time as a percentage from total:  (10.85266527673554%)
+
+Date and time: 2024-08-27 16:13:00
+Total task time: 48.232790231 seconds
+Total correction time: 20.439389226999996 seconds
+Total correction distance: 0.4627688794737863 meters
+Total Lio correction distance: 0.5841947233997998 meters
+Correction time as a percentage from total:  (42.37654327918866%)
+
+Date and time: 2024-08-27 16:17:43
+Total task time: 217.57998228 seconds
+Total correction time: 30.158263684 seconds
+Total correction distance: 0.6870021110597091 meters
+Total Lio correction distance: 0.9784953360591813 meters
+Correction time as a percentage from total:  (13.860771274992494%)
+
+Date and time: 2024-08-27 16:27:24
+Total task time: 480.014597416 seconds
+Total correction time: 299.50769568000004 seconds
+Total correction distance: 3.4784322439471977 meters
+Total Lio correction distance: 3.936157536483197 meters
+Correction time as a percentage from total:  (62.39553907158256%)
+
+Date and time: 2024-08-27 16:37:31
+Total task time: 480.153256416 seconds
+Total correction time: 195.781969075 seconds
+Total correction distance: 2.832824269437329 meters
+Total Lio correction distance: 3.7560803104312224 meters
+Correction time as a percentage from total:  (40.77489144536312%)
+
+####################################################################
+
+Date and time: 2024-08-28 15:36:17
+Total task time: 309.289164305 seconds
+Total correction time: 70.763602971 seconds
+Total correction distance: 0.7382915897278943 meters
+Total Lio correction distance: 0.8187426119555496 meters
+Correction time as a percentage from total:  (22.87943165743037%)
+
+Date and time: 2024-08-28 15:44:13
+Total task time: 271.66806078 seconds
+Total correction time: 58.694233900000015 seconds
+Total correction distance: 0.9928785316722404 meters
+Total Lio correction distance: 1.1281412029642126 meters
+Correction time as a percentage from total:  (21.605128601234906%)
+
+Date and time: 2024-08-28 15:53:03
+Total task time: 300.224192143 seconds
+Total correction time: 131.34330011000003 seconds
+Total correction distance: 2.2481628198043757 meters
+Total Lio correction distance: 2.7324019682081726 meters
+Correction time as a percentage from total:  (43.748406539949926%)
+
+Date and time: 2024-08-28 16:03:59
+Total task time: 480.035575628 seconds
+Total correction time: 134.94091511599996 seconds
+Total correction distance: 1.4892318868235839 meters
+Total Lio correction distance: 2.4175557536627297 meters
+Correction time as a percentage from total:  (28.11060720644826%)
+
+##################################################################
+
+Date and time: 2024-08-29 12:24:38
+Total task time: 63.206400872 seconds
+Total correction time: 18.944159508 seconds
+Total correction distance: 0.3975277160107768 meters
+Total Lio correction distance: 0.46873954354417036 meters
+Correction time as a percentage from total:  (29.971900387690216%)
+
+Date and time: 2024-08-29 12:30:22
+Total task time: 268.891354084 seconds
+Total correction time: 90.57950424799999 seconds
+Total correction distance: 1.4153440918638098 meters
+Total Lio correction distance: 1.705343279789718 meters
+Correction time as a percentage from total:  (33.6862836503488%)
+
+Date and time: 2024-08-29 12:37:54
+Total task time: 292.537887812 seconds
+Total correction time: 93.205563786 seconds
+Total correction distance: 1.6392112960011898 meters
+Total Lio correction distance: 2.594326682467089 meters
+Correction time as a percentage from total:  (31.86102302273363%)
+
+Date and time: 2024-08-29 12:46:39
+Total task time: 386.170903921 seconds
+Total correction time: 70.644543886 seconds
+Total correction distance: 0.6776333326387193 meters
+Total Lio correction distance: 0.9626272157331321 meters
+Correction time as a percentage from total:  (18.29359570301856%)
+
+####################################################################  
+
+
+
+Date and time: 2024-08-29 15:48:48
+Total task time: 492.998339891 seconds
+Total correction time: 75.79244494499999 seconds
+Total correction distance: 1.3526049443606694 meters
+Total Lio correction distance: 2.4854916986890356 meters
+Correction time as a percentage from total:  (15.373772853222468%)
+
+Date and time: 2024-08-29 15:57:04
+Total task time: 323.861617088 seconds
+Total correction time: 55.553018327000004 seconds
+Total correction distance: 1.095777850370478 meters
+Total Lio correction distance: 0.8394711000496483 meters
+Correction time as a percentage from total:  (17.153319626606166%)
+
+Date and time: 2024-08-29 16:09:08
+Total task time: 480.128388643 seconds
+Total correction time: 250.894039868 seconds
+Total correction distance: 3.6444026762784225 meters
+Total Lio correction distance: 3.801489055988656 meters
+Correction time as a percentage from total:  (52.255614498677886%)
+
+Date and time: 2024-08-29 16:19:45
+Total task time: 480.10163641 seconds
+Total correction time: 118.67468881700002 seconds
+Total correction distance: 1.8601024626007054 meters
+Total Lio correction distance: 2.639826409844438 meters
+Correction time as a percentage from total:  (24.71865951226492%)
+
+#################################################################
+
+Date and time: 2024-08-30 11:19:10
+Total task time: 69.932075501 seconds
+Total correction time: 29.130576848999993 seconds
+Total correction distance: 0.37429999373295647 meters
+Total Lio correction distance: 0.31509892508164333 meters
+Correction time as a percentage from total:  (41.65553022744683%)
+
+Date and time: 2024-08-30 11:24:03
+Total task time: 219.049283981 seconds
+Total correction time: 38.156094315999994 seconds
+Total correction distance: 0.7688611331005364 meters
+Total Lio correction distance: 1.035747710850362 meters
+Correction time as a percentage from total:  (17.418954137877755%)
+
+Date and time: 2024-08-30 11:30:54
+Total task time: 301.165050984 seconds
+Total correction time: 131.46687078099998 seconds
+Total correction distance: 1.5877829832808696 meters
+Total Lio correction distance: 2.235650858444549 meters
+Correction time as a percentage from total:  (43.65276460580561%)
+
+Date and time: 2024-08-30 11:38:05
+Total task time: 325.232461214 seconds
+Total correction time: 90.39439225900001 seconds
+Total correction distance: 1.0260393174151938 meters
+Total Lio correction distance: 1.4029732071354533 meters
+Correction time as a percentage from total:  (27.793779231502146%)
+
+#################################################################
+
+Date and time: 2024-09-02 10:10:39
+Total task time: 385.010758639 seconds
+Total correction time: 45.169483423 seconds
+Total correction distance: 0.7443729689165757 meters
+Total Lio correction distance: 0.8271253642189662 meters
+Correction time as a percentage from total:  (11.73200551139729%)
+
+Date and time: 2024-09-02 10:15:44
+Total task time: 207.277765512 seconds
+Total correction time: 35.382857797 seconds
+Total correction distance: 0.6416128229322426 meters
+Total Lio correction distance: 0.7937062270988359 meters
+Correction time as a percentage from total:  (17.07026207543306%)
+
+Date and time: 2024-09-02 10:25:23
+Total task time: 324.40696311 seconds
+Total correction time: 152.467154504 seconds
+Total correction distance: 1.703581082886134 meters
+Total Lio correction distance: 1.8538510025485684 meters
+Correction time as a percentage from total:  (46.998730558166656%)
+
+Date and time: 2024-09-02 10:34:07
+Total task time: 356.206728935 seconds
+Total correction time: 38.473647830000004 seconds
+Total correction distance: 0.8032405610477262 meters
+Total Lio correction distance: 0.9337294017748973 meters
+Correction time as a percentage from total:  (10.800932353251701%)
+
+####################################################################
+
+Date and time: 2024-09-02 15:04:40
+Total task time: 139.027627706 seconds
+Total correction time: 73.35028362099997 seconds
+Total correction distance: 0.8031625230682585 meters
+Total Lio correction distance: 0.8237052680660679 meters
+Correction time as a percentage from total:  (52.759501712935005%)
+
+Date and time: 2024-09-02 15:10:10
+Total task time: 250.972497224 seconds
+Total correction time: 60.07647729499998 seconds
+Total correction distance: 1.205486912653031 meters
+Total Lio correction distance: 1.268480064692695 meters
+Correction time as a percentage from total:  (23.937474408353214%)
+
+
+Date and time: 2024-09-02 15:32:37
+Total task time: 282.435730695 seconds
+Total correction time: 122.210284712 seconds
+Total correction distance: 1.6737667334589992 meters
+Total Lio correction distance: 1.9151637834565247 meters
+Correction time as a percentage from total:  (43.27012181188005%)
+
+Date and time: 2024-09-02 15:39:00
+Total task time: 278.796025991 seconds
+Total correction time: 86.702953339 seconds
+Total correction distance: 1.0291523725266545 meters
+Total Lio correction distance: 1.2278680274910112 meters
+Correction time as a percentage from total:  (31.099063564772226%)
+
+
+####################################################################
+
+
+
+Date and time: 2024-09-03 10:41:45
+Total task time: 324.255957603 seconds
+Total correction time: 57.62470626199999 seconds
+Total correction distance: 0.9725505765512112 meters
+Total Lio correction distance: 1.5661138832807784 meters
+Correction time as a percentage from total:  (17.771363921261333%)
+
+Date and time: 2024-09-03 10:51:27
+Total task time: 480.00854659 seconds
+Total correction time: 252.03257727799996 seconds
+Total correction distance: 2.9475850657230516 meters
+Total Lio correction distance: 4.002334155599557 meters
+Correction time as a percentage from total:  (52.50585204543743%)
+
+Date and time: 2024-09-03 11:01:40
+Total task time: 406.408955335 seconds
+Total correction time: 167.515262362 seconds
+Total correction distance: 2.627020877179497 meters
+Total Lio correction distance: 2.652125149745203 meters
+Correction time as a percentage from total:  (41.21839840461152%)
+
+Date and time: 2024-09-03 11:12:27
+Total task time: 480.091293573 seconds
+Total correction time: 217.02989411899998 seconds
+Total correction distance: 2.473663196210536 meters
+Total Lio correction distance: 2.862792798270014 meters
+Correction time as a percentage from total:  (45.20596332913912%)
+
+
+#######################################################################
+
+Date and time: 2024-09-04 11:28:35
+Total task time: 216.238212585 seconds
+Total correction time: 70.71136117500001 seconds
+Total correction distance: 1.1465132890419325 meters
+Total Lio correction distance: 1.3878931055816042 meters
+Correction time as a percentage from total:  (32.70067779865894%)
+
+Date and time: 2024-09-04 11:33:39
+Total task time: 200.438212634 seconds
+Total correction time: 34.239080191 seconds
+Total correction distance: 0.653153914334621 meters
+Total Lio correction distance: 0.7433896615887247 meters
+Correction time as a percentage from total:  (17.082112108792614%)
+
+Date and time: 2024-09-04 11:43:58
+Total task time: 476.777187586 seconds
+Total correction time: 228.71186471699997 seconds
+Total correction distance: 4.612502154537718 meters
+Total Lio correction distance: 5.859031970903221 meters
+Correction time as a percentage from total:  (47.970387567199914%)
+
+Date and time: 2024-09-04 11:52:08
+Total task time: 364.331385612 seconds
+Total correction time: 140.646510837 seconds
+Total correction distance: 1.0699780556167713 meters
+Total Lio correction distance: 2.0774791042676206 meters
+Correction time as a percentage from total:  (38.60400624029233%)
+
+#################################################################
+
+
+
+Date and time: 2024-09-04 15:12:53
+Total task time: 384.510885477 seconds
+Total correction time: 55.05182981800001 seconds
+Total correction distance: 1.0654556235029478 meters
+Total Lio correction distance: 1.0494161191200373 meters
+Correction time as a percentage from total:  (14.317365748880212%)
+
+Date and time: 2024-09-04 15:19:17
+Total task time: 250.853948355 seconds
+Total correction time: 47.17378830999999 seconds
+Total correction distance: 0.7846220494227645 meters
+Total Lio correction distance: 1.2333380990949423 meters
+Correction time as a percentage from total:  (18.805280371047317%)
+
+
+Date and time: 2024-09-04 15:41:13
+Total task time: 480.062342167 seconds
+Total correction time: 231.18640613600004 seconds
+Total correction distance: 5.41492487474293 meters
+Total Lio correction distance: 5.280509396958394 meters
+Correction time as a percentage from total:  (48.15757992856204%)
+
+Date and time: 2024-09-04 15:58:01
+Total task time: 480.037720442 seconds
+Total correction time: 140.37515640000004 seconds
+Total correction distance: 2.252630724253363 meters
+Total Lio correction distance: 2.29972256036195 meters
+Correction time as a percentage from total:  (29.242526247884864%)
+
+
+#########################################################################
+
+Date and time: 2024-09-05 11:27:51
+Total task time: 323.55838418 seconds
+Total correction time: 132.224652532 seconds
+Total correction distance: 2.0136326824240314 meters
+Total Lio correction distance: 2.9273067083135045 meters
+Correction time as a percentage from total:  (40.86577847985592%)
+
+Date and time: 2024-09-05 11:33:34
+Total task time: 226.246592998 seconds
+Total correction time: 66.610243317 seconds
+Total correction distance: 1.3027899129374045 meters
+Total Lio correction distance: 1.4580838965888363 meters
+Correction time as a percentage from total:  (29.441434867303755%)
+
+Date and time: 2024-09-05 11:43:55
+Total task time: 480.0118711 seconds
+Total correction time: 235.21875619499997 seconds
+Total correction distance: 4.959265311383705 meters
+Total Lio correction distance: 5.248532715536191 meters
+Correction time as a percentage from total:  (49.00269563249974%)
+
+Date and time: 2024-09-05 11:55:21
+Total task time: 480.187984705 seconds
+Total correction time: 158.663014176 seconds
+Total correction distance: 1.6908972574415204 meters
+Total Lio correction distance: 2.2232567578895233 meters
+Correction time as a percentage from total:  (33.041854279938605%)
+
+#############################################################################
+
+
+
+Date and time: 2024-09-10 14:19:45
+Total task time: 480.145341158 seconds
+Total correction time: 100.49064063600002 seconds
+Total correction distance: 1.8904023986789182 meters
+Total Lio correction distance: 2.3671332569426466 meters
+Correction time as a percentage from total:  (20.929212890755064%)
+
+Date and time: 2024-09-10 14:26:00
+Total task time: 248.701131344 seconds
+Total correction time: 66.30217885999998 seconds
+Total correction distance: 1.3945663233950334 meters
+Total Lio correction distance: 1.693821992269839 meters
+Correction time as a percentage from total:  (26.65937967459091%)
+
+Date and time: 2024-09-10 14:35:36
+Total task time: 343.099384308 seconds
+Total correction time: 160.78768419799997 seconds
+Total correction distance: 3.6782949390205717 meters
+Total Lio correction distance: 3.7660073811868484 meters
+Correction time as a percentage from total:  (46.863297211183855%)
+
+Date and time: 2024-09-10 14:46:53
+Total task time: 480.067280054 seconds
+Total correction time: 146.92685889700005 seconds
+Total correction distance: 2.4190199709228772 meters
+Total Lio correction distance: 2.9789778033412158 meters
+Correction time as a percentage from total:  (30.605472399717204%)
+
+#################################################################################
+
+Date and time: 2024-09-17 11:31:42
+Total task time: 289.142089844 seconds
+Total correction time: 102.12347555199997 seconds
+Total correction distance: 1.6077396880425707 meters
+Total Lio correction distance: 2.1474249477700535 meters
+Correction time as a percentage from total:  (35.319477564507594%)
+
+Date and time: 2024-09-17 11:36:06
+Total task time: 211.341566801 seconds
+Total correction time: 49.911307810999986 seconds
+Total correction distance: 0.8912756206478641 meters
+Total Lio correction distance: 1.0858208853318505 meters
+Correction time as a percentage from total:  (23.61641799409799%)
+
+Date and time: 2024-09-17 11:45:00
+Total task time: 456.011986256 seconds
+Total correction time: 246.672347548 seconds
+Total correction distance: 3.7274978259117977 meters
+Total Lio correction distance: 5.680340183639141 meters
+Correction time as a percentage from total:  (54.09339117887154%)
+
+
+Date and time: 2024-09-17 12:00:55
+Total task time: 480.063780308 seconds
+Total correction time: 165.12153148300004 seconds
+Total correction distance: 1.8174077845805912 meters
+Total Lio correction distance: 2.5406645230470426 meters
+Correction time as a percentage from total:  (34.39574870177899%)
+
+##################################################################################
+
+Date and time: 2024-09-26 10:22:52
+Total task time: 414.826309919 seconds
+Total correction time: 73.558604957 seconds
+Total correction distance: 1.357133242047869 meters
+Total Lio correction distance: 1.4304085551491594 meters
+Correction time as a percentage from total:  (17.732386591237002%)
+
+Date and time: 2024-09-26 10:27:59
+Total task time: 194.52324462 seconds
+Total correction time: 31.750338318999997 seconds
+Total correction distance: 0.518283042431551 meters
+Total Lio correction distance: 0.6820250692576144 meters
+Correction time as a percentage from total:  (16.32213074639182%)
+
+Date and time: 2024-09-26 10:40:53
+Total task time: 480.094726801 seconds
+Total correction time: 148.95414447800005 seconds
+Total correction distance: 3.3679389303266225 meters
+Total Lio correction distance: 3.036035801032294 meters
+Correction time as a percentage from total:  (31.025990531185688%)
+
+Date and time: 2024-09-26 10:54:13
+Total task time: 480.074384451 seconds
+Total correction time: 121.59062003700001 seconds
+Total correction distance: 2.211555717126647 meters
+Total Lio correction distance: 2.498027779370958 meters
+Correction time as a percentage from total:  (25.32745423941911%)
+
+#################################################################################3
+
+Date and time: 2024-09-26 15:22:02
+Total task time: 145.77095747 seconds
+Total correction time: 45.320362091999996 seconds
+Total correction distance: 1.0565860390671253 meters
+Total Lio correction distance: 1.1729004255399678 meters
+Correction time as a percentage from total:  (31.090117591720578%)
+
+Date and time: 2024-09-26 15:26:31
+Total task time: 213.364401579 seconds
+Total correction time: 42.416648391 seconds
+Total correction distance: 0.8431592215538288 meters
+Total Lio correction distance: 0.9744109119110806 meters
+Correction time as a percentage from total:  (19.879908774423587%)
+
+Date and time: 2024-09-26 15:33:41
+Total task time: 316.494229793 seconds
+Total correction time: 111.252335073 seconds
+Total correction distance: 2.6279940449572483 meters
+Total Lio correction distance: 2.4328444734675334 meters
+Correction time as a percentage from total:  (35.151457625550876%)
+
+Date and time: 2024-09-26 15:42:29
+Total task time: 423.375050545 seconds
+Total correction time: 84.318497179 seconds
+Total correction distance: 1.1023470938757163 meters
+Total Lio correction distance: 1.311117561084135 meters
+Correction time as a percentage from total:  (19.915792645423704%)
+
+#################################################################################
+

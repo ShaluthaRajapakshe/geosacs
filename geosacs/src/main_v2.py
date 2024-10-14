@@ -14,6 +14,7 @@ from reproduce import reproduce
 import tf
 import tf2_ros
 
+import datetime
 
 
 class MainNode(): 
@@ -56,6 +57,9 @@ class MainNode():
 
         self.out_of_canal = False
 
+        self.out_of_canal_number = 0
+        self.previous_out_of_canal = False
+
 
         self.prev_circle_type = None
         self.prev_xy_flag = None
@@ -95,17 +99,17 @@ class MainNode():
         # Need to decide the x_dir_mul w.r.t the these two axes" Note: the values will change based on whether it is front or rear of the robot
         
 
-        # ## For front control  #object relocation task
-        # self.control_front = True
-        # self.control_rear = False
-        # self.control_left = False
-
-        ## For rear control  #painting task
-        self.control_front = False
-        self.control_rear = True
+        # # # # For front control  #object relocation task
+        self.control_front = True
+        self.control_rear = False
         self.control_left = False
 
-        # ### For left control  #laundry task
+        # # For rear control  #painting task
+        # self.control_front = False
+        # self.control_rear = True
+        # self.control_left = False
+
+        # For left control  #laundry task
         # self.control_front = False
         # self.control_rear = False
         # self.control_left = True
@@ -135,7 +139,7 @@ class MainNode():
         self.x_dir_mul = -1 ## This need to be change based on how the joy will give values w.r.t the above two axes (eg: if when we press right, and the joy x will gibe negative values, then this should be -1, else 1)
         self.y_dir_mul = 1 #1 because when w epress up (according the above define axes, the values will give positive values)
 
-        # ## For Sony PS% Access controler
+        ## For Sony PS5 Access controler
         # self.x_dir_mul = -1 ## This need to be change based on how the joy will give values w.r.t the above two axes (eg: if when we press right, and the joy x will gibe negative values, then this should be -1, else 1)
         # self.y_dir_mul = -1 #1 because when w epress up (according the above define axes, the values will give positive values)
         
@@ -357,9 +361,15 @@ class MainNode():
     #             self.joy_x = self.front_config[0]
     #             self.joy_y = self.front_config[1]
 
-    #         else:
+    #         elif self.control_rear:
     #             self.joy_x = self.rear_config[0]
     #             self.joy_y = self.rear_config[1]
+
+    #         elif self.control_left:
+    #             # print("#############IN LEFT")
+    #             self.joy_x = self.left_config[0]
+    #             self.joy_y = self.left_config[1]
+                
                 
     #         ##sony access controller
     #         self.y_corr = self.y_dir_mul * msg.axes[0]/150
@@ -375,18 +385,19 @@ class MainNode():
     #     self.previous_buttons = current_buttons
 
 
-    #     if changed_buttons[1] != 0:
+    #     if changed_buttons[9] != 0:
     #         # print("CHANGE DIRECTION")
     #         self.change_direction_request = True
     #         return
-    #     if changed_buttons[9] != 0:
+    #     if changed_buttons[2] != 0:
     #         # print("STOP")
     #         self.terminate = True
     #     if changed_buttons[12] != 0:
     #         # print("START")
     #         self.start = True
-    #     if changed_buttons[2] != 0:
+    #     if changed_buttons[1] != 0:
     #         self.gripper_state_pub.publish("toggle_gripper")
+    #         self.gripper_change_request = True
 
 
 
@@ -1261,7 +1272,7 @@ class MainNode():
 
     def correct_traj(self, s_model, i, PcurrG, QcurrG, 
                      q_weight, current_idx, numRepro, starting, crossSectionType, strategy, direction, trajectory_xyz, trajectory_q, 
-                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance):
+                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance, start_task_time):
         rospy.loginfo(f"  *Correction request at i={i}*")
         self.events_pub.publish(f"Correction request at i={i}")
         # Truncate model
@@ -1314,6 +1325,10 @@ class MainNode():
             # print("x and y axes", x_corr_axes[i,:], y_corr_axes[i,:])
             # print("######### x and y after mult ", self.x_corr*x_corr_axes[i,:], self.y_corr*y_corr_axes[i,:])
 
+            running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+            if running_task_time >= 480:
+                self.terminate = True
+                break
 
 
             # ##### Test code #####
@@ -1363,17 +1378,42 @@ class MainNode():
             # ##Mofidy the below code so that only if a user put too much of an effort only they will be given the chance to go beyond the circle
             distance_from_center = np.linalg.norm(AcurrG_corr)
 
-            elastic_constant = 0.8
+            elastic_constant = 0.9
             if distance_from_center > Rc[0]:
+
+                if not self.previous_out_of_canal:
+                    self.out_of_canal_number += 1
+
                 self.out_of_canal = True
+                self.previous_out_of_canal = True
                 elastic_extension = distance_from_center - Rc[0]
+
+                # Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
+                # AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+                # AcurrG_corr = AcurrG_corr * Rc_adjusted / distance_from_center  #vectorize
+
+                # elastic_extension = distance_from_center - Rc[0]
+                # scaling_ratio = 1 + elastic_constant * (elastic_extension / distance_from_center)
+                # Rc_adjusted = Rc[0] * scaling_ratio
+
+                # AcurrG_corr *= scaling_ratio
+
                 Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
-                AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
-                AcurrG_corr = AcurrG_corr * Rc_adjusted / distance_from_center  #vectorize
+    
+                # Limit the correction to stay within Rc_adjusted
+                AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center
+                #Usually when going out, d increase, however, the new rc also get increase but in a smaller 
+                # proportion, so the resistent will get increased
+
+
+                
+
+
                 Ratio = 1.0
                 print("Outside", Rc_adjusted)
             else:
                 self.out_of_canal = False
+                self.previous_out_of_canal = False
                 Ratio = distance_from_center / Rc[0]
 
             ################################################################
@@ -1400,7 +1440,7 @@ class MainNode():
             end_position_lio = np.array([[transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z]])
             # end_position_lio = np.array([[self.lio_pose.pose.position.x, self.lio_pose.pose.position.y, self.lio_pose.pose.position.z]])
             
-            lio_correction_distance = np.linalg.norm(start_position_lio-end_position_lio)
+            lio_correction_distance = np.linalg.norm(end_position_lio - start_position_lio)
             lio_cumulative_correction_distance += lio_correction_distance
             rospy.loginfo(f"    Lio correction distance: {lio_correction_distance}")
             self.events_pub.publish(f"Lio correction distance: {lio_correction_distance}")
@@ -1424,13 +1464,13 @@ class MainNode():
         # return
         self.correction = False
 
-        return trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance
+        return trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance
 
 
 
     def correction_at_ends(self, s_model, PcurrG, QcurrG, t,
                      q_weight, current_idx, 
-                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance):
+                     cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance, start_task_time):
         
         ## Because of this function, the robot might stop in the middle, untill the user presses the Y button
  
@@ -1478,6 +1518,11 @@ class MainNode():
             # if from_front:
             #     raw_joystickDisplacement = -self.x_corr*y_corr_axes[-1,:] + self.y_corr*-x_corr_axes[-1,:]
 
+            running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+            if running_task_time >= 480:
+                self.terminate = True
+                break
+
             aligned_axis_x, aligned_axis_y, direction_x, direction_y = self.map_input(x_corr_axes[-1,:], y_corr_axes[-1,:], joy_x, joy_y, s_model["eT"][-1,:], directrix_point)
 
             aligned_axis_x = np.array(aligned_axis_x)
@@ -1515,14 +1560,24 @@ class MainNode():
 
             elastic_constant = 0.8
             if distance_from_center > Rc[0]:
+
+                if not self.previous_out_of_canal:
+                    self.out_of_canal_number += 1
+
                 self.out_of_canal = True
+                self.previous_out_of_canal = True
+
                 elastic_extension = distance_from_center - Rc[0]
+
+
                 Rc_adjusted = Rc[0] + elastic_constant * elastic_extension
                 AcurrG_corr = Rc_adjusted * AcurrG_corr / distance_from_center  #vectorize
+                
                 Ratio = 1.0
                 print("Outside", Rc_adjusted)
             else:
                 self.out_of_canal = False
+                self.previous_out_of_canal = False
                 Ratio = distance_from_center / Rc[0]
 
             ################################################################
@@ -1897,17 +1952,20 @@ class MainNode():
         # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
 
         rospy.loginfo("Loading GC visualisation...")
-        self.visualise_gc(model["GC"])
+        # self.visualise_gc(model["GC"][::3,:,:])
         # self.visualise_gc(model["GC"][120:220,:,:])
         # self.visualise_gc(model["GC"][60:80,:,:])
         
-        # self.visualise_gc(model["GC"][-50:,:,:])
+        # self.visualise_gc(model["GC"][-40:-30:2,:,:])
+        # self.visualise_gc(model["GC"][50:150:2,:,:])
         # self.visualise_gc(model["GC"][:50,:,:])
+        self.visualise_gc(model["GC"])
         
         rospy.loginfo("Loading directrix visualisation...")
         # self.visualise_directrix(model["directrix"], model["q"])
 
         rospy.loginfo("Loading correction axes visualisation...")
+        # self.visualise_correction_axes(model["x_corr_axes"][:,2], model["y_corr_axes"][:,2], model["directrix"][:,2])
         # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
 
         # rospy.sleep(5)
@@ -2029,6 +2087,8 @@ class MainNode():
                 rospy.sleep(0.1)
                 first = False
 
+
+            
             
             rospy.loginfo("Running trajectory ...")
 
@@ -2040,6 +2100,10 @@ class MainNode():
 
                 # directrix_point = s_model["directrix"][i,:]
                 # print("############ current directrix_point", directrix_point)
+
+                running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+                if running_task_time >= 480:
+                    self.terminate = True
                 
 
                 if self.terminate:
@@ -2108,11 +2172,11 @@ class MainNode():
                 if self.correction and i != nb_points-1:
                     # print("########### current idx", current_idx)
                     
-                    trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
+                    trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
                                                                                                             current_idx, numRepro, starting, 
                                                                                                             crossSectionType, strategy, direction, 
                                                                                                         trajectory_xyz, trajectory_q, cumulative_correction_time, cumulative_correction_distance,
-                                                                                                        lio_cumulative_correction_distance)
+                                                                                                        lio_cumulative_correction_distance, start_task_time)
                 self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
                 AcurrG = PcurrG - model["directrix"][current_idx,:]
                 Ratio = np.array([np.sqrt(AcurrG[0]**2 + AcurrG[1]**2 + AcurrG[2]**2) / model["Rc"][current_idx]])
@@ -2127,6 +2191,10 @@ class MainNode():
 
                 while not self.change_direction_request:
 
+                    running_task_time = int((rospy.Time.now() - start_task_time).to_sec())
+                    if running_task_time >= 480:
+                        self.terminate = True
+
                     # q_weight = q_weights[current_idx,:]  #q_weights will not change anywhere
                     # QcurrG = trajectory_q[current_idx,:] #trajector_q will not change anywhere
 
@@ -2138,7 +2206,7 @@ class MainNode():
                     if self.correction:  ## Need to give the previous QcurrG and q_weight
 
                         PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance, lio_cumulative_correction_distance = self.correction_at_ends(s_model,PcurrG, QcurrG, t, q_weight, current_idx, cumulative_correction_time,
-                                                                                                            cumulative_correction_distance, lio_cumulative_correction_distance)
+                                                                                                            cumulative_correction_distance, lio_cumulative_correction_distance, start_task_time)
                 
                         # trajectory_xyz, trajectory_q, PcurrG, QcurrG, q_weight, Ratio, cumulative_correction_time, cumulative_correction_distance = self.correct_traj(s_model,i, PcurrG, QcurrG, q_weight, 
                         #                                                                                     current_idx, numRepro, starting, 
@@ -2200,13 +2268,20 @@ class MainNode():
 
                 file_path = '/home/shalutha/geosacs_ws/src/geosacs/geosacs/data/experiment_data_geosacsv2.txt'
 
+                # Current date and time
+                now = datetime.datetime.now()
+
                 # Write the values to the file
                 with open(file_path, 'a') as file:
+                    file.write(f"Date and time: {now.strftime('%Y-%m-%d %H:%M:%S')}\n")
                     file.write(f"Total task time: {task_duration} seconds\n")
                     file.write(f"Total correction time: {cumulative_correction_time} seconds\n")
                     file.write(f"Total correction distance: {cumulative_correction_distance} meters\n")
                     file.write(f"Total Lio correction distance: {lio_cumulative_correction_distance} meters\n")
                     file.write(f"Correction time as a percentage from total:  ({(cumulative_correction_time/task_duration)*100}%)\n")
+                    file.write(f"Number of times went outside of the canal:  {self.out_of_canal_number} \n")
+                
+                    
                     file.write("\n")  # Adding a newline for separation between entries
                 
                 # self.events_pub.publish(f"Total task time: {task_duration} seconds")

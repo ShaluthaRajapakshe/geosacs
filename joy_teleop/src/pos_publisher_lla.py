@@ -77,7 +77,8 @@ class Model(object):
         if task == "marshmellow":
             # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_updatedv7', map_location='cpu')
             # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry_18th', map_location='cpu')
-            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_simple4', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_simple4', map_location='cpu')
+            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_test11', map_location='cpu')
         else:
             model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry', map_location='cpu')
         
@@ -173,7 +174,9 @@ class PoseControllerNode():
             # self.initial_joint_positions = [-1.3858905781607287, 0.7159300780040135, 0.4632712412584416, -1.2268456073293923, 1.6233500351764731, -0.03530500317349961]
             # self.initial_joint_positions = [-1.410956, 0.383656, 1.350812, 1.518535, -1.492571, -2.692524] #this was the workig one
             # self.initial_joint_positions = [-1.72873,-0.52013,1.72421,2.66727,-0.71898,-2.68907]
-            self.initial_joint_positions =  [-1.565891, -0.287631, 1.032714, 0.026283, -0.068027, 0.056256]
+            # self.initial_joint_positions =  [-1.565891, -0.287631, 1.032714, 0.026283, -0.068027, 0.056256]
+            # self.initial_joint_positions = [-1.680594, 0.199952, 1.260681, -0.43824, 0.834903, -0.27658]
+            self.initial_joint_positions = [-1.415177, 0.452273, 0.975495, -1.505162, 1.719274, -0.000463]
         else:
             ### Laundry ####
             self.initial_joint_positions = [-1.1657304272784037, 1.0865569625827096, 0.7532967406451435, -0.9674269093442143, 1.6453289999999998, 0.3506041628038431]

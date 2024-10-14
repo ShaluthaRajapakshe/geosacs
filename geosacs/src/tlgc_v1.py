@@ -760,14 +760,14 @@ class TLGCNode():
         model["q_weights"] = q_weights
 
         self.clear_viz_pub.publish("all")
-        self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
-        self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
-        self.visualise_gc(model["GC"])
-        self.visualise_directrix(model["directrix"], model["q"])
+        # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+        # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+        # self.visualise_gc(model["GC"])
+        # self.visualise_directrix(model["directrix"], model["q"])
         # self.visualise_TNB_axes(model["eT"], model["directrix"], "eT")
         # self.visualise_TNB_axes(model["eN"], model["directrix"], "eN")
         # self.visualise_TNB_axes(model["eB"], model["directrix"], "eB")
-        self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
+        # self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
 
         crop = True
 
@@ -782,6 +782,29 @@ class TLGCNode():
 
             x_corr_axes, y_corr_axes = self.get_correction_axes(xyz_model)
 
+
+            # ######    Only for the painting task  ######
+
+            # for i in range (-3, 0, 1):
+            #     global_z = [0,0,1]
+            #     eT_last = model["eT"][i,:]
+            #     projected_eT_last = self.project_onto_plane(eT_last, global_z)
+            #     projected_eT_last = projected_eT_last/np.linalg.norm(projected_eT_last)
+            #     print("eT_last and proj eT_last", eT_last, projected_eT_last)
+
+            #     model["eT"][i,:] = projected_eT_last
+
+            #     x_corr_last = model["x_corr_axes"][i,:]
+            #     projected_x_corr_last = self.project_onto_plane(x_corr_last, projected_eT_last)
+
+            #     y_corr_last = model["y_corr_axes"][i,:]
+            #     projected_y_corr_last = self.project_onto_plane(y_corr_last, projected_eT_last)
+
+            #     x_corr_axes[i] = projected_x_corr_last/np.linalg.norm(projected_x_corr_last)
+            #     y_corr_axes[i] = projected_y_corr_last/np.linalg.norm(projected_y_corr_last)
+
+            # ###############################################
+
             # x_corr_axes[-1] = [0,0,1]
             # y_corr_axes[-1] = [0,-1,0]
 
@@ -795,8 +818,8 @@ class TLGCNode():
             model["q_weights"] = q_weights
 
             self.clear_viz_pub.publish("all")
-            self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
-            self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
+            # self.visualise_demos(raw_demos_xyz, raw_demos_q, "raw" )
+            # self.visualise_demos(processed_demos_xyz, processed_demos_q, "processed" )
 
             self.visualise_gc(model["GC"])
             self.visualise_correction_axes(model["x_corr_axes"], model["y_corr_axes"], model["directrix"])
@@ -808,7 +831,7 @@ class TLGCNode():
             # # Last 50 points
             # # self.visualise_gc(model["GC"][-50:,:,:])
             # self.visualise_directrix(model["directrix"][-50:,:], model["q"][-50:,:])
-            # self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
+            self.visualise_TNB_axes(model["eT"][-50:,:], model["directrix"][-50:,:], "eT")
             # self.visualise_correction_axes(model["x_corr_axes"][-50:,:], model["y_corr_axes"][-50:,:], model["directrix"][-50:,:])
 
             if input("Crop again ? ([y]/n]") == "n":

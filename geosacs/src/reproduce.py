@@ -25,7 +25,7 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
     dir_changed = False
     for jj in range(numRepro):
         strt = starting[0, jj]
-        ratio = Ratio[jj]
+        Ratio = Ratio[jj]
         newTraj = np.zeros((szd - strt, 3))
         newTraj[0, :] = initPoint[jj, :]
 
@@ -62,6 +62,8 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
 
             # Adapt ratio
 
+            # print(" ########################  previous ratio and the strategy", Ratio, strategy)
+
             if strategy == "convergent" : 
                 ratio_final = 0
                 decay =0.0005*ii
@@ -69,6 +71,8 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
             else: 
                 # print("FIXED STRATEGY")
                 pass
+
+            # print("###########################   After ratio,", Ratio)
 
             transition_window = 10
 
@@ -92,10 +96,10 @@ def reproduce(model, numRepro, starting, initPoint, Ratio, crossSection, strateg
                 directrix_reshaped = directrix[ii,:].reshape(3,1)
 
                 test_nan = np.isnan((PnextG0 / np.linalg.norm(PnextG0)).ravel())
-                if np.isclose(ratio, 0) or np.any(test_nan):
+                if np.isclose(Ratio, 0) or np.any(test_nan):
                     PnextG = directrix_reshaped
                 else:
-                    PnextG = ratio * Rc_adj * PnextG0 / np.linalg.norm(PnextG0) + directrix_reshaped
+                    PnextG = Ratio * Rc_adj * PnextG0 / np.linalg.norm(PnextG0) + directrix_reshaped
 
                 PnextG = PnextG.reshape(-1)
 

@@ -169,7 +169,7 @@ pub extern "C" fn solve(robot_start: *mut [f64;6], link_name: *mut c_char,
     let mut errors = unsafe{std::ptr::read(errors_start).clone()};
 
     // println!("Inside cost, position =  {}", position);
-    // println!("Inside cost, weight =  {}", w);
+    // println!("Inside cost, optimization weight =  {}", w);
 
     let state = get_state().get_mut().unwrap();
     let robot = &mut state.robot;
@@ -299,7 +299,7 @@ fn optimize_robot(robot_start: *mut [f64;6], position: &Vector3<f64>, orientatio
 
         *c = 100.0 * position_cost(&trans.translation.vector, &position);
         *c += w*rotation_cost(&trans.rotation, &orientation);
-        *c += movement_cost(&u, &init_state, &lb, &ub);
+        *c += movement_cost(&u, &init_state, &lb, &ub);   //increase the cost of this to avoid big movements
         // *c += 0.1 * joint_limit_cost(&u, &lb, &ub);
         
 

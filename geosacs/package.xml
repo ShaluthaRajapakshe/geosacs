@@ -14,6 +14,8 @@
   <exec_depend>rospy</exec_depend>
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
+  <build_depend>fp_core_msgs</build_depend>
+  <exec_depend>fp_core_msgs</exec_depend>
   
   <export>
   </export>

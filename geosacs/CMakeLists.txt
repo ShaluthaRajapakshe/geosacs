@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   std_msgs
   message_generation
+  fp_core_msgs
   
 )
 
@@ -33,6 +34,7 @@ generate_messages(
 catkin_package( 
     CATKIN_DEPENDS 
     message_runtime
+    fp_core_msgs
 )
 
 include_directories(

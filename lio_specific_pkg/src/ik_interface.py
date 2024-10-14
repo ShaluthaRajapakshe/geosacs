@@ -63,22 +63,6 @@ class IKinterface():
             self.rate.sleep()
     
 
-    # def joy_cb(self, msg):
-    #     changed_buttons = self.filter_joy_buttons(msg)
-    #     if changed_buttons[0]==1 : 
-    #         if self.gripper_angle == 0 : self.gripper_angle = 0.523594
-    #         else : self.gripper_angle = 0
-
-
-    # def filter_joy_buttons(self, msg):
-    #     current_buttons = list(msg.buttons)
-    #     if current_buttons == [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] : changed_buttons = current_buttons
-    #     else: changed_buttons = [button1 - button2 for (button1, button2) in zip(current_buttons, self.previous_buttons)]
-
-    #     self.previous_buttons = current_buttons
-
-    #     return changed_buttons
-
     
     def ik_cb(self, msg):
         self.ik_js = msg.data

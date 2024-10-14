@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from geometry_msgs.msg import PoseArray
 from geometry_msgs.msg import PoseStamped, Point, Quaternion, Vector3, PoseArray, Pose

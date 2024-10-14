@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 from fp_core_msgs.srv import GetStatus
 from std_msgs.msg import String

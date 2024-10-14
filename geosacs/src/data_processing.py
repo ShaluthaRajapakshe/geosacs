@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import rospy
 import os
 import numpy as np
@@ -114,7 +114,7 @@ class DataProcessingNode():
         n = len(demos_xyz)
         filtered_demos_xyz = []
         filtered_demos_q = []
-        stepc = None  #there is an issue with this as stepc final value is the number of points from the second trajectory
+        stepc = None
 
         
         for i in range(n):
@@ -129,7 +129,7 @@ class DataProcessingNode():
             rospy.loginfo(f"  Trajectory size before step filtering: {positions.shape[0]}")
             # Determine step filter
             num_points = len(positions)
-            stepc = int(0.05 * num_points) # 0.1 # int() returns integer part
+            stepc = int(0.1 * num_points) # int() returns integer part
             if stepc == 0 : stepc = 1
             keep_idxs = list(range(0, num_points, stepc))
             if not (num_points-1)%stepc == 0: 
@@ -270,7 +270,7 @@ class DataProcessingNode():
     
     
     
-    def spatial_filter(self, demos_xyz, demos_q):  
+    def spatial_filter(self, demos_xyz, demos_q):
         rospy.loginfo("Spatial filtering of demos:")
   
         if len(demos_xyz) != len(demos_q):
@@ -457,7 +457,7 @@ class DataProcessingNode():
         # self.task = "testlab"
         self.raw_dir = self.data_dir + f"/{self.task}/record-raw"
 
-        raw_demos_xyz, raw_demos_q = self.get_data(self.raw_dir)  #only supports for two demos at the moment
+        raw_demos_xyz, raw_demos_q = self.get_data(self.raw_dir)
         # demos_xyz, demos_q = self.static_filter(raw_demos_xyz, raw_demos_q)
         # demos_xyz, demos_q = self.step_filter(demos_xyz, demos_q)
         # demos_xyz, demos_q = self.spatial_filter(raw_demos_xyz, raw_demos_q)
@@ -472,6 +472,7 @@ class DataProcessingNode():
             if positions.shape[0] > max_length: max_length=positions.shape[0]
         N =step*max_length
 
+        # demos_xyz, demos_q = self.resample_interpolate(demos_xyz, demos_q, int(N/2))
         demos_xyz, demos_q = self.resample_interpolate(demos_xyz, demos_q, N)
 
         # Visualise
