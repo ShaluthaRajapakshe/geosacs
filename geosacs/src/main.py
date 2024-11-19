@@ -8,7 +8,7 @@ from geometry_msgs.msg import Pose, PoseStamped, PoseArray
 from std_msgs.msg import String
 from sensor_msgs.msg import Joy, JointState
 from geosacs.msg import WeightedPose, Correction, SurfacePose
-from randomInitialPoints import randomInitialPoints
+# from randomInitialPoints import randomInitialPoints
 from reproduce import reproduce
 
 import tf
@@ -1947,7 +1947,15 @@ class MainNode():
             # start_QcurrG = QcurrG
             # start_q_weight = q_weight
 
-            self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+            if self.task == "marshmellow":
+                start_position = [0.435, -0.348, 0.898]
+                start_orientation = [-0.506, -0.485, 0.448, 0.555]
+
+                self.pub_cmd_pose(start_position, start_orientation, q_weight)
+
+            else:
+                self.pub_cmd_pose(PcurrG, QcurrG, q_weight)
+
             if first:
                 rospy.loginfo("Press START button on joystick ...")
                 while not self.start:
@@ -2058,10 +2066,13 @@ class MainNode():
                         # print("PcurrG", PcurrG, "QcurrG", QcurrG, "q_weight", q_weight)
 
                     if self.task == "marshmellow" and self.marsh_selected: #TODO might need to add this even in the middle of the canal rather than waiting until the last cross section
-                        print("PcuurG before", PcurrG)
+                        # print("PcuurG before", PcurrG)
                         PcurrG[2] = PcurrG[2] - 0.03
-                        print("#################### After PcuurG", PcurrG)
+                        # print("#################### After PcuurG", PcurrG)
                         self.terminate = True
+
+                        task_duration = (rospy.Time.now() - start_task_time).to_sec()
+                        print("marsh selected", task_duration)
 
                         count = 0
 

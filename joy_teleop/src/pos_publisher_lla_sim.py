@@ -58,11 +58,8 @@ class CAE(nn.Module):
     return self.loss_func(a_decoded, a_target)
 
 
-
-
-
-# task = "marshmellow"
-task = "other"
+# task = "other"
+task = "marshmellow"
 
 
 
@@ -79,9 +76,29 @@ class Model(object):
             # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_updatedv7', map_location='cpu')
             # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry_18th', map_location='cpu')
             # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_simple4', map_location='cpu')
-            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_test11', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_test11', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_marsh_plate_1', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_marshmallow_task', map_location='cpu')
+
+            ##below is the latest model and works well
+            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_marshmallow_updated1', map_location='cpu')
+            
+            
+
+
         else:
-            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry', map_location='cpu')
+
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lio_laundry', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_laundry_new', map_location='cpu')
+
+            model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_laundry_updated1', map_location='cpu') #this is good though
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_laundry_updated2', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_laundry_updated3', map_location='cpu')
+            # model_dict = torch.load('/home/shalutha/geosacs_ws/src/geosacs/joy_teleop/models/CAE_model_lla_laundry_updated4', map_location='cpu')
+# 
+            
+
+            
         
         self.model.load_state_dict(model_dict)
         self.model.eval()
@@ -142,14 +159,8 @@ class PoseControllerNode():
 
         rospy.Subscriber("/panda_ik/output", Float64MultiArray, self.ik_cb_end)
 
-        # rospy.Timer(rospy.Duration(0.01), self.transform_callback)
-
-            
-        # rospy.Subscriber("ik_interface/joint_states_lio", JointState, self.joint_states_lio_cb)
-        # rospy.Subscriber("/lio_1c/joint_states", JointState, self.lio_joint_states_cb)
-        # self.correction = False
-
         self.first  = True
+
         self.task = "marshmellow" # "marshmellow" or "other"
         # self.task = "other" # "marshmellow" or "other"
 
@@ -178,35 +189,22 @@ class PoseControllerNode():
             self.initial_joint_positions = [-1.1657304272784037, 1.0865569625827096, 0.7532967406451435, -0.9674269093442143, 1.6453289999999998, 0.3506041628038431]
         
 
+        # self.marsh_secondary_joint_positions = [-1.5928193913737134, 0.6524183594615064, 1.374728569701513, -0.4208207782005475, 0.8542391614824932, -0.0306878920003573]
+        # self.marsh_secondary_joint_positions = [-1.5550867861722104, 0.6358101240352599, 0.43895299959575224, -0.0711653235326415, 2.008265594066223, 0.06296344430696968]
+        # self.marsh_secondary_joint_positions =  [-1.558832, 0.389377, 0.692769, 0.01802, 1.975289, -0.014497]
+        self.marsh_secondary_joint_positions = [-1.643382, 0.230667, 0.973082, 0.047736, 1.456986, -0.048237]
+        
+
         # Load the trained model
         self.model = Model()
         
         # Init
         rospy.loginfo("joy_controller for lla has been started")
 
-    
-    # def transform_callback(self, event):
-
-        
-
-    #     # try:
-    #         # Lookup the transform from the 'base_footprint' to 'tcp_joint'
-    #     self.transform = self.tfBuffer.lookup_transform('LIO_robot_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
-
-    #     # self.lio_pose.pose.position = transform.transform.translation
-    #     # self.lio_pose.pose.orientation = transform.transform.rotation
-    #         # print("Translation x: ", transform.transform.translation.x)
-    #         # print("Translation x: ", self.lio_pose.pose.position.x)
-    #         # print("Rotationx: ", transform.transform.rotation.x)
-
-    #     # except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
-    #     #     rospy.logerr("Transform lookup failed")
 
 
     def lio_pose_cb(self,msg):
-        # print("in pose cb")
         self.lio_pose = msg
-        # print("########## Lio pose", self.lio_pose.pose.position)
 
     def joy_cb(self, msg):
         # Map joystick axes to input
@@ -311,8 +309,6 @@ class PoseControllerNode():
 
         self.ik_js = msg.data
 
-        # if self.marsh_selected:
-        #     print("Marsh selectec", self.ik_js)
 
 
 
@@ -336,6 +332,13 @@ class PoseControllerNode():
 
                 rospy.loginfo("##### started ####")
                 start_task_time = rospy.Time.now()
+
+
+                if self.task == "marshmellow":
+                    self.interpolate_joint_positions(self.initial_joint_positions, self.marsh_secondary_joint_positions)
+                    # self.joint_positions = self.marsh_secondary_joint_positions
+                    # self.publish_joint_positions()
+
                 
                 rospy.sleep(0.1)
                 self.first = False
@@ -347,6 +350,9 @@ class PoseControllerNode():
                 print("sim start position", self.sim_start_position_lio_base)
 
             else:
+
+                transform = self.tfBuffer.lookup_transform('LIO_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
+                self.sim_start_position_lio_base = np.array([[transform.transform.translation.x, transform.transform.translation.y, transform.transform.translation.z]])
                 
                 while self.correction:
                     transform = self.tfBuffer.lookup_transform('LIO_base_link', 'lio_tcp_link', rospy.Time(0), rospy.Duration(1.0))
@@ -355,8 +361,15 @@ class PoseControllerNode():
                     # print("sim current position", self.current_position_lio)
 
                     lio_correction_distance = np.linalg.norm(self.current_position_lio - self.sim_start_position_lio_base)
-                    self.lio_cumulative_correction_distance += lio_correction_distance
-                    self.start_position_lio = self.sim_start_position_lio_base
+
+
+                    self.cumulative_correction_distance += lio_correction_distance
+
+                    if self.physical_robot:
+                        self.lio_cumulative_correction_distance += lio_correction_distance
+                        
+                    # self.start_position_lio = self.sim_start_position_lio_base
+                    self.sim_start_position_lio_base = self.current_position_lio
 
                     correction_duration = (rospy.Time.now() - self.correction_start_time).to_sec()
                     self.cumulative_correction_time += correction_duration
@@ -408,6 +421,10 @@ class PoseControllerNode():
                     self.joint_positions = list(self.ik_js)  # receiving the necessary joint values from the Ik engine
                     self.publish_joint_positions() # publishing joint values as we are now in joint space control
 
+                    #
+
+                    ###### WHILE LOOP IS NEEDED WITH THE REAL ROBOT ################
+
                     # while count < 1:  #50 for physical robot
 
                     #     # print("########### joint positions", self.joint_positions)
@@ -417,7 +434,8 @@ class PoseControllerNode():
                     #     self.publish_joint_positions() # publishing joint values as we are now in joint space control
                     #     rospy.sleep(0.1)
 
-                    return
+                    # return
+                    self.terminate = True
 
 
             if self.terminate:
@@ -453,25 +471,26 @@ class PoseControllerNode():
             
             self.rate.sleep()
             
-
-
+    def interpolate_joint_positions(self, start, end, steps=50):
+        """Interpolates between start and end joint positions in given steps."""
+        start = np.array(start)
+        end = np.array(end)
+        for t in np.linspace(0, 1, steps):
+            intermediate_position = (1 - t) * start + t * end
+            self.joint_positions = intermediate_position
+            self.publish_joint_positions()
+            self.rate.sleep()
 
     def update_joint_positions(self):
         
 
-        # rospy.loginfo("joy x and y %s",self.joystick_input )
-        # rospy.loginfo("velocities: %s", action_velocities)
-
         if self.first:
             self.joint_positions = self.initial_joint_positions
-            # print("still at start", self.joint_positions)
 
         else:
             # Get model output in rad/s
             # print("################# Before joint positions", self.lio_joint_positions)
             action_velocities = self.model.decoder(self.joystick_input, self.lio_joint_positions)  # Model output in rad/s
-
-            # print("action velocities", action_velocities)
 
             # Convert velocity commands to position commands
             for i in range(len(self.joint_positions)):
@@ -481,19 +500,10 @@ class PoseControllerNode():
     def publish_joint_positions(self):
         # Prepare Float64MultiArray message
         msg = Float64MultiArray()
-
-       
         msg.data = self.joint_positions
-
-        count = 0
-
-        if self.first and count == 0:
-            # print("first publishable data", msg.data)
-            count += 1
-
-        # print("################# After joint positions", self.joint_positions)
-
+     
         # Publish the positions
+
         self.joint_position_pub.publish(msg)
         # rospy.loginfo("Published joint positions: %s", msg.data)
 
